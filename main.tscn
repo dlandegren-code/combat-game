@@ -1,0 +1,363 @@
+[gd_scene format=3 uid="uid://b7v2n3eakpqp6"]
+
+[ext_resource type="Script" uid="uid://bt71cq16le8s7" path="res://scripts/player.gd" id="1_player"]
+[ext_resource type="Script" uid="uid://cqq8m3hh3yh7e" path="res://scripts/enemy.gd" id="2_enemy"]
+[ext_resource type="Script" uid="uid://by7c3x5cgidj7" path="res://scripts/combat_manager.gd" id="3_turn"]
+[ext_resource type="Script" uid="uid://cgx1c6je2dbjs" path="res://scripts/grid.gd" id="4_1bvp3"]
+[ext_resource type="PackedScene" uid="uid://cp4r67tmcolap" path="res://assets/models/kenney/mini-arena/character-soldier.glb" id="4_4c57u"]
+[ext_resource type="Script" uid="uid://ce8bhcvhdkt2m" path="res://scripts/camera_controller.gd" id="5_camera"]
+[ext_resource type="PackedScene" uid="uid://bwi0nb7c2v4ea" path="res://assets/models/kenney/mini-dungeon/character-orc.glb" id="6_efxa6"]
+[ext_resource type="Script" uid="uid://cthubpsntwfxy" path="res://scripts/inventory_component.gd" id="6_inv"]
+[ext_resource type="PackedScene" uid="uid://dsjxvrpgqwixj" path="res://assets/models/kenney/mini-characters-1/character-male-d.glb" id="7_dg77c"]
+[ext_resource type="Script" uid="uid://bdvlysmli3u5i" path="res://scripts/inventory_ui.gd" id="7_inv_ui"]
+
+[sub_resource type="StandardMaterial3D" id="mat_ground"]
+albedo_color = Color(0.35, 0.5, 0.25, 1)
+
+[sub_resource type="BoxMesh" id="mesh_ground"]
+size = Vector3(30, 0.2, 30)
+
+[sub_resource type="BoxShape3D" id="shape_ground"]
+size = Vector3(30, 0.2, 30)
+
+[sub_resource type="StandardMaterial3D" id="mat_indicator"]
+transparency = 1
+albedo_color = Color(0.3, 0.6, 1, 0.5)
+
+[sub_resource type="PlaneMesh" id="mesh_indicator"]
+size = Vector2(0.9, 0.9)
+
+[sub_resource type="StandardMaterial3D" id="mat_player"]
+albedo_color = Color(0.2, 0.4, 0.85, 1)
+
+[sub_resource type="BoxMesh" id="mesh_player"]
+size = Vector3(0.8, 2, 0.8)
+
+[sub_resource type="BoxShape3D" id="shape_character"]
+size = Vector3(0.8, 2, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="mat_enemy"]
+albedo_color = Color(0.85, 0.2, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="mesh_enemy"]
+size = Vector3(0.8, 2, 0.8)
+
+[node name="Battlefield" type="Node3D" unique_id=331942802]
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1894012257]
+transform = Transform3D(0.8253356, 0.44229966, -0.3509874, 0, 0.62161, 0.7833269, 0.5646425, -0.6465076, 0.51303685, 10, 18, 10)
+shadow_enabled = true
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1106272685]
+fov = 55.0
+script = ExtResource("5_camera")
+
+[node name="Ground" type="StaticBody3D" parent="." unique_id=1034464368]
+
+[node name="Mesh" type="MeshInstance3D" parent="Ground" unique_id=1622797662]
+material_override = SubResource("mat_ground")
+mesh = SubResource("mesh_ground")
+
+[node name="Collision" type="CollisionShape3D" parent="Ground" unique_id=1851846502]
+shape = SubResource("shape_ground")
+
+[node name="MoveIndicator" type="MeshInstance3D" parent="." unique_id=1354630385]
+visible = false
+material_override = SubResource("mat_indicator")
+mesh = SubResource("mesh_indicator")
+
+[node name="Player" type="CharacterBody3D" parent="." unique_id=1460944051]
+wall_min_slide_angle = 0.0
+floor_stop_on_slope = false
+floor_block_on_wall = false
+floor_snap_length = 0.0
+script = ExtResource("1_player")
+
+[node name="Mesh" type="MeshInstance3D" parent="Player" unique_id=1393056996]
+visible = false
+material_override = SubResource("mat_player")
+mesh = SubResource("mesh_player")
+
+[node name="Collision" type="CollisionShape3D" parent="Player" unique_id=1911978251]
+shape = SubResource("shape_character")
+
+[node name="HealthBar" type="Label3D" parent="Player" unique_id=14341044]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
+billboard = 2
+text = "20/20"
+font_size = 36
+
+[node name="Inventory" type="Node" parent="Player" unique_id=1062237212]
+script = ExtResource("6_inv")
+
+[node name="CharacterModel" parent="Player" unique_id=1087090325 instance=ExtResource("4_4c57u")]
+
+[node name="Enemy" type="CharacterBody3D" parent="." unique_id=750982114]
+collision_layer = 2
+wall_min_slide_angle = 0.0
+floor_stop_on_slope = false
+floor_block_on_wall = false
+floor_snap_length = 0.0
+script = ExtResource("2_enemy")
+armor = 2
+
+[node name="Mesh" type="MeshInstance3D" parent="Enemy" unique_id=1490164396]
+visible = false
+material_override = SubResource("mat_enemy")
+mesh = SubResource("mesh_enemy")
+
+[node name="Collision" type="CollisionShape3D" parent="Enemy" unique_id=1952952854]
+shape = SubResource("shape_character")
+
+[node name="HealthBar" type="Label3D" parent="Enemy" unique_id=1772120485]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
+billboard = 2
+text = "10/10"
+font_size = 36
+
+[node name="Inventory" type="Node" parent="Enemy" unique_id=2002346694]
+script = ExtResource("6_inv")
+
+[node name="CharacterModel" parent="Enemy" unique_id=126384533 instance=ExtResource("6_efxa6")]
+
+[node name="ArcherEnemy" type="CharacterBody3D" parent="." unique_id=1733349018]
+collision_layer = 2
+wall_min_slide_angle = 0.0
+floor_stop_on_slope = false
+floor_block_on_wall = false
+floor_snap_length = 0.0
+script = ExtResource("2_enemy")
+enemy_type = 1
+
+[node name="Mesh" type="MeshInstance3D" parent="ArcherEnemy" unique_id=1443505065]
+visible = false
+material_override = SubResource("mat_enemy")
+mesh = SubResource("mesh_enemy")
+
+[node name="Collision" type="CollisionShape3D" parent="ArcherEnemy" unique_id=1089460754]
+shape = SubResource("shape_character")
+
+[node name="HealthBar" type="Label3D" parent="ArcherEnemy" unique_id=2137636909]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
+billboard = 2
+text = "8/8"
+font_size = 36
+
+[node name="Inventory" type="Node" parent="ArcherEnemy" unique_id=1010040196]
+script = ExtResource("6_inv")
+
+[node name="CharacterModel" parent="ArcherEnemy" unique_id=942337605 instance=ExtResource("6_efxa6")]
+
+[node name="BossEnemy" type="CharacterBody3D" parent="." unique_id=2118022327]
+collision_layer = 2
+wall_min_slide_angle = 0.0
+floor_stop_on_slope = false
+floor_block_on_wall = false
+floor_snap_length = 0.0
+script = ExtResource("2_enemy")
+enemy_type = 2
+
+[node name="Mesh" type="MeshInstance3D" parent="BossEnemy" unique_id=217558937]
+visible = false
+material_override = SubResource("mat_enemy")
+mesh = SubResource("mesh_enemy")
+
+[node name="Collision" type="CollisionShape3D" parent="BossEnemy" unique_id=911772981]
+shape = SubResource("shape_character")
+
+[node name="HealthBar" type="Label3D" parent="BossEnemy" unique_id=2076650310]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
+billboard = 2
+text = "30/30"
+font_size = 36
+
+[node name="Inventory" type="Node" parent="BossEnemy" unique_id=100771442]
+script = ExtResource("6_inv")
+
+[node name="CharacterModel" parent="BossEnemy" unique_id=1141627769 instance=ExtResource("6_efxa6")]
+
+[node name="Player2" type="CharacterBody3D" parent="." unique_id=1766136452]
+wall_min_slide_angle = 0.0
+floor_stop_on_slope = false
+floor_block_on_wall = false
+floor_snap_length = 0.0
+script = ExtResource("1_player")
+initiative = 8
+character_name = "Archer"
+attack_skill = 4
+parry_skill = 2
+dodge_skill = 7
+weapon_durability = 8
+defensive_option = 1
+shove_skill = 2
+trip_skill = 3
+ammo = 2
+
+[node name="Mesh" type="MeshInstance3D" parent="Player2" unique_id=1720006444]
+visible = false
+material_override = SubResource("mat_player")
+mesh = SubResource("mesh_player")
+
+[node name="Collision" type="CollisionShape3D" parent="Player2" unique_id=1608493797]
+shape = SubResource("shape_character")
+
+[node name="HealthBar" type="Label3D" parent="Player2" unique_id=1825970212]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
+billboard = 2
+text = "20/20"
+font_size = 36
+
+[node name="Inventory" type="Node" parent="Player2" unique_id=342301566]
+script = ExtResource("6_inv")
+
+[node name="CharacterModel" parent="Player2" unique_id=2132221886 instance=ExtResource("7_dg77c")]
+
+[node name="CombatManager" type="Node" parent="." unique_id=1411475820]
+script = ExtResource("3_turn")
+
+[node name="InitiativePanel" type="CanvasLayer" parent="." unique_id=1909950055]
+
+[node name="Panel" type="Panel" parent="InitiativePanel" unique_id=283494159]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -220.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = 200.0
+
+[node name="Title" type="Label" parent="InitiativePanel/Panel" unique_id=387994056]
+layout_mode = 0
+anchor_right = 1.0
+offset_left = 10.0
+offset_top = 8.0
+offset_right = -10.0
+offset_bottom = 32.0
+text = "Turn Order"
+horizontal_alignment = 1
+
+[node name="OrderList" type="VBoxContainer" parent="InitiativePanel/Panel" unique_id=2056677228]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 38.0
+offset_right = -10.0
+offset_bottom = -10.0
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1609581694]
+
+[node name="TurnLabel" type="Label" parent="HUD" unique_id=1061078849]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 10.0
+offset_top = 20.0
+offset_right = -10.0
+offset_bottom = 60.0
+text = "Your Turn"
+horizontal_alignment = 1
+
+[node name="Grid" type="MeshInstance3D" parent="." unique_id=1678629236]
+script = ExtResource("4_1bvp3")
+
+[node name="ActionBar" type="CanvasLayer" parent="." unique_id=501745713]
+
+[node name="Panel" type="Panel" parent="ActionBar" unique_id=1481245891]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -220.0
+offset_top = -50.0
+offset_right = 220.0
+offset_bottom = -10.0
+
+[node name="Bar" type="HBoxContainer" parent="ActionBar/Panel" unique_id=1040050374]
+layout_mode = 0
+anchor_right = 1.0
+offset_left = 8.0
+offset_top = 6.0
+offset_right = -8.0
+offset_bottom = -6.0
+theme_override_constants/separation = 6
+
+[node name="Btn1" type="Button" parent="ActionBar/Panel/Bar" unique_id=882408011]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+toggle_mode = true
+text = "Move (1)"
+
+[node name="Btn2" type="Button" parent="ActionBar/Panel/Bar" unique_id=230933854]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+toggle_mode = true
+text = "Attack (2)"
+
+[node name="Btn3" type="Button" parent="ActionBar/Panel/Bar" unique_id=662632987]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+toggle_mode = true
+text = "Shove (3)"
+
+[node name="Btn4" type="Button" parent="ActionBar/Panel/Bar" unique_id=1383850769]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+toggle_mode = true
+text = "Trip (4)"
+
+[node name="Btn5" type="Button" parent="ActionBar/Panel/Bar" unique_id=1885349579]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+toggle_mode = true
+text = "Range (5)"
+
+[node name="Btn6" type="Button" parent="ActionBar/Panel/Bar" unique_id=934824872]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+toggle_mode = true
+text = "Throw (6)"
+
+[node name="Btn7" type="Button" parent="ActionBar/Panel/Bar" unique_id=2140506241]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+toggle_mode = true
+text = "Pick Up (7)"
+
+[node name="InventoryPanel" type="CanvasLayer" parent="." unique_id=1727708808]
+script = ExtResource("7_inv_ui")
+
+[node name="Panel" type="Panel" parent="InventoryPanel" unique_id=1202592604]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -220.0
+offset_top = 210.0
+offset_right = -10.0
+offset_bottom = 400.0
+
+[node name="Title" type="Label" parent="InventoryPanel/Panel" unique_id=198958552]
+layout_mode = 0
+anchor_right = 1.0
+offset_left = 10.0
+offset_top = 8.0
+offset_right = -10.0
+offset_bottom = 32.0
+text = "Inventory"
+horizontal_alignment = 1
+
+[node name="SlotList" type="VBoxContainer" parent="InventoryPanel/Panel" unique_id=1283029243]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 38.0
+offset_right = -10.0
+offset_bottom = -10.0
