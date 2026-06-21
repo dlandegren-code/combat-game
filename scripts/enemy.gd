@@ -18,8 +18,6 @@ enum EnemyType { GOBLIN, ARCHER, BOSS }
 @export var attack_skill: int = 3       ## used in attack vs defense rolls
 @export var parry_skill: int = 1        ## parry defense skill (low: no real training)
 @export var dodge_skill: int = 3        ## dodge defense skill
-@export var has_weapon: bool = false
-@export var weapon_durability: int = 5
 @export_enum("Parry", "Dodge") var defensive_option: int = 1  ## 0=Parry, 1=Dodge
 @export var shove_skill: int = 2
 @export var trip_skill: int = 1
@@ -37,7 +35,6 @@ enum EnemyType { GOBLIN, ARCHER, BOSS }
 enum Action { MOVE, ATTACK, SHOVE, TRIP, RANGED, THROW }
 
 var next_turn_at: int = 0
-var weapon_broken: bool = false
 var is_prone: bool = false
 
 var is_moving := false
@@ -49,6 +46,7 @@ var attack_dmg := 3
 var is_alive := true
 
 var health_bar: Label3D
+var inventory: Node  ## InventoryComponent
 
 var _pending_cost: int = 0
 var _action_used: int = Action.MOVE
@@ -56,7 +54,9 @@ var _action_used: int = Action.MOVE
 
 func _ready() -> void:
 	target_position = position
+	position.y = _ground_y()
 	health_bar = get_node("HealthBar")
+	inventory = get_node_or_null("Inventory")
 	_configure_from_type()
 	_apply_enemy_visual()
 	_update_health_bar()
@@ -75,7 +75,6 @@ func _configure_from_type() -> void:
 			attack_skill = 3; attack_dmg = 3
 			parry_skill = 1; dodge_skill = 3
 			defensive_option = 1  # Dodge
-			has_weapon = false
 			shove_skill = 2; trip_skill = 1
 			shove_cost = 2; trip_cost = 2
 			move_cost_per_tile = 1; attack_cost = 2
@@ -90,7 +89,6 @@ func _configure_from_type() -> void:
 			attack_skill = 2; attack_dmg = 2  # Weak melee
 			parry_skill = 1; dodge_skill = 4
 			defensive_option = 1  # Dodge
-			has_weapon = false
 			shove_skill = 1; trip_skill = 1
 			shove_cost = 3; trip_cost = 3
 			move_cost_per_tile = 1; attack_cost = 2
@@ -105,7 +103,6 @@ func _configure_from_type() -> void:
 			attack_skill = 6; attack_dmg = 5
 			parry_skill = 5; dodge_skill = 3
 			defensive_option = 0  # Parry
-			has_weapon = true; weapon_durability = 12
 			shove_skill = 4; trip_skill = 3
 			shove_cost = 2; trip_cost = 2
 			move_cost_per_tile = 1; attack_cost = 2
@@ -180,17 +177,10 @@ func _take_turn_goblin() -> void:
 		end_my_turn(1)
 		return
 
-	# Move one cell toward nearest player
-	var dir_to_player: Vector3 = player.position - position
-	var move_dir := Vector3.ZERO
-	if abs(dir_to_player.x) > abs(dir_to_player.z):
-		move_dir.x = sign(dir_to_player.x)
-	else:
-		move_dir.z = sign(dir_to_player.z)
-
+	# Move one cell toward nearest player, avoiding occupied tiles
 	_action_used = Action.MOVE
 	_pending_cost = move_cost_per_tile
-	target_position = position + move_dir * GRID_SIZE
+	_move_toward(player)
 	is_moving = true
 
 
@@ -225,7 +215,7 @@ func _take_turn_archer() -> void:
 
 	# In optimal range (4-10 tiles): fire arrows
 	if ammo > 0 and dist_to_player >= 4 * GRID_SIZE and dist_to_player <= ranged_range * GRID_SIZE:
-		if _has_line_of_sight(player.position):
+		if _has_line_of_sight(player):
 			_action_used = Action.RANGED
 			ammo -= 1
 			_update_health_bar()
@@ -346,12 +336,12 @@ func _try_move_away(from: Node) -> bool:
 		move_dir.z = sign(dir_away.z)
 
 	var dest := _snap_to_grid(position + move_dir * GRID_SIZE)
-	dest = _avoid_overlap(dest, from)
+	dest = _avoid_overlap(dest, self)
 	if dest.distance_to(position) < 0.1:
 		# Try perpendicular direction
 		move_dir = Vector3(move_dir.z, 0, -move_dir.x)
 		dest = _snap_to_grid(position + move_dir * GRID_SIZE)
-		dest = _avoid_overlap(dest, from)
+		dest = _avoid_overlap(dest, self)
 		if dest.distance_to(position) < 0.1:
 			return false
 
@@ -374,7 +364,7 @@ func _move_toward(target: Node) -> void:
 		move_dir.z = sign(dir_to.z)
 
 	var dest := _snap_to_grid(position + move_dir * GRID_SIZE)
-	dest = _avoid_overlap(dest, target)
+	dest = _avoid_overlap(dest, self)
 	target_position = dest
 
 
@@ -411,15 +401,20 @@ func _do_adjacent_action(player: Node) -> void:
 		_pending_cost = trip_cost
 
 
-func _has_line_of_sight(target_pos: Vector3) -> bool:
+func _has_line_of_sight(target: Node) -> bool:
+	var target_node := target as Node3D
+	if not target_node:
+		return false
 	var space_state := get_world_3d().direct_space_state
-	var from_pos := position + Vector3(0, 1.0, 0)
-	var to_pos := target_pos + Vector3(0, 1.0, 0)
+	var from_pos := position + Vector3(0, 0.5, 0)
+	var to_pos := target_node.position + Vector3(0, 0.5, 0)
 	var query := PhysicsRayQueryParameters3D.create(from_pos, to_pos)
 	query.collision_mask = 2
 	query.exclude = [get_rid()]
 	var result := space_state.intersect_ray(query)
-	return not result.is_empty()
+	if result.is_empty():
+		return false
+	return result.collider == target
 
 
 func _show_action_text(text: String) -> void:
@@ -436,13 +431,33 @@ func _show_action_text(text: String) -> void:
 	tween.tween_callback(label.queue_free)
 
 
-func _avoid_overlap(tile: Vector3, exclude: Node) -> Vector3:
+func _is_tile_occupied_by_others(tile: Vector3, exclude: Node = null) -> bool:
 	for c in get_tree().get_nodes_in_group("combatants"):
-		if c == exclude or not is_instance_valid(c):
+		if not is_instance_valid(c) or c == exclude:
 			continue
-		if c._snap_to_grid(c.position).distance_to(tile) < 0.5:
-			return c._snap_to_grid(c.position)
-	return tile
+		var current_tile: Vector3 = c._snap_to_grid(c.position)
+		var target_tile: Vector3 = c._snap_to_grid(c.target_position)
+		if current_tile.distance_to(tile) < 0.5 or target_tile.distance_to(tile) < 0.5:
+			return true
+	return false
+
+
+func _avoid_overlap(tile: Vector3, exclude: Node) -> Vector3:
+	if not _is_tile_occupied_by_others(tile, exclude):
+		return tile
+
+	var directions := [
+		Vector3(0, 0, 1), Vector3(0, 0, -1), Vector3(1, 0, 0), Vector3(-1, 0, 0),
+		Vector3(1, 0, 1), Vector3(1, 0, -1), Vector3(-1, 0, 1), Vector3(-1, 0, -1)
+	]
+	for radius in range(1, 5):
+		for d in directions:
+			var candidate: Vector3 = tile + d * radius * GRID_SIZE
+			candidate.x = clamp(candidate.x, -14, 14)
+			candidate.z = clamp(candidate.z, -14, 14)
+			if not _is_tile_occupied_by_others(candidate, exclude):
+				return candidate
+	return _snap_to_grid(position)
 
 
 func _is_adjacent(target_pos: Vector3, source_pos: Vector3 = Vector3.INF) -> bool:
@@ -466,6 +481,7 @@ func _try_shove(target: Node) -> void:
 	var dest: Vector3 = target._snap_to_grid(target.position + push_dir * tiles * GRID_SIZE)
 	dest.x = clamp(dest.x, -14, 14)
 	dest.z = clamp(dest.z, -14, 14)
+	dest = _avoid_overlap(dest, target)
 	target.position = dest
 	target.target_position = dest
 
@@ -479,13 +495,13 @@ func _try_trip(target: Node) -> void:
 	target._update_health_bar()
 
 
-func take_damage(amount: int, attacker_skill: int = 0, _action_type: int = Action.ATTACK) -> void:
+func take_damage(amount: int, attacker_skill: int = 0, _action_type: int = Action.ATTACK) -> bool:
 	if not is_alive:
-		return
+		return false
 
-	var def_result: Dictionary = _attempt_defense(attacker_skill)
+	var def_result: Dictionary = _attempt_defense(attacker_skill, _action_type)
 	if def_result.defended:
-		return
+		return true
 
 	var effective: int = _calculate_damage(amount)
 	hp -= effective
@@ -495,26 +511,51 @@ func take_damage(amount: int, attacker_skill: int = 0, _action_type: int = Actio
 	if hp <= 0:
 		is_alive = false
 		_die()
+	return false
 
 
-func _attempt_defense(attacker_skill: int) -> Dictionary:
+func _has_shield_equipped() -> bool:
+	if inventory and inventory.has_method("is_shield_equipped"):
+		return inventory.is_shield_equipped()
+	return false
+
+func _can_parry_ranged() -> bool:
+	if inventory and inventory.has_method("can_parry_ranged"):
+		return inventory.can_parry_ranged()
+	return false
+
+func _can_dodge_ranged() -> bool:
+	if inventory and inventory.has_method("can_dodge_ranged"):
+		return inventory.can_dodge_ranged()
+	return false
+
+func _has_defense_item() -> bool:
+	if inventory and inventory.has_method("has_weapon_equipped"):
+		return inventory.has_weapon_equipped() or _has_shield_equipped()
+	return false
+
+func _attempt_defense(attacker_skill: int, action_type: int = Action.ATTACK) -> Dictionary:
 	var attack_roll := attacker_skill + randi_range(1, 5)
 	var effective_dodge: int = dodge_skill - (2 if is_prone else 0)
 	var result := { "defended": false, "attack_roll": attack_roll, "defense_roll": 0 }
+	var is_ranged := (action_type == Action.RANGED or action_type == Action.THROW)
 
 	if defensive_option == 0:
-		if not has_weapon or weapon_broken:
+		if not _has_defense_item():
+			return result
+		if is_ranged and not _can_parry_ranged():
 			return result
 		result.defense_roll = parry_skill + randi_range(1, 5)
 		if result.defense_roll >= attack_roll:
-			weapon_durability -= 1
+			if inventory and inventory.has_method("degrade_equipped_weapon"):
+				inventory.degrade_equipped_weapon()
 			_show_defense_result("Parry!")
 			_update_health_bar()
-			if weapon_durability <= 0:
-				weapon_broken = true
 			_charge_defense_cost()
 			result.defended = true
 	else:
+		if is_ranged and not _can_dodge_ranged():
+			return result
 		result.defense_roll = effective_dodge + randi_range(1, 5)
 		if result.defense_roll >= attack_roll:
 			_show_defense_result("Dodge!")
@@ -603,13 +644,20 @@ func _update_health_bar() -> void:
 			text += "Armor:" + str(armor) + " "
 		if physical_resistance > 0:
 			text += "Res:" + str(physical_resistance) + "%"
-	if has_weapon:
-		var dur_text := ""
-		if weapon_broken:
-			dur_text = "Weapon:Broken"
-		else:
-			dur_text = "Weapon:" + str(weapon_durability)
-		text += "\n" + dur_text
+	# Show equipped gear
+	var gear_lines := []
+	if inventory and inventory.has_method("get_equipped_weapon"):
+		var main: ItemResource = inventory.get_equipped_weapon()
+		if main:
+			gear_lines.append("RH:" + main.item_name + "(" + str(main.durability) + ")")
+	if inventory and inventory.has_method("get_equipped_offhand"):
+		var off: ItemResource = inventory.get_equipped_offhand()
+		if off:
+			gear_lines.append("LH:" + off.item_name + "(" + str(off.durability) + ")")
+	if inventory and inventory.armor:
+		gear_lines.append("Armor:" + inventory.armor.item_name)
+	if not gear_lines.is_empty():
+		text += "\n" + " ".join(gear_lines)
 	if defensive_option == 0:
 		text += " Stance:Parry"
 	else:

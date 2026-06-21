@@ -15,8 +15,6 @@ const MOVE_SPEED := 6.0
 @export var attack_skill: int = 5       ## used in attack vs defense rolls
 @export var parry_skill: int = 4        ## parry defense skill
 @export var dodge_skill: int = 5        ## dodge defense skill
-@export var has_weapon: bool = true
-@export var weapon_durability: int = 10
 @export_enum("Parry", "Dodge") var defensive_option: int = 0  ## 0=Parry, 1=Dodge
 @export var shove_skill: int = 5
 @export var trip_skill: int = 4
@@ -30,11 +28,11 @@ const MOVE_SPEED := 6.0
 @export var throw_skill: int = 3       ## used for thrown weapon attacks
 @export var throw_cost: int = 3
 @export var throw_range: int = 5       ## max tiles for thrown
+@export var equip_cost: int = 1        ## time cost to swap equipped weapon/shield
 
-enum Action { MOVE, ATTACK, SHOVE, TRIP, RANGED, THROW, PICKUP }
+enum Action { MOVE, ATTACK, SHOVE, TRIP, RANGED, THROW, PICKUP, EQUIP }
 
 var next_turn_at: int = 0
-var weapon_broken: bool = false
 var is_prone: bool = false
 
 var can_act := false
@@ -59,6 +57,7 @@ static var _bar_connected := false
 
 func _ready() -> void:
 	target_position = position
+	position.y = _ground_y()
 	health_bar = get_node("HealthBar")
 	move_indicator = get_parent().get_node("MoveIndicator")
 	move_indicator.visible = false
@@ -230,7 +229,7 @@ func _update_cursor() -> void:
 		var clicked: Vector3 = result.position
 		clicked.y = position.y
 		var grid_pos := _snap_to_grid(clicked)
-		if _can_move() and _is_in_range(grid_pos):
+		if _can_move() and _is_in_range(grid_pos) and not _is_tile_occupied_by_others(grid_pos, self):
 			Input.set_default_cursor_shape(Input.CURSOR_POINTING_HAND)
 			_show_indicator(grid_pos)
 		else:
@@ -311,7 +310,7 @@ func _handle_click(screen_pos: Vector2) -> void:
 		var clicked: Vector3 = result.position
 		clicked.y = position.y
 		var grid_pos := _snap_to_grid(clicked)
-		if _can_move() and _is_in_range(grid_pos):
+		if _can_move() and _is_in_range(grid_pos) and not _is_tile_occupied_by_others(grid_pos, self):
 			Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 			_hide_indicator()
 			_tiles_moved = int(abs(grid_pos.x - position.x) + abs(grid_pos.z - position.z))
@@ -333,23 +332,28 @@ func _can_target(collider: Node) -> bool:
 		Action.RANGED:
 			if ammo <= 0:
 				return false
-			return dist <= ranged_range * GRID_SIZE and _has_line_of_sight(collider.position)
+			return dist <= ranged_range * GRID_SIZE and _has_line_of_sight(collider)
 		Action.THROW:
 			if not _has_usable_weapon():
 				return false
-			return dist <= throw_range * GRID_SIZE and _has_line_of_sight(collider.position)
+			return dist <= throw_range * GRID_SIZE and _has_line_of_sight(collider)
 	return false
 
 
-func _has_line_of_sight(target_pos: Vector3) -> bool:
+func _has_line_of_sight(target: Node) -> bool:
+	var target_node := target as Node3D
+	if not target_node:
+		return false
 	var space_state := get_world_3d().direct_space_state
-	var from_pos := position + Vector3(0, 1.0, 0)
-	var to_pos := target_pos + Vector3(0, 1.0, 0)
+	var from_pos := position + Vector3(0, 0.5, 0)
+	var to_pos := target_node.position + Vector3(0, 0.5, 0)
 	var query := PhysicsRayQueryParameters3D.create(from_pos, to_pos)
 	query.collision_mask = 2  ## only enemy layer -- ignore ground
 	query.exclude = [get_rid()]
 	var result := space_state.intersect_ray(query)
-	return not result.is_empty()
+	if result.is_empty():
+		return false
+	return result.collider == target
 
 
 func _do_ranged_attack(target: Node) -> void:
@@ -363,14 +367,12 @@ func _do_ranged_attack(target: Node) -> void:
 
 
 func _do_throw_attack(target: Node) -> void:
-	if not has_weapon or weapon_broken:
+	var thrown_item: ItemResource = null
+	if inventory and inventory.has_method("get_equipped_weapon"):
+		thrown_item = inventory.get_equipped_weapon()
+	if thrown_item == null:
+		_show_action_text("No weapon to throw!")
 		return
-
-	# Check defense before applying damage so we know hit vs miss
-	var def_result: Dictionary = target._attempt_defense(throw_skill)
-	has_weapon = false
-	weapon_broken = true
-	_update_health_bar()
 
 	var throw_dir: Vector3 = (target.position - position)
 	throw_dir.y = 0
@@ -378,32 +380,29 @@ func _do_throw_attack(target: Node) -> void:
 		throw_dir = Vector3.RIGHT
 	throw_dir = throw_dir.normalized()
 
-	if def_result.defended:
+	var defended: bool = target.take_damage(attack_dmg, throw_skill, Action.THROW)
+	# Remove the thrown weapon from the character's equipment
+	if inventory and inventory.has_method("unequip_slot"):
+		inventory.unequip_slot(ItemResource.EquipSlot.RIGHT_HAND)
+	var slot := -1
+	if inventory and inventory.has_method("get_item_slot"):
+		slot = inventory.get_item_slot(thrown_item)
+	if slot >= 0 and inventory and inventory.has_method("remove_item"):
+		inventory.remove_item(slot)
+	_update_health_bar()
+
+	if defended:
 		_show_action_text("Throw missed!")
-		# Miss: weapon lands in the throw direction past the target
 		var land_pos: Vector3 = target._snap_to_grid(target.position + throw_dir * (randi_range(2, 4) * GRID_SIZE))
-		_spawn_thrown_weapon(land_pos)
+		_spawn_ground_item(thrown_item, Vector3(land_pos.x, 0.2, land_pos.z))
 	else:
-		target.take_damage(attack_dmg, throw_skill, Action.THROW)
 		_show_action_text("Weapon thrown!")
-		# Hit: weapon scatters randomly near the target
 		var scatter_angle := randf_range(0, TAU)
 		var scatter_dist := randf_range(1.0, 3.0) * GRID_SIZE
 		var scatter_offset := Vector3(cos(scatter_angle), 0, sin(scatter_angle)) * scatter_dist
 		var land_pos: Vector3 = target._snap_to_grid(target.position + scatter_offset)
 		land_pos = _avoid_overlap(land_pos, target)
-		_spawn_thrown_weapon(land_pos)
-
-
-func _spawn_thrown_weapon(at: Vector3) -> void:
-	var item_data := ItemResource.new()
-	item_data.item_name = "Throwing Axe"
-	item_data.item_type = ItemResource.ItemType.THROWABLE
-	item_data.attack_bonus = 0
-	item_data.damage_bonus = attack_dmg
-	item_data.durability = 1
-
-	_spawn_ground_item(item_data, Vector3(at.x, 0.2, at.z))
+		_spawn_ground_item(thrown_item, Vector3(land_pos.x, 0.2, land_pos.z))
 
 
 func _spawn_ground_item(item: ItemResource, at: Vector3) -> void:
@@ -428,20 +427,86 @@ func _do_pickup() -> void:
 		if not gi_node:
 			continue
 		var dist: float = abs(gi_node.position.x - position.x) + abs(gi_node.position.z - position.z)
-		if dist <= GRID_SIZE * 2:
-			if inventory and inventory.has_method("add_item"):
-				var item: ItemResource = gi.get("item_resource")
-				if item and inventory.add_item(item):
-					_show_action_text("Picked up " + item.item_name)
-					gi.queue_free()
-					picked_up = true
-					break
+		if dist > GRID_SIZE * 2:
+			continue
+		var item: ItemResource = gi.get("item_resource")
+		if not item:
+			continue
+		# Ammo and consumables are used immediately, not stored
+		if item.item_type == ItemResource.ItemType.AMMO or item.item_type == ItemResource.ItemType.CONSUMABLE:
+			var applied := false
+			if item.heal_amount > 0:
+				hp = min(hp + item.heal_amount, max_hp)
+				_show_action_text("+" + str(item.heal_amount) + " HP")
+				applied = true
+			if item.ammo_amount > 0:
+				if max_ammo <= 0:
+					max_ammo = 10
+				ammo = min(ammo + item.ammo_amount, max_ammo)
+				_show_action_text("+" + str(item.ammo_amount) + " arrows")
+				applied = true
+			if applied:
+				_update_health_bar()
+				gi.queue_free()
+				picked_up = true
+				break
+			continue
+		if inventory and inventory.has_method("add_item"):
+			if inventory.add_item(item):
+				_show_action_text("Picked up " + item.item_name)
+				gi.queue_free()
+				picked_up = true
+				break
 	if not picked_up:
 		if not inventory or inventory.is_full():
 			_show_action_text("Inventory full!")
 		else:
 			_show_action_text("Nothing to pick up")
 	_update_health_bar()
+
+
+func equip_weapon(slot_index: int) -> void:
+	## Swapping equipped weapon/shield is a full action.
+	if not can_act or is_moving:
+		return
+	if not inventory or not inventory.has_method("equip"):
+		return
+	var old_item: ItemResource = null
+	if inventory.has_method("get_equipped_weapon"):
+		old_item = inventory.get_equipped_weapon()
+	inventory.equip(slot_index)
+	var new_item: ItemResource = null
+	if inventory.has_method("get_equipped_weapon"):
+		new_item = inventory.get_equipped_weapon()
+	if old_item == new_item:
+		return
+	var item_name := "nothing"
+	if new_item:
+		item_name = new_item.item_name
+	_show_action_text("Equipped " + item_name)
+	_update_health_bar()
+	_action_used = Action.EQUIP
+	is_moving = true
+	target_position = position
+
+
+func unequip_item(item: ItemResource) -> void:
+	## Unequip an already-equipped item. Costs a full action.
+	if not can_act or is_moving:
+		return
+	if not inventory or not inventory.has_method("unequip_item"):
+		return
+	var was_equipped := false
+	if inventory.get("right_hand") == item or inventory.get("left_hand") == item or inventory.get("armor") == item:
+		was_equipped = true
+	if not was_equipped:
+		return
+	inventory.unequip_item(item)
+	_show_action_text("Unequipped " + item.item_name)
+	_update_health_bar()
+	_action_used = Action.EQUIP
+	is_moving = true
+	target_position = position
 
 
 func _get_effective_attack_skill() -> int:
@@ -456,13 +521,13 @@ func _get_effective_attack_dmg() -> int:
 	return attack_dmg
 
 
-func take_damage(amount: int, attacker_skill: int = 0, _action_type: int = Action.ATTACK) -> void:
+func take_damage(amount: int, attacker_skill: int = 0, _action_type: int = Action.ATTACK) -> bool:
 	if not is_alive:
-		return
+		return false
 
-	var def_result: Dictionary = _attempt_defense(attacker_skill)
+	var def_result: Dictionary = _attempt_defense(attacker_skill, _action_type)
 	if def_result.defended:
-		return
+		return true
 
 	var effective: int = _calculate_damage(amount)
 	hp -= effective
@@ -472,29 +537,31 @@ func take_damage(amount: int, attacker_skill: int = 0, _action_type: int = Actio
 	if hp <= 0:
 		is_alive = false
 		_die()
+	return false
 
 
-func _attempt_defense(attacker_skill: int) -> Dictionary:
+func _attempt_defense(attacker_skill: int, action_type: int = Action.ATTACK) -> Dictionary:
 	var attack_roll := attacker_skill + randi_range(1, 5)
 	var effective_dodge: int = dodge_skill - (2 if is_prone else 0)
 	var result := { "defended": false, "attack_roll": attack_roll, "defense_roll": 0 }
+	var is_ranged := (action_type == Action.RANGED or action_type == Action.THROW)
 
 	if defensive_option == 0:
-		if not _has_usable_weapon():
+		if not (_has_usable_weapon() or _has_shield_equipped()):
+			return result
+		if is_ranged and not _can_parry_ranged():
 			return result
 		result.defense_roll = parry_skill + randi_range(1, 5)
 		if result.defense_roll >= attack_roll:
 			if inventory and inventory.has_method("degrade_equipped_weapon"):
 				inventory.degrade_equipped_weapon()
-			else:
-				weapon_durability -= 1
-				if weapon_durability <= 0:
-					weapon_broken = true
 			_show_defense_result("Parry!")
 			_update_health_bar()
 			_charge_defense_cost()
 			result.defended = true
 	else:
+		if is_ranged and not _can_dodge_ranged():
+			return result
 		result.defense_roll = effective_dodge + randi_range(1, 5)
 		if result.defense_roll >= attack_roll:
 			_show_defense_result("Dodge!")
@@ -600,7 +667,22 @@ func _avoid_overlap(tile: Vector3, exclude: Node) -> Vector3:
 func _has_usable_weapon() -> bool:
 	if inventory and inventory.has_method("has_weapon_equipped"):
 		return inventory.has_weapon_equipped()
-	return has_weapon and not weapon_broken
+	return false
+
+func _has_shield_equipped() -> bool:
+	if inventory and inventory.has_method("is_shield_equipped"):
+		return inventory.is_shield_equipped()
+	return false
+
+func _can_parry_ranged() -> bool:
+	if inventory and inventory.has_method("can_parry_ranged"):
+		return inventory.can_parry_ranged()
+	return false
+
+func _can_dodge_ranged() -> bool:
+	if inventory and inventory.has_method("can_dodge_ranged"):
+		return inventory.can_dodge_ranged()
+	return false
 
 
 func _can_move() -> bool:
@@ -646,18 +728,22 @@ func _update_health_bar() -> void:
 			text += "Armor:" + str(armor) + " "
 		if physical_resistance > 0:
 			text += "Res:" + str(physical_resistance) + "%"
-	if _has_usable_weapon():
-		var dur_text := ""
-		if inventory and inventory.has_method("get_equipped_weapon"):
-			var eq: ItemResource = inventory.get_equipped_weapon()
-			if eq:
-				dur_text = eq.item_name + ":" + str(eq.durability)
-		if dur_text == "":
-			if weapon_broken:
-				dur_text = "Weapon:Broken"
-			else:
-				dur_text = "Weapon:" + str(weapon_durability)
-		text += "\n" + dur_text
+	# Show equipped gear
+	var gear_lines := []
+	if inventory and inventory.has_method("get_equipped_weapon"):
+		var main: ItemResource = inventory.get_equipped_weapon()
+		if main:
+			gear_lines.append("RH:" + main.item_name + "(" + str(main.durability) + ")")
+	if inventory and inventory.has_method("get_equipped_offhand"):
+		var off: ItemResource = inventory.get_equipped_offhand()
+		if off:
+			gear_lines.append("LH:" + off.item_name + "(" + str(off.durability) + ")")
+	if inventory and inventory.has_method("get_armor_bonus"):
+		var arm: ItemResource = inventory.armor
+		if arm:
+			gear_lines.append("Armor:" + arm.item_name)
+	if not gear_lines.is_empty():
+		text += "\n" + " ".join(gear_lines)
 	if defensive_option == 0:
 		text += " Stance:Parry"
 	else:
@@ -683,6 +769,17 @@ func _snap_to_grid(pos: Vector3) -> Vector3:
 func _is_in_range(target: Vector3) -> bool:
 	var dist: float = abs(target.x - position.x) + abs(target.z - position.z)
 	return dist <= MOVE_RANGE * GRID_SIZE
+
+
+func _is_tile_occupied_by_others(tile: Vector3, exclude: Node = null) -> bool:
+	for c in get_tree().get_nodes_in_group("combatants"):
+		if not is_instance_valid(c) or c == exclude:
+			continue
+		var current_tile: Vector3 = c._snap_to_grid(c.position)
+		var target_tile: Vector3 = c._snap_to_grid(c.target_position)
+		if current_tile.distance_to(tile) < 0.5 or target_tile.distance_to(tile) < 0.5:
+			return true
+	return false
 
 
 func _physics_process(delta: float) -> void:
@@ -726,6 +823,8 @@ func _on_move_complete() -> void:
 			cost = throw_cost
 		Action.PICKUP:
 			cost = 1
+		Action.EQUIP:
+			cost = equip_cost
 	cost = max(cost, 1)
 	var combat_mgr := get_parent().get_node_or_null("CombatManager")
 	if combat_mgr:

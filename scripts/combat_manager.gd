@@ -215,6 +215,14 @@ func _spawn_ground_items() -> void:
 	dagger.durability = 5
 	_spawn_gi(dagger, Vector3(-6, 0.2, -4))
 
+	# Wooden Shield at (-3, 0.2, -6)
+	var shield := ItemResource.new()
+	shield.item_name = "Wooden Shield"
+	shield.item_type = ItemResource.ItemType.SHIELD
+	shield.durability = 10
+	shield.is_shield = true
+	_spawn_gi(shield, Vector3(-3, 0.2, -6))
+
 
 func _spawn_gi(item: ItemResource, at: Vector3) -> void:
 	var gi := MeshInstance3D.new()

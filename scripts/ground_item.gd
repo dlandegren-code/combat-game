@@ -1,7 +1,7 @@
 extends MeshInstance3D
 ## A visible item on the ground that can be picked up
 
-var item_resource: ItemResource
+@export var item_resource: ItemResource
 
 func _ready() -> void:
 	add_to_group("pickups")
@@ -19,12 +19,18 @@ func _apply_visual() -> void:
 		ItemResource.ItemType.THROWABLE:
 			_set_color(Color(0.75, 0.55, 0.15, 1))  ## darker gold
 			_set_size(Vector3(0.3, 0.08, 0.15))
+		ItemResource.ItemType.SHIELD:
+			_set_color(Color(0.6, 0.7, 0.8, 1))  ## silver-blue for shields
+			_set_size(Vector3(0.3, 0.12, 0.3))
 		ItemResource.ItemType.AMMO:
 			_set_color(Color(0.3, 0.5, 0.85, 1))  ## blue for ammo
 			_set_size(Vector3(0.15, 0.15, 0.15))
 		ItemResource.ItemType.CONSUMABLE:
 			_set_color(Color(0.85, 0.2, 0.2, 1))  ## red for consumables
 			_set_size(Vector3(0.18, 0.18, 0.18))
+		ItemResource.ItemType.ARMOR:
+			_set_color(Color(0.4, 0.6, 0.4, 1))  ## green for armor
+			_set_size(Vector3(0.35, 0.12, 0.25))
 
 	# Add a name label floating above
 	var label := Label3D.new()

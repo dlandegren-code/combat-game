@@ -30,12 +30,13 @@ func refresh() -> void:
 		_clear()
 		return
 
-	# Rebuild slot display
+	title_label.text = active.get("character_name") + " - Inventory"
+
+	# Rebuild slot display if slot count changed
 	var needed := 0
 	if inv.has_method("slot_count"):
 		needed = inv.get("MAX_SLOTS") if inv.get("MAX_SLOTS") else 4
 
-	# Only rebuild if slot count changed
 	if slot_list.get_child_count() != needed:
 		_clear()
 		for i in range(needed):
@@ -74,9 +75,10 @@ func refresh() -> void:
 
 			slot_list.add_child(row)
 
-	# Update text on each slot row
 	var items: Array = inv.get("items") if inv.get("items") else []
-	var equipped: int = inv.get("equipped_slot") if inv.get("equipped_slot") else -1
+	var main_hand: ItemResource = inv.get("right_hand") if inv.get("right_hand") else null
+	var off_hand: ItemResource = inv.get("left_hand") if inv.get("left_hand") else null
+	var armor_item: ItemResource = inv.get("armor") if inv.get("armor") else null
 
 	for i in range(needed):
 		var row: HBoxContainer = slot_list.get_child(i)
@@ -88,8 +90,29 @@ func refresh() -> void:
 		if i < items.size() and items[i] != null:
 			var item: ItemResource = items[i]
 			var desc := item.item_name
-			if item.item_type == ItemResource.ItemType.WEAPON or item.item_type == ItemResource.ItemType.THROWABLE:
+			if item.item_type == ItemResource.ItemType.WEAPON or item.item_type == ItemResource.ItemType.THROWABLE or item.item_type == ItemResource.ItemType.SHIELD:
 				desc += " (Dur:" + str(item.durability) + ")"
+			if item.item_type == ItemResource.ItemType.ARMOR:
+				desc += " (Armor:" + str(item.armor_bonus) + ")"
+			if item.handedness == ItemResource.Handedness.TWO_HANDED:
+				desc += " 2H"
+			if item.is_shield:
+				desc += " [Shield]"
+			if item.parry_ranged:
+				desc += " [ParryRanged]"
+			if item.dodge_ranged:
+				desc += " [DodgeRanged]"
+
+			# Show which slot this item is equipped in
+			if item == main_hand and item == off_hand:
+				desc += " [2H]"
+			elif item == main_hand:
+				desc += " [RH]"
+			elif item == off_hand:
+				desc += " [LH]"
+			elif item == armor_item:
+				desc += " [Armor]"
+
 			name_label.text = desc
 
 			# Use button only for consumables and ammo
@@ -100,17 +123,17 @@ func refresh() -> void:
 				use_btn.visible = false
 				use_btn.disabled = true
 
-			# Equip button only for weapons and throwables
-			if item.item_type == ItemResource.ItemType.WEAPON or item.item_type == ItemResource.ItemType.THROWABLE:
+			# Equip/unequip button for weapons, throwables, shields, and armor
+			if item.item_type == ItemResource.ItemType.WEAPON or item.item_type == ItemResource.ItemType.THROWABLE or item.item_type == ItemResource.ItemType.SHIELD or item.item_type == ItemResource.ItemType.ARMOR:
 				equip_btn.visible = true
-				equip_btn.disabled = false
-				if i == equipped:
+				if item == main_hand or item == off_hand or item == armor_item:
 					name_label.self_modulate = Color(1, 0.85, 0.3, 1)
-					equip_btn.text = "*"
-					equip_btn.disabled = true
+					equip_btn.text = "U"
+					equip_btn.disabled = false
 				else:
 					name_label.self_modulate = Color(1, 1, 1, 1)
 					equip_btn.text = "E"
+					equip_btn.disabled = false
 			else:
 				equip_btn.visible = false
 				equip_btn.disabled = true
@@ -142,10 +165,25 @@ func _on_use(slot_index: int, active: Node) -> void:
 
 
 func _on_equip(slot_index: int, active: Node) -> void:
+	## Equipping/unequipping is a full combat action; it must be the active character's turn.
 	var inv: Node = active.get_node_or_null("Inventory")
-	if inv and inv.has_method("equip"):
-		inv.equip(slot_index)
-		if active.has_method("_update_health_bar"):
+	if not inv or not inv.has_method("unequip_item"):
+		return
+	var item: ItemResource = inv.items[slot_index]
+	if item == null:
+		return
+	var is_equipped := false
+	if item == inv.get("right_hand") or item == inv.get("left_hand") or item == inv.get("armor"):
+		is_equipped = true
+	if is_equipped:
+		if active.has_method("unequip_item"):
+			active.unequip_item(item)
+		elif active.has_method("_update_health_bar"):
+			active._update_health_bar()
+	else:
+		if active.has_method("equip_weapon"):
+			active.equip_weapon(slot_index)
+		elif active.has_method("_update_health_bar"):
 			active._update_health_bar()
 
 
