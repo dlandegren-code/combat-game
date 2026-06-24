@@ -92,7 +92,7 @@ func _configure_from_type() -> void:
 			shove_skill = 1; trip_skill = 1
 			shove_cost = 3; trip_cost = 3
 			move_cost_per_tile = 1; attack_cost = 2
-			ranged_skill = 5; ranged_range = 10; ranged_cost = 3
+			ranged_skill = 5; ranged_range = 15; ranged_cost = 3
 			ammo = 6; max_ammo = 6
 			throw_skill = 2; throw_range = 4; throw_cost = 3
 		EnemyType.BOSS:
@@ -213,8 +213,13 @@ func _take_turn_archer() -> void:
 			end_my_turn(_pending_cost)
 		return
 
-	# In optimal range (4-10 tiles): fire arrows
-	if ammo > 0 and dist_to_player >= 4 * GRID_SIZE and dist_to_player <= ranged_range * GRID_SIZE:
+	# In optimal range (4+ tiles): fire arrows
+	var effective_ranged_range: int = ranged_range
+	if inventory and inventory.has_method("get_equipped_ranged_range"):
+		var item_range: int = inventory.get_equipped_ranged_range()
+		if item_range > 0:
+			effective_ranged_range = item_range
+	if ammo > 0 and dist_to_player >= 4 * GRID_SIZE and dist_to_player <= effective_ranged_range * GRID_SIZE:
 		if _has_line_of_sight(player):
 			_action_used = Action.RANGED
 			ammo -= 1
@@ -236,7 +241,7 @@ func _take_turn_archer() -> void:
 		return
 
 	# Move toward ideal range (if too far, move closer; if too close, back up)
-	if dist_to_player > 8 * GRID_SIZE:
+	if dist_to_player > effective_ranged_range * 0.8 * GRID_SIZE:
 		_move_toward(player)
 		_action_used = Action.MOVE
 		_pending_cost = move_cost_per_tile

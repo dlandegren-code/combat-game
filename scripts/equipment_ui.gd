@@ -63,6 +63,14 @@ func _ensure_rows(count: int) -> void:
 		stat_label.add_theme_font_size_override("font_size", 12)
 		row.add_child(stat_label)
 
+		var drop_btn := Button.new()
+		drop_btn.name = "Drop"
+		drop_btn.text = "Drop"
+		drop_btn.custom_minimum_size = Vector2(40, 0)
+		drop_btn.add_theme_font_size_override("font_size", 10)
+		drop_btn.pressed.connect(_on_unequip.bind(slot_list.get_child_count()))
+		row.add_child(drop_btn)
+
 		slot_list.add_child(row)
 
 
@@ -71,6 +79,9 @@ func _set_row(index: int, slot_name: String, data: Dictionary) -> void:
 	row.get_node("Slot").text = slot_name + ":"
 	row.get_node("Item").text = data.get("name", "(empty)")
 	row.get_node("Stat").text = data.get("stat", "")
+	var drop_btn: Button = row.get_node("Drop")
+	var has_item: bool = data.get("name", "(empty)") != "(empty)"
+	drop_btn.disabled = not has_item
 
 
 func _hand_desc(item: ItemResource, two_handed: bool, offhand: bool = false) -> Dictionary:
@@ -100,6 +111,33 @@ func _armor_desc(item: ItemResource) -> Dictionary:
 	if item.resistance_bonus != 0:
 		stat += " Res+" + str(item.resistance_bonus) + "%"
 	return { "name": item.item_name, "stat": stat }
+
+
+func _on_unequip(slot_index: int) -> void:
+	var combat_mgr := get_parent().get_node_or_null("CombatManager")
+	if not combat_mgr:
+		return
+	var active: Node = combat_mgr.current_combatant
+	if not active or not is_instance_valid(active) or not active.get("is_player_controlled"):
+		return
+	var inv: Node = active.get_node_or_null("Inventory")
+	if not inv:
+		return
+
+	var item: ItemResource = null
+	match slot_index:
+		0:  # Right Hand
+			item = inv.get("right_hand")
+			if item and active.has_method("unequip_item"):
+				active.unequip_item(item)
+		1:  # Left Hand
+			item = inv.get("left_hand")
+			if item and active.has_method("unequip_item"):
+				active.unequip_item(item)
+		2:  # Armor
+			item = inv.get("armor")
+			if item and active.has_method("unequip_item"):
+				active.unequip_item(item)
 
 
 func _clear() -> void:

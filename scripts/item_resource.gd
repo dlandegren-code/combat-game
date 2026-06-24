@@ -22,6 +22,8 @@ enum Handedness { ONE_HANDED, TWO_HANDED }
 @export var durability: int = 10
 @export var shove_bonus: int = 0
 @export var trip_bonus: int = 0
+@export var ranged_range: int = 0   ## max tiles when used as ranged weapon; 0 = use character stat
+@export var throw_range: int = 0    ## max tiles when thrown; 0 = use character stat
 
 ## Defense properties granted while this item is equipped
 @export var is_shield: bool = false    ## Allows parrying ranged attacks
@@ -71,6 +73,10 @@ func get_description() -> String:
 		desc += " Heal:" + str(heal_amount)
 	if ammo_amount > 0:
 		desc += " Ammo:" + str(ammo_amount)
+	if ranged_range > 0:
+		desc += " RngRange:" + str(ranged_range)
+	if throw_range > 0:
+		desc += " ThrowRange:" + str(throw_range)
 	if item_type == ItemType.WEAPON or item_type == ItemType.THROWABLE or item_type == ItemType.SHIELD:
 		desc += " Dur:" + str(durability)
 	if is_shield:

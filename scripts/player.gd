@@ -24,7 +24,7 @@ const MOVE_SPEED := 6.0
 @export var ranged_cost: int = 3
 @export var ammo: int = 0
 @export var max_ammo: int = 0
-@export var ranged_range: int = 8       ## max tiles for ranged
+@export var ranged_range: int = 15      ## max tiles for ranged
 @export var throw_skill: int = 3       ## used for thrown weapon attacks
 @export var throw_cost: int = 3
 @export var throw_range: int = 5       ## max tiles for thrown
@@ -332,11 +332,11 @@ func _can_target(collider: Node) -> bool:
 		Action.RANGED:
 			if ammo <= 0:
 				return false
-			return dist <= ranged_range * GRID_SIZE and _has_line_of_sight(collider)
+			return dist <= _get_effective_ranged_range() * GRID_SIZE and _has_line_of_sight(collider)
 		Action.THROW:
 			if not _has_usable_weapon():
 				return false
-			return dist <= throw_range * GRID_SIZE and _has_line_of_sight(collider)
+			return dist <= _get_effective_throw_range() * GRID_SIZE and _has_line_of_sight(collider)
 	return false
 
 
@@ -507,6 +507,22 @@ func unequip_item(item: ItemResource) -> void:
 	_action_used = Action.EQUIP
 	is_moving = true
 	target_position = position
+
+
+func _get_effective_ranged_range() -> int:
+	if inventory and inventory.has_method("get_equipped_ranged_range"):
+		var item_range: int = inventory.get_equipped_ranged_range()
+		if item_range > 0:
+			return item_range
+	return ranged_range
+
+
+func _get_effective_throw_range() -> int:
+	if inventory and inventory.has_method("get_equipped_throw_range"):
+		var item_range: int = inventory.get_equipped_throw_range()
+		if item_range > 0:
+			return item_range
+	return throw_range
 
 
 func _get_effective_attack_skill() -> int:

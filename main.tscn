@@ -76,6 +76,8 @@ floor_stop_on_slope = false
 floor_block_on_wall = false
 floor_snap_length = 0.0
 script = ExtResource("1_player")
+ammo = 6.0
+max_ammo = 10.0
 
 [node name="Mesh" type="MeshInstance3D" parent="Player" unique_id=1393056996]
 visible = false
@@ -106,6 +108,13 @@ starting_item_3_name = "Leather Armor"
 starting_item_3_type = 5
 starting_item_3_equip_slot = 3
 starting_item_3_armor = 1
+starting_item_4_name = "Short Bow"
+starting_item_4_equip_slot = 1.0
+starting_item_4_handedness = 1.0
+starting_item_4_attack = 1.0
+starting_item_4_damage = 1.0
+starting_item_4_ranged_range = 15.0
+starting_item_4_throw_range = 2.0
 
 [node name="CharacterModel" parent="Player" unique_id=1087090325 instance=ExtResource("4_4c57u")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
@@ -171,7 +180,6 @@ font_size = 36
 script = ExtResource("6_inv")
 starting_item_name = "Short Bow"
 starting_item_equip_slot = 1
-starting_item_handedness = 1
 starting_item_attack = 1
 starting_item_damage = 1
 starting_item_durability = 6
@@ -235,8 +243,8 @@ dodge_skill = 7
 defensive_option = 1
 shove_skill = 2
 trip_skill = 3
-ammo = 5
-max_ammo = 10
+ammo = 6.0
+max_ammo = 10.0
 
 [node name="Mesh" type="MeshInstance3D" parent="Player2" unique_id=1720006444]
 visible = false
@@ -261,6 +269,13 @@ starting_item_2_name = "Leather Armor"
 starting_item_2_type = 5
 starting_item_2_equip_slot = 3
 starting_item_2_armor = 1
+starting_item_3_name = "Short Bow"
+starting_item_3_equip_slot = 1.0
+starting_item_3_handedness = 1.0
+starting_item_3_attack = 1.0
+starting_item_3_damage = 1.0
+starting_item_3_ranged_range = 15.0
+starting_item_3_throw_range = 2.0
 
 [node name="CharacterModel" parent="Player2" unique_id=2132221886 instance=ExtResource("7_dg77c")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
@@ -391,10 +406,10 @@ script = ExtResource("7_inv_ui")
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -220.0
+offset_left = -340.0
 offset_top = 210.0
 offset_right = -10.0
-offset_bottom = 400.0
+offset_bottom = 440.0
 
 [node name="Title" type="Label" parent="InventoryPanel/Panel" unique_id=198958552]
 layout_mode = 0
@@ -422,10 +437,10 @@ script = ExtResource("8_equip")
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -220.0
-offset_top = 410.0
+offset_left = -340.0
+offset_top = 450.0
 offset_right = -10.0
-offset_bottom = 550.0
+offset_bottom = 610.0
 
 [node name="Title" type="Label" parent="EquipmentPanel/Panel" unique_id=198958553]
 layout_mode = 0

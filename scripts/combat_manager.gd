@@ -204,6 +204,7 @@ func _spawn_ground_items() -> void:
 	hammer.attack_bonus = 1
 	hammer.damage_bonus = 3
 	hammer.durability = 8
+	hammer.throw_range = 3
 	_spawn_gi(hammer, Vector3(1, 0.2, -5))
 
 	# Dagger at (-6, 0.2, -4)
@@ -213,6 +214,7 @@ func _spawn_ground_items() -> void:
 	dagger.attack_bonus = 4
 	dagger.damage_bonus = 0
 	dagger.durability = 5
+	dagger.throw_range = 7
 	_spawn_gi(dagger, Vector3(-6, 0.2, -4))
 
 	# Wooden Shield at (-3, 0.2, -6)
@@ -222,6 +224,18 @@ func _spawn_ground_items() -> void:
 	shield.durability = 10
 	shield.is_shield = true
 	_spawn_gi(shield, Vector3(-3, 0.2, -6))
+
+	# Longbow at (5, 0.2, 4)
+	var bow := ItemResource.new()
+	bow.item_name = "Longbow"
+	bow.item_type = ItemResource.ItemType.WEAPON
+	bow.handedness = ItemResource.Handedness.TWO_HANDED
+	bow.attack_bonus = 2
+	bow.damage_bonus = 1
+	bow.durability = 12
+	bow.ranged_range = 20
+	bow.throw_range = 2
+	_spawn_gi(bow, Vector3(5, 0.2, 4))
 
 
 func _spawn_gi(item: ItemResource, at: Vector3) -> void:

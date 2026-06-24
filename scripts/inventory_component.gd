@@ -1,7 +1,7 @@
 extends Node
 ## Per-character inventory: holds items, allows equip/drop/pickup
 
-const MAX_SLOTS := 4
+const MAX_SLOTS := 5
 
 enum EquipSlot { ANY_HAND, RIGHT_HAND, LEFT_HAND, ARMOR }
 
@@ -17,6 +17,8 @@ enum EquipSlot { ANY_HAND, RIGHT_HAND, LEFT_HAND, ARMOR }
 @export var starting_item_is_shield: bool = false
 @export var starting_item_parry_ranged: bool = false
 @export var starting_item_dodge_ranged: bool = false
+@export var starting_item_ranged_range: int = 0
+@export var starting_item_throw_range: int = 0
 
 @export var starting_item_2_name: String = ""
 @export var starting_item_2_type: int = ItemResource.ItemType.WEAPON
@@ -30,6 +32,8 @@ enum EquipSlot { ANY_HAND, RIGHT_HAND, LEFT_HAND, ARMOR }
 @export var starting_item_2_is_shield: bool = false
 @export var starting_item_2_parry_ranged: bool = false
 @export var starting_item_2_dodge_ranged: bool = false
+@export var starting_item_2_ranged_range: int = 0
+@export var starting_item_2_throw_range: int = 0
 
 @export var starting_item_3_name: String = ""
 @export var starting_item_3_type: int = ItemResource.ItemType.WEAPON
@@ -43,6 +47,23 @@ enum EquipSlot { ANY_HAND, RIGHT_HAND, LEFT_HAND, ARMOR }
 @export var starting_item_3_is_shield: bool = false
 @export var starting_item_3_parry_ranged: bool = false
 @export var starting_item_3_dodge_ranged: bool = false
+@export var starting_item_3_ranged_range: int = 0
+@export var starting_item_3_throw_range: int = 0
+
+@export var starting_item_4_name: String = ""
+@export var starting_item_4_type: int = ItemResource.ItemType.WEAPON
+@export var starting_item_4_equip_slot: int = ItemResource.EquipSlot.ANY_HAND
+@export var starting_item_4_handedness: int = ItemResource.Handedness.ONE_HANDED
+@export var starting_item_4_attack: int = 0
+@export var starting_item_4_damage: int = 0
+@export var starting_item_4_durability: int = 10
+@export var starting_item_4_armor: int = 0
+@export var starting_item_4_resistance: int = 0
+@export var starting_item_4_is_shield: bool = false
+@export var starting_item_4_parry_ranged: bool = false
+@export var starting_item_4_dodge_ranged: bool = false
+@export var starting_item_4_ranged_range: int = 0
+@export var starting_item_4_throw_range: int = 0
 
 var items: Array  ## Array[ItemResource], null means empty slot
 
@@ -61,20 +82,29 @@ func _ready() -> void:
 	_add_starting_item(starting_item_name, starting_item_type, starting_item_equip_slot,
 		starting_item_handedness, starting_item_attack, starting_item_damage,
 		starting_item_durability, starting_item_armor, starting_item_resistance,
-		starting_item_is_shield, starting_item_parry_ranged, starting_item_dodge_ranged)
+		starting_item_is_shield, starting_item_parry_ranged, starting_item_dodge_ranged,
+		starting_item_ranged_range, starting_item_throw_range)
 	_add_starting_item(starting_item_2_name, starting_item_2_type, starting_item_2_equip_slot,
 		starting_item_2_handedness, starting_item_2_attack, starting_item_2_damage,
 		starting_item_2_durability, starting_item_2_armor, starting_item_2_resistance,
-		starting_item_2_is_shield, starting_item_2_parry_ranged, starting_item_2_dodge_ranged)
+		starting_item_2_is_shield, starting_item_2_parry_ranged, starting_item_2_dodge_ranged,
+		starting_item_2_ranged_range, starting_item_2_throw_range)
 	_add_starting_item(starting_item_3_name, starting_item_3_type, starting_item_3_equip_slot,
 		starting_item_3_handedness, starting_item_3_attack, starting_item_3_damage,
 		starting_item_3_durability, starting_item_3_armor, starting_item_3_resistance,
-		starting_item_3_is_shield, starting_item_3_parry_ranged, starting_item_3_dodge_ranged)
+		starting_item_3_is_shield, starting_item_3_parry_ranged, starting_item_3_dodge_ranged,
+		starting_item_3_ranged_range, starting_item_3_throw_range)
+	_add_starting_item(starting_item_4_name, starting_item_4_type, starting_item_4_equip_slot,
+		starting_item_4_handedness, starting_item_4_attack, starting_item_4_damage,
+		starting_item_4_durability, starting_item_4_armor, starting_item_4_resistance,
+		starting_item_4_is_shield, starting_item_4_parry_ranged, starting_item_4_dodge_ranged,
+		starting_item_4_ranged_range, starting_item_4_throw_range)
 
 
 func _add_starting_item(name_str: String, type: int, slot: int, handed: int,
 		atk: int, dmg: int, dur: int, armor_val: int, res: int,
-		shield: bool, parry: bool, dodge: bool) -> void:
+		shield: bool, parry: bool, dodge: bool,
+		rng_range: int = 0, thr_range: int = 0) -> void:
 	if name_str == "":
 		return
 	var item := ItemResource.new()
@@ -90,6 +120,8 @@ func _add_starting_item(name_str: String, type: int, slot: int, handed: int,
 	item.is_shield = shield
 	item.parry_ranged = parry
 	item.dodge_ranged = dodge
+	item.ranged_range = rng_range
+	item.throw_range = thr_range
 	add_item(item)
 	# Auto-equip starting items into their intended slot
 	if item.can_equip_in(ItemResource.EquipSlot.RIGHT_HAND):
@@ -293,6 +325,20 @@ func can_dodge_ranged() -> bool:
 	if main and main.dodge_ranged:
 		return true
 	return false
+
+
+func get_equipped_ranged_range() -> int:
+	var weapon := get_equipped_weapon()
+	if weapon:
+		return weapon.ranged_range
+	return 0
+
+
+func get_equipped_throw_range() -> int:
+	var weapon := get_equipped_weapon()
+	if weapon:
+		return weapon.throw_range
+	return 0
 
 
 func get_armor_bonus() -> int:
