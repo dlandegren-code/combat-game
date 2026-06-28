@@ -460,8 +460,8 @@ func _refresh_socket(socket, item: ItemResource) -> void:
 				ItemResource.ItemType.SHIELD:
 					# Shield is already vertical (Y longest, X=0.84 wide, Z=0.14 thin)
 					# Push outward on left arm (positive X = outward from body on left side)
-					n3d.position = Vector3(0.2, 0, 0.1)
-					n3d.rotation_degrees = Vector3(0, 0, 0)
+					n3d.position = Vector3(0.2, 0, 0.15)
+					n3d.rotation_degrees = Vector3(0, 20, 0)
 			print("[Enemy] Weapon node after positioning: scale=%s pos=%s rot=%s" % [n3d.scale, n3d.position, n3d.rotation_degrees])
 		socket.add_child(node)
 		print("[Enemy] Weapon node added to socket, children=%d" % socket.get_child_count())

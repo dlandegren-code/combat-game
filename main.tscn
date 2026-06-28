@@ -235,6 +235,7 @@ dodge_skill = 7
 defensive_option = 1
 shove_skill = 2
 trip_skill = 3
+ammo = 12
 
 [node name="Mesh" type="MeshInstance3D" parent="Player2" unique_id=1720006444]
 visible = false
@@ -258,7 +259,7 @@ starting_item_durability = 5
 starting_item_2_name = "Leather Armor"
 starting_item_2_type = 5
 starting_item_2_equip_slot = 3
-starting_item_2_armor = 1
+starting_item_2_armor = 3
 starting_item_3_name = "Short Bow"
 
 [node name="CharacterModel" parent="Player2" unique_id=2132221886 instance=ExtResource("13_maled_wrapper")]
