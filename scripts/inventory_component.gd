@@ -229,6 +229,13 @@ func _equip_to(slot: int, item: ItemResource) -> void:
 	if not item.can_equip_in(slot):
 		return
 
+	# Check for a 2H weapon currently equipped BEFORE we null the reference
+	var has_2h_equipped := false
+	if right_hand and right_hand.handedness == ItemResource.Handedness.TWO_HANDED:
+		has_2h_equipped = true
+	if left_hand and left_hand.handedness == ItemResource.Handedness.TWO_HANDED:
+		has_2h_equipped = true
+
 	# Unequip anything currently in the target slot
 	unequip_slot(slot)
 
@@ -241,14 +248,10 @@ func _equip_to(slot: int, item: ItemResource) -> void:
 		_apply_item_bonuses(item)
 		return
 
-	# One-handed item: if equipping into a hand, unequip 2H weapon first
-	if slot == ItemResource.EquipSlot.RIGHT_HAND or slot == ItemResource.EquipSlot.LEFT_HAND:
-		if right_hand and right_hand.handedness == ItemResource.Handedness.TWO_HANDED:
-			unequip_slot(ItemResource.EquipSlot.RIGHT_HAND)
-			unequip_slot(ItemResource.EquipSlot.LEFT_HAND)
-		elif slot == ItemResource.EquipSlot.RIGHT_HAND and left_hand and left_hand.handedness == ItemResource.Handedness.TWO_HANDED:
-			unequip_slot(ItemResource.EquipSlot.RIGHT_HAND)
-			unequip_slot(ItemResource.EquipSlot.LEFT_HAND)
+	# If equipping into a hand and a 2H weapon was equipped, clean both hands
+	if has_2h_equipped and (slot == ItemResource.EquipSlot.RIGHT_HAND or slot == ItemResource.EquipSlot.LEFT_HAND):
+		unequip_slot(ItemResource.EquipSlot.RIGHT_HAND)
+		unequip_slot(ItemResource.EquipSlot.LEFT_HAND)
 
 	match slot:
 		ItemResource.EquipSlot.RIGHT_HAND:

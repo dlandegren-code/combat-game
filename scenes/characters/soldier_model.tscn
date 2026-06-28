@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://opvjw5on7r3a"]
+
+[ext_resource type="PackedScene" uid="uid://cp4r67tmcolap" path="res://assets/models/kenney/mini-arena/character-soldier.glb" id="1_base"]
+
+[node name="CharacterModel" type="Node3D" unique_id=544523370]
+
+[node name="character-soldier" parent="." unique_id=14041684 instance=ExtResource("1_base")]
+
+[node name="WeaponSocket" type="BoneAttachment3D" parent="character-soldier/character-soldier/Skeleton3D" unique_id=1135643429]
+bone_name = "arm-right"
+
+[node name="ShieldSocket" type="BoneAttachment3D" parent="character-soldier/character-soldier/Skeleton3D" unique_id=758480213]
+bone_name = "arm-left"
+
+[node name="HelmetSocket" type="BoneAttachment3D" parent="character-soldier/character-soldier/Skeleton3D" unique_id=373265250]
+bone_name = "head"

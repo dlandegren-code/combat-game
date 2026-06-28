@@ -4,15 +4,15 @@
 [ext_resource type="Script" uid="uid://cqq8m3hh3yh7e" path="res://scripts/enemy.gd" id="2_enemy"]
 [ext_resource type="Script" uid="uid://by7c3x5cgidj7" path="res://scripts/combat_manager.gd" id="3_turn"]
 [ext_resource type="Script" uid="uid://cgx1c6je2dbjs" path="res://scripts/grid.gd" id="4_1bvp3"]
-[ext_resource type="PackedScene" uid="uid://cp4r67tmcolap" path="res://assets/models/kenney/mini-arena/character-soldier.glb" id="4_4c57u"]
 [ext_resource type="Script" uid="uid://ce8bhcvhdkt2m" path="res://scripts/camera_controller.gd" id="5_camera"]
-[ext_resource type="PackedScene" uid="uid://bwi0nb7c2v4ea" path="res://assets/models/kenney/mini-dungeon/character-orc.glb" id="6_efxa6"]
 [ext_resource type="Script" uid="uid://cthubpsntwfxy" path="res://scripts/inventory_component.gd" id="6_inv"]
-[ext_resource type="PackedScene" uid="uid://dsjxvrpgqwixj" path="res://assets/models/kenney/mini-characters-1/character-male-d.glb" id="7_dg77c"]
 [ext_resource type="Script" uid="uid://bdvlysmli3u5i" path="res://scripts/inventory_ui.gd" id="7_inv_ui"]
 [ext_resource type="Script" uid="uid://danvl26xfdtrh" path="res://scripts/equipment_ui.gd" id="8_equip"]
 [ext_resource type="Script" uid="uid://beuvdl0vwtots" path="res://scripts/ground_item.gd" id="9_ground"]
 [ext_resource type="Resource" path="res://resources/items/wooden_shield.tres" id="10_shield"]
+[ext_resource type="PackedScene" uid="uid://opvjw5on7r3a" path="res://scenes/characters/soldier_model.tscn" id="11_soldier_wrapper"]
+[ext_resource type="PackedScene" uid="uid://ca2d2euqix8my" path="res://scenes/characters/orc_model.tscn" id="12_orc_wrapper"]
+[ext_resource type="PackedScene" path="res://scenes/characters/male_d_model.tscn" id="13_maled_wrapper"]
 
 [sub_resource type="StandardMaterial3D" id="mat_ground"]
 albedo_color = Color(0.35, 0.5, 0.25, 1)
@@ -76,8 +76,6 @@ floor_stop_on_slope = false
 floor_block_on_wall = false
 floor_snap_length = 0.0
 script = ExtResource("1_player")
-ammo = 6.0
-max_ammo = 10.0
 
 [node name="Mesh" type="MeshInstance3D" parent="Player" unique_id=1393056996]
 visible = false
@@ -109,14 +107,8 @@ starting_item_3_type = 5
 starting_item_3_equip_slot = 3
 starting_item_3_armor = 1
 starting_item_4_name = "Short Bow"
-starting_item_4_equip_slot = 1.0
-starting_item_4_handedness = 1.0
-starting_item_4_attack = 1.0
-starting_item_4_damage = 1.0
-starting_item_4_ranged_range = 15.0
-starting_item_4_throw_range = 2.0
 
-[node name="CharacterModel" parent="Player" unique_id=1087090325 instance=ExtResource("4_4c57u")]
+[node name="CharacterModel" parent="Player" unique_id=1087090325 instance=ExtResource("11_soldier_wrapper")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 
 [node name="Enemy" type="CharacterBody3D" parent="." unique_id=750982114]
@@ -149,7 +141,7 @@ starting_item_name = "Goblin Dagger"
 starting_item_attack = 1
 starting_item_durability = 4
 
-[node name="CharacterModel" parent="Enemy" unique_id=126384533 instance=ExtResource("6_efxa6")]
+[node name="CharacterModel" parent="Enemy" unique_id=126384533 instance=ExtResource("12_orc_wrapper")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 
 [node name="ArcherEnemy" type="CharacterBody3D" parent="." unique_id=1733349018]
@@ -184,7 +176,7 @@ starting_item_attack = 1
 starting_item_damage = 1
 starting_item_durability = 6
 
-[node name="CharacterModel" parent="ArcherEnemy" unique_id=942337605 instance=ExtResource("6_efxa6")]
+[node name="CharacterModel" parent="ArcherEnemy" unique_id=942337605 instance=ExtResource("12_orc_wrapper")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 
 [node name="BossEnemy" type="CharacterBody3D" parent="." unique_id=2118022327]
@@ -225,7 +217,7 @@ starting_item_2_equip_slot = 3
 starting_item_2_armor = 2
 starting_item_2_resistance = 10
 
-[node name="CharacterModel" parent="BossEnemy" unique_id=1141627769 instance=ExtResource("6_efxa6")]
+[node name="CharacterModel" parent="BossEnemy" unique_id=1141627769 instance=ExtResource("12_orc_wrapper")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 
 [node name="Player2" type="CharacterBody3D" parent="." unique_id=1766136452]
@@ -243,8 +235,6 @@ dodge_skill = 7
 defensive_option = 1
 shove_skill = 2
 trip_skill = 3
-ammo = 6.0
-max_ammo = 10.0
 
 [node name="Mesh" type="MeshInstance3D" parent="Player2" unique_id=1720006444]
 visible = false
@@ -270,14 +260,8 @@ starting_item_2_type = 5
 starting_item_2_equip_slot = 3
 starting_item_2_armor = 1
 starting_item_3_name = "Short Bow"
-starting_item_3_equip_slot = 1.0
-starting_item_3_handedness = 1.0
-starting_item_3_attack = 1.0
-starting_item_3_damage = 1.0
-starting_item_3_ranged_range = 15.0
-starting_item_3_throw_range = 2.0
 
-[node name="CharacterModel" parent="Player2" unique_id=2132221886 instance=ExtResource("7_dg77c")]
+[node name="CharacterModel" parent="Player2" unique_id=2132221886 instance=ExtResource("13_maled_wrapper")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 
 [node name="CombatManager" type="Node" parent="." unique_id=1411475820]
