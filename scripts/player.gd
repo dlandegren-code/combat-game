@@ -1036,7 +1036,7 @@ func _on_move_complete() -> void:
 	var cost := 0
 	match _action_used:
 		Action.MOVE:
-			cost = _tiles_moved * move_cost_per_tile
+			cost = move_cost_per_tile #_tiles_moved * move_cost_per_tile
 		Action.ATTACK:
 			cost = attack_cost
 		Action.SHOVE:

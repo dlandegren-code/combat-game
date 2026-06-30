@@ -2,6 +2,7 @@ extends CharacterBody3D
 ## Enemy: AI-controlled combatant with multiple enemy types
 
 const GRID_SIZE := 1.0
+const MOVE_RANGE := 3
 const MOVE_SPEED := 4.0
 
 enum EnemyType { GOBLIN, ARCHER, BOSS }
@@ -558,6 +559,7 @@ func _move_toward(target: Node) -> void:
 	dir_to.y = 0
 	if dir_to.length() < 0.01:
 		dir_to = Vector3.RIGHT
+	var orig_dist_to = dir_to;	
 	dir_to = dir_to.normalized()
 
 	var move_dir := Vector3.ZERO
@@ -566,7 +568,8 @@ func _move_toward(target: Node) -> void:
 	else:
 		move_dir.z = sign(dir_to.z)
 
-	var dest := _snap_to_grid(position + move_dir * GRID_SIZE)
+	var move_dist = min(MOVE_RANGE, orig_dist_to.length())
+	var dest := _snap_to_grid(position + move_dir * GRID_SIZE * move_dist)
 	dest = _avoid_overlap(dest, self)
 	target_position = dest
 

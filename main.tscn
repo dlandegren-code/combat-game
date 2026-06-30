@@ -154,6 +154,7 @@ floor_snap_length = 0.0
 script = ExtResource("2_enemy")
 enemy_type = 1
 ammo = 8
+max_ammo = 13
 
 [node name="Mesh" type="MeshInstance3D" parent="ArcherEnemy" unique_id=1443505065]
 visible = false
