@@ -153,6 +153,7 @@ floor_block_on_wall = false
 floor_snap_length = 0.0
 script = ExtResource("2_enemy")
 enemy_type = 1
+ammo = 8
 
 [node name="Mesh" type="MeshInstance3D" parent="ArcherEnemy" unique_id=1443505065]
 visible = false
@@ -235,7 +236,8 @@ dodge_skill = 7
 defensive_option = 1
 shove_skill = 2
 trip_skill = 3
-ammo = 12
+ammo = 7
+max_ammo = 12
 
 [node name="Mesh" type="MeshInstance3D" parent="Player2" unique_id=1720006444]
 visible = false

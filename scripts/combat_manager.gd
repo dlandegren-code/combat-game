@@ -194,7 +194,7 @@ func _spawn_ground_items() -> void:
 	var arrows := ItemResource.new()
 	arrows.item_name = "Arrow Bundle"
 	arrows.item_type = ItemResource.ItemType.AMMO
-	arrows.ammo_amount = 4
+	arrows.ammo_amount = 9
 	_spawn_gi(arrows, Vector3(3, 0.2, -3))
 
 	# Warhammer at (1, 0.2, -5)
