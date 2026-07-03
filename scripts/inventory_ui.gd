@@ -156,7 +156,23 @@ func _clear() -> void:
 	title_label.text = "Inventory"
 
 
-func _on_use(slot_index: int, active: Node) -> void:
+func _current_player() -> Node:
+	## The combatant the panel is currently showing. Button callbacks resolve this
+	## fresh instead of trusting the combatant bound when the rows were last built
+	## (which goes stale as turns advance without the slot count changing).
+	var combat_mgr := get_parent().get_node_or_null("CombatManager")
+	if not combat_mgr:
+		return null
+	var cur: Node = combat_mgr.current_combatant
+	if not cur or not is_instance_valid(cur) or not cur.get("is_player_controlled"):
+		return null
+	return cur
+
+
+func _on_use(slot_index: int, _bound: Node) -> void:
+	var active := _current_player()
+	if not active:
+		return
 	var inv: Node = active.get_node_or_null("Inventory")
 	if inv and inv.has_method("use_consumable"):
 		if inv.use_consumable(slot_index):
@@ -164,8 +180,11 @@ func _on_use(slot_index: int, active: Node) -> void:
 				active._update_health_bar()
 
 
-func _on_equip(slot_index: int, active: Node) -> void:
+func _on_equip(slot_index: int, _bound: Node) -> void:
 	## Equipping/unequipping is a full combat action; it must be the active character's turn.
+	var active := _current_player()
+	if not active:
+		return
 	var inv: Node = active.get_node_or_null("Inventory")
 	if not inv or not inv.has_method("unequip_item"):
 		return
@@ -187,7 +206,10 @@ func _on_equip(slot_index: int, active: Node) -> void:
 			active._update_health_bar()
 
 
-func _on_drop(slot_index: int, active: Node) -> void:
+func _on_drop(slot_index: int, _bound: Node) -> void:
+	var active := _current_player()
+	if not active:
+		return
 	var inv: Node = active.get_node_or_null("Inventory")
 	if not inv or not inv.has_method("remove_item"):
 		return
