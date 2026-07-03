@@ -5,12 +5,3 @@
 [node name="CharacterModel" type="Node3D" unique_id=840889246]
 
 [node name="character-orc" parent="." unique_id=21147915 instance=ExtResource("1_base")]
-
-[node name="WeaponSocket" type="BoneAttachment3D" parent="character-orc/character-orc/Skeleton3D" unique_id=1975583134]
-bone_name = "arm-right"
-
-[node name="ShieldSocket" type="BoneAttachment3D" parent="character-orc/character-orc/Skeleton3D" unique_id=124751680]
-bone_name = "arm-left"
-
-[node name="HelmetSocket" type="BoneAttachment3D" parent="character-orc/character-orc/Skeleton3D" unique_id=507944260]
-bone_name = "head"

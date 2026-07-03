@@ -32,6 +32,8 @@ enum EnemyType { GOBLIN, ARCHER, BOSS }
 @export var throw_skill: int = 3
 @export var throw_cost: int = 3
 @export var throw_range: int = 5
+@export var strength: int = 2
+@export var weight: int = 1
 
 enum Action { MOVE, ATTACK, SHOVE, TRIP, RANGED, THROW }
 
@@ -58,6 +60,8 @@ var _center_target := 0.0
 var _helmet_socket = null
 var _last_right_hand: ItemResource = null
 var _last_left_hand: ItemResource = null
+var _anim_player = null
+var _is_attacking := false
 
 # Preloaded weapon models
 const SWORD_MODEL_PATH := "res://assets/models/kenney/mini-arena/weapon-sword.glb"
@@ -76,6 +80,7 @@ func _ready() -> void:
 	_update_health_bar()
 	add_to_group("combatants")
 	add_to_group("enemies")
+	call_deferred("_play_idle_anim")
 
 
 func _configure_from_type() -> void:
@@ -95,6 +100,7 @@ func _configure_from_type() -> void:
 			ranged_skill = 3; ranged_range = 8
 			ammo = 0; max_ammo = 0
 			throw_skill = 3; throw_range = 5; throw_cost = 3
+			strength = 2; weight = 1
 		EnemyType.ARCHER:
 			character_name = "Goblin Archer"
 			hp = 8; max_hp = 8
@@ -109,6 +115,7 @@ func _configure_from_type() -> void:
 			ranged_skill = 5; ranged_range = 15; ranged_cost = 3
 			ammo = 6; max_ammo = 6
 			throw_skill = 2; throw_range = 4; throw_cost = 3
+			strength = 1; weight = 1
 		EnemyType.BOSS:
 			character_name = "Goblin Boss"
 			hp = 30; max_hp = 30
@@ -123,6 +130,7 @@ func _configure_from_type() -> void:
 			ranged_skill = 1; ranged_range = 0
 			ammo = 0; max_ammo = 0
 			throw_skill = 4; throw_range = 4; throw_cost = 3
+			strength = 5; weight = 4
 
 
 func _apply_enemy_visual() -> void:
@@ -149,6 +157,7 @@ func enable_turn() -> void:
 		is_prone = false
 		_show_condition_text("Stood up")
 		_update_health_bar()
+		_update_prone_anim()
 		var combat_mgr := get_parent().get_node_or_null("CombatManager")
 		if combat_mgr:
 			combat_mgr.charge_defense_cost(self)
@@ -221,6 +230,7 @@ func _take_turn_archer() -> void:
 		else:
 			# Desperate melee
 			_action_used = Action.ATTACK
+			_play_attack_anim("attack-melee-right")
 			player.take_damage(attack_dmg, attack_skill, Action.ATTACK)
 			_pending_cost = attack_cost
 			await get_tree().create_timer(0.3).timeout
@@ -239,6 +249,7 @@ func _take_turn_archer() -> void:
 			_action_used = Action.RANGED
 			ammo -= 1
 			_update_health_bar()
+			_play_attack_anim("holding-both-shoot")
 			player.take_damage(attack_dmg, ranged_skill, Action.RANGED)
 			_show_action_text("Arrow fired!")
 			_pending_cost = ranged_cost
@@ -287,16 +298,19 @@ func _take_turn_boss() -> void:
 		if has_ally_adjacent and roll <= 35:
 			# Shove to separate from allies
 			_action_used = Action.SHOVE
+			_play_attack_anim("attack-kick-right")
 			_try_shove(target)
 			_pending_cost = shove_cost
 		elif roll <= 80:
 			# Attack
 			_action_used = Action.ATTACK
+			_play_attack_anim("attack-melee-right")
 			target.take_damage(attack_dmg, attack_skill, Action.ATTACK)
 			_pending_cost = attack_cost
 		else:
 			# Trip
 			_action_used = Action.TRIP
+			_play_attack_anim("attack-kick-right")
 			_try_trip(target)
 			_pending_cost = trip_cost
 		await get_tree().create_timer(0.3).timeout
@@ -554,22 +568,16 @@ func _try_move_away(from: Node) -> bool:
 
 
 func _move_toward(target: Node) -> void:
-	## Set target_position one tile toward the target
-	var dir_to: Vector3 = target.position - position
-	dir_to.y = 0
-	if dir_to.length() < 0.01:
-		dir_to = Vector3.RIGHT
-	var orig_dist_to = dir_to;	
-	dir_to = dir_to.normalized()
+	## Move toward target using BFS pathfinding to route around obstacles
+	var from_tile: Vector3 = _snap_to_grid(position)
+	var to_tile: Vector3 = _snap_to_grid(target.position)
 
-	var move_dir := Vector3.ZERO
-	if abs(dir_to.x) > abs(dir_to.z):
-		move_dir.x = sign(dir_to.x)
-	else:
-		move_dir.z = sign(dir_to.z)
+	var path: Array = _find_path(from_tile, to_tile)
+	if path.size() <= 1:
+		return
 
-	var move_dist = min(MOVE_RANGE, orig_dist_to.length())
-	var dest := _snap_to_grid(position + move_dir * GRID_SIZE * move_dist)
+	var step_idx: int = min(MOVE_RANGE, path.size() - 1)
+	var dest: Vector3 = path[step_idx]
 	dest = _avoid_overlap(dest, self)
 	target_position = dest
 
@@ -596,14 +604,17 @@ func _do_adjacent_action(player: Node) -> void:
 	var roll := randi_range(1, 100)
 	if roll <= 60:
 		_action_used = Action.ATTACK
+		_play_attack_anim("attack-melee-right")
 		player.take_damage(attack_dmg, attack_skill, Action.ATTACK)
 		_pending_cost = attack_cost
 	elif roll <= 85:
 		_action_used = Action.SHOVE
+		_play_attack_anim("attack-kick-right")
 		_try_shove(player)
 		_pending_cost = shove_cost
 	else:
 		_action_used = Action.TRIP
+		_play_attack_anim("attack-kick-right")
 		_try_trip(player)
 		_pending_cost = trip_cost
 
@@ -616,7 +627,7 @@ func _has_line_of_sight(target: Node) -> bool:
 	var from_pos := position + Vector3(0, 0.5, 0)
 	var to_pos := target_node.position + Vector3(0, 0.5, 0)
 	var query := PhysicsRayQueryParameters3D.create(from_pos, to_pos)
-	query.collision_mask = 2
+	query.collision_mask = 6  ## enemy layer (2) + obstacle layer (4)
 	query.exclude = [get_rid()]
 	var result := space_state.intersect_ray(query)
 	if result.is_empty():
@@ -638,6 +649,16 @@ func _show_action_text(text: String) -> void:
 	tween.tween_callback(label.queue_free)
 
 
+func _is_obstacle_at(tile: Vector3) -> bool:
+	for o in get_tree().get_nodes_in_group("obstacles"):
+		if not is_instance_valid(o):
+			continue
+		var obs_tile := Vector3(round(o.position.x / GRID_SIZE) * GRID_SIZE, tile.y, round(o.position.z / GRID_SIZE) * GRID_SIZE)
+		if obs_tile.distance_to(tile) < 0.5:
+			return true
+	return false
+
+
 func _is_tile_occupied_by_others(tile: Vector3, exclude: Node = null) -> bool:
 	for c in get_tree().get_nodes_in_group("combatants"):
 		if not is_instance_valid(c) or c == exclude:
@@ -646,7 +667,42 @@ func _is_tile_occupied_by_others(tile: Vector3, exclude: Node = null) -> bool:
 		var target_tile: Vector3 = c._snap_to_grid(c.target_position)
 		if current_tile.distance_to(tile) < 0.5 or target_tile.distance_to(tile) < 0.5:
 			return true
-	return false
+	return _is_obstacle_at(tile)
+
+
+func _tile_key(tile: Vector3) -> String:
+	return str(int(round(tile.x))) + "," + str(int(round(tile.z)))
+
+
+func _find_path(from_tile: Vector3, to_tile: Vector3) -> Array:
+	## BFS returning the shortest obstacle-free path; combatant tiles are passable
+	var dirs := [
+		Vector3(GRID_SIZE, 0, 0), Vector3(-GRID_SIZE, 0, 0),
+		Vector3(0, 0, GRID_SIZE), Vector3(0, 0, -GRID_SIZE)
+	]
+	var queue: Array = [[from_tile]]
+	var visited: Dictionary = {}
+	visited[_tile_key(from_tile)] = true
+
+	while not queue.is_empty():
+		var path: Array = queue.pop_front()
+		var cur: Vector3 = path[path.size() - 1]
+		if cur.distance_to(to_tile) < 0.5:
+			return path
+		if path.size() > 50:
+			continue
+		for d in dirs:
+			var nxt: Vector3 = _snap_to_grid(cur + d)
+			var k: String = _tile_key(nxt)
+			if visited.has(k):
+				continue
+			if _is_obstacle_at(nxt):
+				continue
+			visited[k] = true
+			var new_path: Array = path.duplicate()
+			new_path.append(nxt)
+			queue.append(new_path)
+	return []
 
 
 func _avoid_overlap(tile: Vector3, exclude: Node) -> Vector3:
@@ -674,23 +730,78 @@ func _is_adjacent(target_pos: Vector3, source_pos: Vector3 = Vector3.INF) -> boo
 	return dist <= GRID_SIZE * 1.5
 
 
+func _get_combatant_at(tile: Vector3, exclude: Node = null) -> Node:
+	for c in get_tree().get_nodes_in_group("combatants"):
+		if not is_instance_valid(c) or c == exclude:
+			continue
+		if "is_alive" in c and not c.is_alive:
+			continue
+		if c.has_method("_snap_to_grid") and c._snap_to_grid(c.position).distance_to(tile) < 0.5:
+			return c
+	return null
+
+
+func _apply_impact_damage(amount: int) -> void:
+	var effective: int = _calculate_damage(amount)
+	if effective <= 0:
+		return
+	hp -= effective
+	_show_damage_number(effective)
+	_update_health_bar()
+	if hp <= 0:
+		hp = 0
+		is_alive = false
+		_die()
+	else:
+		_play_hit_anim()
+
+
+func _apply_push(push_dir: Vector3, force: int) -> void:
+	if force <= 0:
+		return
+	var dir := Vector3.ZERO
+	if abs(push_dir.x) >= abs(push_dir.z):
+		dir.x = sign(push_dir.x)
+	else:
+		dir.z = sign(push_dir.z)
+	var start: Vector3 = _snap_to_grid(position)
+	for i in range(1, force + 1):
+		var next: Vector3 = _snap_to_grid(start + dir * GRID_SIZE * i)
+		if next.x < -14 or next.x > 14 or next.z < -14 or next.z > 14:
+			_apply_impact_damage((force - i + 1) * 2)
+			return
+		if _is_obstacle_at(next):
+			_apply_impact_damage((force - i + 1) * 2)
+			return
+		var blocker: Node = _get_combatant_at(next, self)
+		if blocker != null:
+			var remaining: int = force - i + 1
+			_apply_impact_damage(remaining)
+			if blocker.has_method("_apply_impact_damage"):
+				blocker._apply_impact_damage(remaining)
+			var chain: int = remaining - blocker.weight
+			if chain > 0 and blocker.has_method("_apply_push"):
+				blocker._apply_push(dir, chain)
+			position = _snap_to_grid(start + dir * GRID_SIZE * (i - 1))
+			target_position = position
+			return
+		position = next
+		target_position = next
+
+
 func _try_shove(target: Node) -> void:
 	var def_result: Dictionary = target._attempt_defense(shove_skill)
 	if def_result.defended:
 		return
-	var margin: int = def_result.attack_roll - def_result.defense_roll
-	var tiles := clampi(margin, 1, 4)
+
+	var push_tiles: int = max(1, strength - target.weight)
 	var push_dir: Vector3 = (target.position - position)
 	push_dir.y = 0
 	if push_dir.length() < 0.01:
 		push_dir = Vector3.RIGHT
 	push_dir = push_dir.normalized()
-	var dest: Vector3 = target._snap_to_grid(target.position + push_dir * tiles * GRID_SIZE)
-	dest.x = clamp(dest.x, -14, 14)
-	dest.z = clamp(dest.z, -14, 14)
-	dest = _avoid_overlap(dest, target)
-	target.position = dest
-	target.target_position = dest
+
+	target._apply_push(push_dir, push_tiles)
 
 
 func _try_trip(target: Node) -> void:
@@ -700,6 +811,8 @@ func _try_trip(target: Node) -> void:
 	target.is_prone = true
 	target._show_condition_text("PRONE!")
 	target._update_health_bar()
+	if target.has_method("_update_prone_anim"):
+		target._update_prone_anim()
 
 
 func take_damage(amount: int, attacker_skill: int = 0, _action_type: int = Action.ATTACK) -> bool:
@@ -718,6 +831,8 @@ func take_damage(amount: int, attacker_skill: int = 0, _action_type: int = Actio
 	if hp <= 0:
 		is_alive = false
 		_die()
+	else:
+		_play_hit_anim()
 	return false
 
 
@@ -836,6 +951,14 @@ func _show_damage_number(amount: int) -> void:
 
 
 func _die() -> void:
+	if not _anim_player:
+		var model := get_node_or_null("CharacterModel") as Node3D
+		if model:
+			_anim_player = model.find_child("AnimationPlayer", true, false)
+	if _anim_player:
+		var ap := _anim_player as AnimationPlayer
+		ap.play("die")
+		await ap.animation_finished
 	visible = false
 	var combat_mgr := get_parent().get_node("CombatManager")
 	combat_mgr.on_character_died(self)
@@ -903,9 +1026,65 @@ func _physics_process(delta: float) -> void:
 		position += dir.normalized() * MOVE_SPEED * delta
 		position.y = _ground_y()
 
+	if is_alive and not _is_attacking and not is_prone:
+		var model := get_node_or_null("CharacterModel") as Node3D
+		if model:
+			if _anim_player == null:
+				_anim_player = model.find_child("AnimationPlayer", true, false)
+			if _anim_player:
+				var target_anim := "walk" if is_moving else "idle"
+				var ap := _anim_player as AnimationPlayer
+				if ap.current_animation != target_anim:
+					ap.play(target_anim)
+
 
 func _ground_y() -> float:
 	return 1.11
+
+
+func _update_prone_anim() -> void:
+	if not _anim_player:
+		var model := get_node_or_null("CharacterModel") as Node3D
+		if model:
+			_anim_player = model.find_child("AnimationPlayer", true, false)
+	if not _anim_player:
+		return
+	(_anim_player as AnimationPlayer).play("die" if is_prone else "idle")
+
+
+func _play_idle_anim() -> void:
+	var model := get_node_or_null("CharacterModel") as Node3D
+	if not model:
+		return
+	var anim := model.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	if anim:
+		_anim_player = anim
+		anim.play("idle")
+
+
+func _play_hit_anim() -> void:
+	if not _anim_player or _is_attacking:
+		return
+	var ap := _anim_player as AnimationPlayer
+	ap.play("crouch")
+	await ap.animation_finished
+	if is_alive and not is_prone:
+		ap.play("idle")
+
+
+func _play_attack_anim(anim_name: String) -> void:
+	if not _anim_player:
+		var model := get_node_or_null("CharacterModel") as Node3D
+		if model:
+			_anim_player = model.find_child("AnimationPlayer", true, false)
+	if not _anim_player:
+		return
+	var ap := _anim_player as AnimationPlayer
+	_is_attacking = true
+	ap.play(anim_name)
+	await ap.animation_finished
+	_is_attacking = false
+	ap.play("idle")
 
 
 func _face_target(target: Node3D) -> void:

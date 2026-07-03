@@ -29,6 +29,8 @@ const MOVE_SPEED := 6.0
 @export var throw_cost: int = 3
 @export var throw_range: int = 5       ## max tiles for thrown
 @export var equip_cost: int = 1        ## time cost to swap equipped weapon/shield
+@export var strength: int = 3
+@export var weight: int = 2
 
 enum Action { MOVE, ATTACK, SHOVE, TRIP, RANGED, THROW, PICKUP, EQUIP }
 
@@ -58,6 +60,8 @@ var _center_target := 0.0
 var _helmet_socket = null
 var _last_right_hand: ItemResource = null
 var _last_left_hand: ItemResource = null
+var _anim_player = null
+var _is_attacking := false
 
 # Preloaded weapon models
 const SWORD_MODEL_PATH := "res://assets/models/kenney/mini-arena/weapon-sword.glb"
@@ -76,6 +80,7 @@ func _ready() -> void:
 	_setup_sockets()
 	_update_health_bar()
 	add_to_group("combatants")
+	call_deferred("_play_idle_anim")
 	if not is_player_controlled:
 		add_to_group("enemies")
 	if is_player_controlled and not _bar_connected:
@@ -91,6 +96,7 @@ func enable_turn() -> void:
 		is_prone = false
 		_show_condition_text("Stood up")
 		_update_health_bar()
+		_update_prone_anim()
 		var combat_mgr := get_parent().get_node_or_null("CombatManager")
 		if combat_mgr:
 			combat_mgr.charge_defense_cost(self)
@@ -281,6 +287,7 @@ func _handle_click(screen_pos: Vector2) -> void:
 
 	# Pickup action: scan for nearby ground items
 	if selected_action == Action.PICKUP:
+		_play_attack_anim("pick-up")
 		_do_pickup()
 		is_moving = true
 		target_position = position
@@ -301,14 +308,19 @@ func _handle_click(screen_pos: Vector2) -> void:
 				_action_used = selected_action
 				match selected_action:
 					Action.ATTACK:
+						_play_attack_anim("attack-melee-right")
 						collider.take_damage(_get_effective_attack_dmg(), _get_effective_attack_skill(), Action.ATTACK)
 					Action.SHOVE:
+						_play_attack_anim("attack-kick-right")
 						_try_shove(collider)
 					Action.TRIP:
+						_play_attack_anim("attack-kick-right")
 						_try_trip(collider)
 					Action.RANGED:
+						_play_attack_anim("holding-both-shoot")
 						_do_ranged_attack(collider)
 					Action.THROW:
+						_play_attack_anim("attack-melee-right")
 						_do_throw_attack(collider)
 				is_moving = true
 				target_position = position
@@ -361,7 +373,7 @@ func _has_line_of_sight(target: Node) -> bool:
 	var from_pos := position + Vector3(0, 0.5, 0)
 	var to_pos := target_node.position + Vector3(0, 0.5, 0)
 	var query := PhysicsRayQueryParameters3D.create(from_pos, to_pos)
-	query.collision_mask = 2  ## only enemy layer -- ignore ground
+	query.collision_mask = 6  ## enemy layer (2) + obstacle layer (4)
 	query.exclude = [get_rid()]
 	var result := space_state.intersect_ray(query)
 	if result.is_empty():
@@ -747,6 +759,8 @@ func take_damage(amount: int, attacker_skill: int = 0, _action_type: int = Actio
 	if hp <= 0:
 		is_alive = false
 		_die()
+	else:
+		_play_hit_anim()
 	return false
 
 
@@ -800,29 +814,90 @@ func _charge_defense_cost() -> void:
 		combat_mgr.charge_defense_cost(self)
 
 
+func _is_obstacle_at(tile: Vector3) -> bool:
+	for o in get_tree().get_nodes_in_group("obstacles"):
+		if not is_instance_valid(o):
+			continue
+		var obs_tile := Vector3(round(o.position.x / GRID_SIZE) * GRID_SIZE, tile.y, round(o.position.z / GRID_SIZE) * GRID_SIZE)
+		if obs_tile.distance_to(tile) < 0.5:
+			return true
+	return false
+
+
+func _get_combatant_at(tile: Vector3, exclude: Node = null) -> Node:
+	for c in get_tree().get_nodes_in_group("combatants"):
+		if not is_instance_valid(c) or c == exclude:
+			continue
+		if "is_alive" in c and not c.is_alive:
+			continue
+		if c.has_method("_snap_to_grid") and c._snap_to_grid(c.position).distance_to(tile) < 0.5:
+			return c
+	return null
+
+
+func _apply_impact_damage(amount: int) -> void:
+	var effective: int = _calculate_damage(amount)
+	if effective <= 0:
+		return
+	hp -= effective
+	_show_damage_number(effective)
+	_update_health_bar()
+	if hp <= 0:
+		hp = 0
+		is_alive = false
+		_die()
+	else:
+		_play_hit_anim()
+
+
+func _apply_push(push_dir: Vector3, force: int) -> void:
+	if force <= 0:
+		return
+	var dir := Vector3.ZERO
+	if abs(push_dir.x) >= abs(push_dir.z):
+		dir.x = sign(push_dir.x)
+	else:
+		dir.z = sign(push_dir.z)
+	var start: Vector3 = _snap_to_grid(position)
+	for i in range(1, force + 1):
+		var next: Vector3 = _snap_to_grid(start + dir * GRID_SIZE * i)
+		if next.x < -14 or next.x > 14 or next.z < -14 or next.z > 14:
+			_apply_impact_damage((force - i + 1) * 2)
+			return
+		if _is_obstacle_at(next):
+			_apply_impact_damage((force - i + 1) * 2)
+			return
+		var blocker: Node = _get_combatant_at(next, self)
+		if blocker != null:
+			var remaining: int = force - i + 1
+			_apply_impact_damage(remaining)
+			if blocker.has_method("_apply_impact_damage"):
+				blocker._apply_impact_damage(remaining)
+			var chain: int = remaining - blocker.weight
+			if chain > 0 and blocker.has_method("_apply_push"):
+				blocker._apply_push(dir, chain)
+			position = _snap_to_grid(start + dir * GRID_SIZE * (i - 1))
+			target_position = position
+			return
+		position = next
+		target_position = next
+
+
 func _try_shove(target: Node) -> void:
 	var def_result: Dictionary = target._attempt_defense(shove_skill)
 	if def_result.defended:
 		_show_action_text("Shove blocked!")
 		return
 
-	var margin: int = def_result.attack_roll - def_result.defense_roll
-	var tiles := clampi(margin, 1, 4)
+	var push_tiles: int = max(1, strength - target.weight)
 	var push_dir: Vector3 = (target.position - position)
 	push_dir.y = 0
 	if push_dir.length() < 0.01:
 		push_dir = Vector3.RIGHT
 	push_dir = push_dir.normalized()
 
-	var dest: Vector3 = target._snap_to_grid(target.position + push_dir * tiles * GRID_SIZE)
-	# Clamp to battlefield and avoid other combatants
-	dest.x = clamp(dest.x, -14, 14)
-	dest.z = clamp(dest.z, -14, 14)
-	dest = _avoid_overlap(dest, target)
-
-	target.position = dest
-	target.target_position = dest
-	_show_action_text("Shoved " + str(tiles) + "!")
+	_show_action_text("Shoved " + str(push_tiles) + "!")
+	target._apply_push(push_dir, push_tiles)
 
 
 func _try_trip(target: Node) -> void:
@@ -834,6 +909,8 @@ func _try_trip(target: Node) -> void:
 	target.is_prone = true
 	target._show_condition_text("PRONE!")
 	target._update_health_bar()
+	if target.has_method("_update_prone_anim"):
+		target._update_prone_anim()
 	_show_action_text("Tripped!")
 
 
@@ -922,8 +999,16 @@ func _show_damage_number(amount: int) -> void:
 
 
 func _die() -> void:
-	visible = false
 	can_act = false
+	if not _anim_player:
+		var model := get_node_or_null("CharacterModel") as Node3D
+		if model:
+			_anim_player = model.find_child("AnimationPlayer", true, false)
+	if _anim_player:
+		var ap := _anim_player as AnimationPlayer
+		ap.play("die")
+		await ap.animation_finished
+	visible = false
 	var combat_mgr := get_parent().get_node("CombatManager")
 	combat_mgr.on_character_died(self)
 
@@ -990,6 +1075,12 @@ func _is_tile_occupied_by_others(tile: Vector3, exclude: Node = null) -> bool:
 		var target_tile: Vector3 = c._snap_to_grid(c.target_position)
 		if current_tile.distance_to(tile) < 0.5 or target_tile.distance_to(tile) < 0.5:
 			return true
+	for o in get_tree().get_nodes_in_group("obstacles"):
+		if not is_instance_valid(o):
+			continue
+		var obs_tile := Vector3(round(o.position.x / GRID_SIZE) * GRID_SIZE, tile.y, round(o.position.z / GRID_SIZE) * GRID_SIZE)
+		if obs_tile.distance_to(tile) < 0.5:
+			return true
 	return false
 
 
@@ -1015,10 +1106,66 @@ func _physics_process(delta: float) -> void:
 	else:
 		position += dir.normalized() * MOVE_SPEED * delta
 		position.y = _ground_y()
+		
+	if is_alive and not _is_attacking and not is_prone:
+		var model := get_node_or_null("CharacterModel") as Node3D
+		if model:
+			if _anim_player == null:
+				_anim_player = model.find_child("AnimationPlayer", true, false)
+			if _anim_player:
+				var target_anim := "walk" if is_moving else "idle"
+				var ap := _anim_player as AnimationPlayer
+				if ap.current_animation != target_anim:
+					ap.play(target_anim)
 
 
 func _ground_y() -> float:
 	return 1.11
+
+
+func _update_prone_anim() -> void:
+	if not _anim_player:
+		var model := get_node_or_null("CharacterModel") as Node3D
+		if model:
+			_anim_player = model.find_child("AnimationPlayer", true, false)
+	if not _anim_player:
+		return
+	(_anim_player as AnimationPlayer).play("die" if is_prone else "idle")
+
+
+func _play_idle_anim() -> void:
+	var model := get_node_or_null("CharacterModel") as Node3D
+	if not model:
+		return
+	var anim := model.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	if anim:
+		_anim_player = anim
+		anim.play("idle")
+
+
+func _play_hit_anim() -> void:
+	if not _anim_player or _is_attacking:
+		return
+	var ap := _anim_player as AnimationPlayer
+	ap.play("crouch")
+	await ap.animation_finished
+	if is_alive and not is_prone:
+		ap.play("idle")
+
+
+func _play_attack_anim(anim_name: String) -> void:
+	if not _anim_player:
+		var model := get_node_or_null("CharacterModel") as Node3D
+		if model:
+			_anim_player = model.find_child("AnimationPlayer", true, false)
+	if not _anim_player:
+		return
+	var ap := _anim_player as AnimationPlayer
+	_is_attacking = true
+	ap.play(anim_name)
+	await ap.animation_finished
+	_is_attacking = false
+	ap.play("idle")
 
 
 func _face_target(target: Node3D) -> void:

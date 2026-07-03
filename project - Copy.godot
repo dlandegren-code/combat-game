@@ -19,10 +19,6 @@ config/icon="res://icon.svg"
 
 project/assembly_name="CombatGame"
 
-[editor]
-
-movie_writer/movie_file="F:/Screendumps/test.avi"
-
 [input]
 
 action_1={
