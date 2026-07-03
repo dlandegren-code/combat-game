@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="CombatantStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combatant_stats.gd" id="1_stats"]
+
+[resource]
+script = ExtResource("1_stats")
+character_name = "Goblin Boss"
+initiative = 6
+max_hp = 30
+attack_dmg = 5
+move_speed = 4.0
+move_range = 3
+move_cost_per_tile = 1
+attack_skill = 6
+attack_cost = 2
+shove_skill = 4
+shove_cost = 2
+trip_skill = 3
+trip_cost = 2
+armor = 3
+physical_resistance = 0
+parry_skill = 5
+dodge_skill = 3
+defensive_option = 0
+ranged_skill = 1
+ranged_cost = 3
+ranged_range = 0
+ammo = 0
+max_ammo = 0
+throw_skill = 4
+throw_cost = 3
+throw_range = 4
+strength = 5
+weight = 4
+equip_cost = 1

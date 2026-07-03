@@ -13,65 +13,14 @@ var _pending_cost: int = 0
 
 func _pre_setup() -> void:
 	# main.tscn does not store is_player_controlled on enemy nodes; enforce it.
+	# All numeric stats (including move_speed/move_range) come from the assigned
+	# `stats` resource, applied by the base before this hook runs.
 	is_player_controlled = false
-	move_speed = 4.0
-	move_range = 3
-	_configure_from_type()
 	_apply_enemy_visual()
 
 
 func _is_ranged_action(action_type: int) -> bool:
 	return action_type == Action.RANGED or action_type == Action.THROW
-
-
-func _configure_from_type() -> void:
-	## Sets all stats based on enemy_type export
-	match enemy_type:
-		EnemyType.GOBLIN:
-			character_name = "Goblin"
-			hp = 10; max_hp = 10
-			initiative = 5
-			armor = 1
-			attack_skill = 3; attack_dmg = 3
-			parry_skill = 1; dodge_skill = 3
-			defensive_option = 1  # Dodge
-			shove_skill = 2; trip_skill = 1
-			shove_cost = 2; trip_cost = 2
-			move_cost_per_tile = 1; attack_cost = 2
-			ranged_skill = 3; ranged_range = 8
-			ammo = 0; max_ammo = 0
-			throw_skill = 3; throw_range = 5; throw_cost = 3
-			strength = 2; weight = 1
-		EnemyType.ARCHER:
-			character_name = "Goblin Archer"
-			hp = 8; max_hp = 8
-			initiative = 7
-			armor = 0
-			attack_skill = 2; attack_dmg = 2  # Weak melee
-			parry_skill = 1; dodge_skill = 4
-			defensive_option = 1  # Dodge
-			shove_skill = 1; trip_skill = 1
-			shove_cost = 3; trip_cost = 3
-			move_cost_per_tile = 1; attack_cost = 2
-			ranged_skill = 5; ranged_range = 15; ranged_cost = 3
-			ammo = 6; max_ammo = 6
-			throw_skill = 2; throw_range = 4; throw_cost = 3
-			strength = 1; weight = 1
-		EnemyType.BOSS:
-			character_name = "Goblin Boss"
-			hp = 30; max_hp = 30
-			initiative = 6
-			armor = 3
-			attack_skill = 6; attack_dmg = 5
-			parry_skill = 5; dodge_skill = 3
-			defensive_option = 0  # Parry
-			shove_skill = 4; trip_skill = 3
-			shove_cost = 2; trip_cost = 2
-			move_cost_per_tile = 1; attack_cost = 2
-			ranged_skill = 1; ranged_range = 0
-			ammo = 0; max_ammo = 0
-			throw_skill = 4; throw_range = 4; throw_cost = 3
-			strength = 5; weight = 4
 
 
 func _apply_enemy_visual() -> void:

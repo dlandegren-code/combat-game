@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="CombatantStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combatant_stats.gd" id="1_stats"]
+
+[resource]
+script = ExtResource("1_stats")
+character_name = "Goblin Archer"
+initiative = 7
+max_hp = 8
+attack_dmg = 2
+move_speed = 4.0
+move_range = 3
+move_cost_per_tile = 1
+attack_skill = 2
+attack_cost = 2
+shove_skill = 1
+shove_cost = 3
+trip_skill = 1
+trip_cost = 3
+armor = 0
+physical_resistance = 0
+parry_skill = 1
+dodge_skill = 4
+defensive_option = 1
+ranged_skill = 5
+ranged_cost = 3
+ranged_range = 15
+ammo = 6
+max_ammo = 6
+throw_skill = 2
+throw_cost = 3
+throw_range = 4
+strength = 1
+weight = 1
+equip_cost = 1

@@ -15,6 +15,13 @@ const LAYER_ENEMY := 2
 const LAYER_OBSTACLE := 4
 const LAYER_ENEMY_AND_OBSTACLE := 6  ## enemy (2) + obstacle (4), for line-of-sight
 
+## Optional data-driven stat block (a CombatantStats resource). When assigned,
+## its values are copied onto this combatant at _ready (overriding the
+## per-instance @export values below). Leave null to use scene / default values.
+## Typed as Resource because the CombatantStats global class is not always
+## registered when this base script first compiles; the .tres still carries it.
+@export var stats: Resource
+
 ## Movement tunables (subclasses may override in _pre_setup / from stats).
 var move_speed: float = 6.0
 var move_range: int = 5
@@ -87,6 +94,7 @@ func _ready() -> void:
 	position.y = _ground_y()
 	health_bar = get_node_or_null("HealthBar")
 	inventory = get_node_or_null("Inventory")
+	_apply_stats()
 	_pre_setup()
 	_setup_sockets()
 	_update_health_bar()
@@ -105,6 +113,45 @@ func _pre_setup() -> void:
 ## Hook: runs at the end of _ready (player wires up UI here).
 func _post_setup() -> void:
 	pass
+
+
+## Copy the assigned stat block onto the runtime vars. No-op if unassigned,
+## leaving the scene-exported / default values in place.
+func _apply_stats() -> void:
+	if stats == null:
+		return
+	# Variant-typed local so field access is dynamic (base is exported as Resource).
+	var s: Variant = stats
+	character_name = s.character_name
+	initiative = s.initiative
+	max_hp = s.max_hp
+	hp = s.max_hp
+	attack_dmg = s.attack_dmg
+	move_speed = s.move_speed
+	move_range = s.move_range
+	move_cost_per_tile = s.move_cost_per_tile
+	attack_skill = s.attack_skill
+	attack_cost = s.attack_cost
+	shove_skill = s.shove_skill
+	shove_cost = s.shove_cost
+	trip_skill = s.trip_skill
+	trip_cost = s.trip_cost
+	armor = s.armor
+	physical_resistance = s.physical_resistance
+	parry_skill = s.parry_skill
+	dodge_skill = s.dodge_skill
+	defensive_option = s.defensive_option
+	ranged_skill = s.ranged_skill
+	ranged_cost = s.ranged_cost
+	ranged_range = s.ranged_range
+	ammo = s.ammo
+	max_ammo = s.max_ammo
+	throw_skill = s.throw_skill
+	throw_cost = s.throw_cost
+	throw_range = s.throw_range
+	strength = s.strength
+	weight = s.weight
+	equip_cost = s.equip_cost
 
 
 func _stand_up_if_prone() -> void:
