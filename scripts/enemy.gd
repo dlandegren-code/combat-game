@@ -140,10 +140,10 @@ func _take_turn_archer() -> void:
 			end_my_turn(_pending_cost)
 			return
 
-	# Out of ammo or bad range: reposition
+	# Out of ammo: no point kiting (arrows never come back). Close in for melee
+	# instead, which also brings a stranded archer back toward the fight.
 	if ammo <= 0:
-		# Move away from nearest player
-		_try_move_away(player)
+		_move_toward(player)
 		_action_used = Action.MOVE
 		_pending_cost = move_cost_per_tile
 		is_moving = true
@@ -240,31 +240,34 @@ func _has_ally_adjacent_to(target: Node) -> bool:
 
 
 func _try_move_away(from: Node) -> bool:
-	## Try to move one tile away from the given node. Returns true if moved.
+	## Try to move one tile away from the given node, staying inside the arena.
+	## Returns true if a valid retreat tile was found. Never leaves the arena
+	## (otherwise a fleeing archer would walk off the map and never return).
 	var dir_away: Vector3 = position - from.position
 	dir_away.y = 0
 	if dir_away.length() < 0.01:
 		dir_away = Vector3.RIGHT
 	dir_away = dir_away.normalized()
 
-	var move_dir := Vector3.ZERO
+	var primary := Vector3.ZERO
 	if abs(dir_away.x) > abs(dir_away.z):
-		move_dir.x = sign(dir_away.x)
+		primary.x = sign(dir_away.x)
 	else:
-		move_dir.z = sign(dir_away.z)
+		primary.z = sign(dir_away.z)
 
-	var dest := _snap_to_grid(position + move_dir * GRID_SIZE)
-	dest = _avoid_overlap(dest, self)
-	if dest.distance_to(position) < 0.1:
-		# Try perpendicular direction
-		move_dir = Vector3(move_dir.z, 0, -move_dir.x)
-		dest = _snap_to_grid(position + move_dir * GRID_SIZE)
+	# Prefer the away direction, then its perpendiculars. Skip any candidate that
+	# leaves the arena or can't resolve to a free tile.
+	var perp := Vector3(primary.z, 0, -primary.x)
+	for move_dir in [primary, perp, -perp]:
+		var dest := _snap_to_grid(position + move_dir * GRID_SIZE)
+		if not _is_in_arena(dest):
+			continue
 		dest = _avoid_overlap(dest, self)
-		if dest.distance_to(position) < 0.1:
-			return false
+		if _is_in_arena(dest) and dest.distance_to(position) >= 0.1:
+			target_position = dest
+			return true
 
-	target_position = dest
-	return true
+	return false
 
 
 func _move_toward(target: Node) -> void:

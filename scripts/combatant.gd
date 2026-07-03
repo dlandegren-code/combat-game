@@ -506,6 +506,10 @@ func _charge_defense_cost() -> void:
 		combat_mgr.charge_defense_cost(self)
 
 
+func _is_in_arena(tile: Vector3) -> bool:
+	return tile.x >= ARENA_MIN and tile.x <= ARENA_MAX and tile.z >= ARENA_MIN and tile.z <= ARENA_MAX
+
+
 func _is_obstacle_at(tile: Vector3) -> bool:
 	for o in get_tree().get_nodes_in_group("obstacles"):
 		if not is_instance_valid(o):
