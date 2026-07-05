@@ -17,6 +17,9 @@
 [ext_resource type="Script" uid="uid://l5mteh6g25ar" path="res://scripts/dungeon_floor.gd" id="14_floor"]
 [ext_resource type="Script" uid="uid://bj17a31dxfh1g" path="res://scripts/column_obstacle.gd" id="16_2cqfq"]
 [ext_resource type="PackedScene" uid="uid://d2rve774d52oj" path="res://assets/models/kenney/mini-dungeon/column.glb" id="17_yaehf"]
+[ext_resource type="Resource" path="res://resources/stats/goblin_stats.tres" id="18_goblin_stats"]
+[ext_resource type="Resource" path="res://resources/stats/archer_stats.tres" id="19_archer_stats"]
+[ext_resource type="Resource" path="res://resources/stats/boss_stats.tres" id="20_boss_stats"]
 
 [sub_resource type="StandardMaterial3D" id="mat_ground"]
 albedo_color = Color(0.35, 0.5, 0.25, 1)
@@ -160,6 +163,7 @@ floor_stop_on_slope = false
 floor_block_on_wall = false
 floor_snap_length = 0.0
 script = ExtResource("2_enemy")
+stats = ExtResource("18_goblin_stats")
 
 [node name="Mesh" type="MeshInstance3D" parent="Enemy" unique_id=1490164396]
 visible = false
@@ -193,6 +197,7 @@ floor_block_on_wall = false
 floor_snap_length = 0.0
 script = ExtResource("2_enemy")
 enemy_type = 1
+stats = ExtResource("19_archer_stats")
 
 [node name="Mesh" type="MeshInstance3D" parent="ArcherEnemy" unique_id=1443505065]
 visible = false
@@ -228,6 +233,7 @@ floor_block_on_wall = false
 floor_snap_length = 0.0
 script = ExtResource("2_enemy")
 enemy_type = 2
+stats = ExtResource("20_boss_stats")
 
 [node name="Mesh" type="MeshInstance3D" parent="BossEnemy" unique_id=217558937]
 visible = false
