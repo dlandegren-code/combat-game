@@ -67,6 +67,14 @@ var is_alive := true
 var health_bar: Label3D
 var inventory: Node  ## InventoryComponent
 
+## Actions/skills this combatant can perform, as Ability resources. Populated by
+## subclasses (player builds the action-bar set; enemies can be given their own).
+var abilities: Array = []
+
+## Time-unit cost of the action in progress; charged when the move/action finishes.
+@warning_ignore("unused_private_class_variable")
+var _pending_cost: int = 0
+
 ## Set by subclasses to the Action they performed; read when charging turn cost.
 @warning_ignore("unused_private_class_variable")
 var _action_used: int = 0
@@ -357,11 +365,11 @@ func _has_line_of_sight(target: Node) -> bool:
 	return result.collider == target
 
 
-func take_damage(amount: int, attacker_skill: int = 0, action_type: int = -1) -> bool:
+func take_damage(amount: int, attacker_skill: int = 0, is_ranged: bool = false) -> bool:
 	if not is_alive:
 		return false
 
-	var def_result: Dictionary = _attempt_defense(attacker_skill, action_type)
+	var def_result: Dictionary = _attempt_defense(attacker_skill, is_ranged)
 	if def_result.defended:
 		return true
 
@@ -378,11 +386,10 @@ func take_damage(amount: int, attacker_skill: int = 0, action_type: int = -1) ->
 	return false
 
 
-func _attempt_defense(attacker_skill: int, action_type: int = -1) -> Dictionary:
+func _attempt_defense(attacker_skill: int, is_ranged: bool = false) -> Dictionary:
 	var attack_roll := attacker_skill + randi_range(1, 5)
 	var effective_dodge: int = dodge_skill - (2 if is_prone else 0)
 	var result := { "defended": false, "attack_roll": attack_roll, "defense_roll": 0 }
-	var is_ranged := _is_ranged_action(action_type)
 
 	if defensive_option == 0:
 		if not (_has_usable_weapon() or _has_shield_equipped()):
@@ -406,12 +413,6 @@ func _attempt_defense(attacker_skill: int, action_type: int = -1) -> Dictionary:
 			_charge_defense_cost()
 			result.defended = true
 	return result
-
-
-## Overridden trivially so the base doesn't depend on subclass Action enums.
-## Subclasses pass their Action.RANGED / Action.THROW values through take_damage.
-func _is_ranged_action(_action_type: int) -> bool:
-	return false
 
 
 func _calculate_damage(raw: int) -> int:
@@ -614,6 +615,41 @@ func _snap_to_grid(pos: Vector3) -> Vector3:
 		pos.y,
 		round(pos.z / GRID_SIZE) * GRID_SIZE
 	)
+
+
+func _can_move() -> bool:
+	return not is_prone
+
+
+func _is_in_range(target: Vector3) -> bool:
+	var dist: float = abs(target.x - position.x) + abs(target.z - position.z)
+	return dist <= move_range * GRID_SIZE
+
+
+# --- Ability stat accessors (overridden by subclasses that add weapon bonuses) ---
+
+func get_attack_skill() -> int:
+	return attack_skill
+
+
+func get_attack_damage() -> int:
+	return attack_dmg
+
+
+func get_ranged_range() -> int:
+	if inventory and inventory.has_method("get_equipped_ranged_range"):
+		var r: int = inventory.get_equipped_ranged_range()
+		if r > 0:
+			return r
+	return ranged_range
+
+
+func get_throw_range() -> int:
+	if inventory and inventory.has_method("get_equipped_throw_range"):
+		var r: int = inventory.get_equipped_throw_range()
+		if r > 0:
+			return r
+	return throw_range
 
 
 func _physics_process(delta: float) -> void:

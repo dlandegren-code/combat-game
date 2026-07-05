@@ -13,8 +13,6 @@ enum Action { MOVE, ATTACK, SHOVE, TRIP, RANGED, THROW }
 ## farther. Capped at the archer's actual ranged range. Raise to hang back more.
 const ARCHER_PREFERRED_DIST := 10
 
-var _pending_cost: int = 0
-
 
 func _pre_setup() -> void:
 	# main.tscn does not store is_player_controlled on enemy nodes; enforce it.
@@ -22,10 +20,6 @@ func _pre_setup() -> void:
 	# `stats` resource, applied by the base before this hook runs.
 	is_player_controlled = false
 	_apply_enemy_visual()
-
-
-func _is_ranged_action(action_type: int) -> bool:
-	return action_type == Action.RANGED or action_type == Action.THROW
 
 
 func _apply_enemy_visual() -> void:
@@ -123,7 +117,7 @@ func _take_turn_archer() -> void:
 		# Out of arrows: melee.
 		_action_used = Action.ATTACK
 		_play_attack_anim("attack-melee-right")
-		player.take_damage(attack_dmg, attack_skill, Action.ATTACK)
+		player.take_damage(attack_dmg, attack_skill, false)
 		_pending_cost = attack_cost
 		await get_tree().create_timer(0.3).timeout
 		end_my_turn(_pending_cost)
@@ -174,7 +168,7 @@ func _fire_arrow(player: Node) -> void:
 	ammo -= 1
 	_update_health_bar()
 	_play_attack_anim("holding-both-shoot")
-	player.take_damage(attack_dmg, ranged_skill, Action.RANGED)
+	player.take_damage(attack_dmg, ranged_skill, true)
 	_show_action_text("Arrow fired!")
 	_pending_cost = ranged_cost
 	await get_tree().create_timer(0.3).timeout
@@ -207,7 +201,7 @@ func _take_turn_boss() -> void:
 			# Attack
 			_action_used = Action.ATTACK
 			_play_attack_anim("attack-melee-right")
-			target.take_damage(attack_dmg, attack_skill, Action.ATTACK)
+			target.take_damage(attack_dmg, attack_skill, false)
 			_pending_cost = attack_cost
 		else:
 			# Trip
@@ -355,7 +349,7 @@ func _do_adjacent_action(player: Node) -> void:
 	if roll <= 60:
 		_action_used = Action.ATTACK
 		_play_attack_anim("attack-melee-right")
-		player.take_damage(attack_dmg, attack_skill, Action.ATTACK)
+		player.take_damage(attack_dmg, attack_skill, false)
 		_pending_cost = attack_cost
 	elif roll <= 85:
 		_action_used = Action.SHOVE

@@ -1,11 +1,21 @@
 extends "res://scripts/combatant.gd"
-## Player character: click-to-move on a grid, click adjacent enemy to attack.
-## Shared combat/movement/equipment logic lives in Combatant (combatant.gd).
+## Player character: click-to-move on a grid, click an enemy to use the selected
+## ability. Actions are driven by the `abilities` list (see scripts/abilities/):
+## the action bar, targeting, cursor and turn cost all read from it, so adding a
+## new player skill is just adding an Ability to _build_abilities().
 
-enum Action { MOVE, ATTACK, SHOVE, TRIP, RANGED, THROW, PICKUP, EQUIP }
+# Slot order of the action bar / abilities list. Values are indices into `abilities`.
+enum Action { MOVE, ATTACK, SHOVE, TRIP, RANGED, THROW, PICKUP }
+
+const MoveAbilityScript := preload("res://scripts/abilities/move_ability.gd")
+const MeleeAttackAbilityScript := preload("res://scripts/abilities/melee_attack_ability.gd")
+const ShoveAbilityScript := preload("res://scripts/abilities/shove_ability.gd")
+const TripAbilityScript := preload("res://scripts/abilities/trip_ability.gd")
+const RangedAbilityScript := preload("res://scripts/abilities/ranged_ability.gd")
+const ThrowAbilityScript := preload("res://scripts/abilities/throw_ability.gd")
+const PickupAbilityScript := preload("res://scripts/abilities/pickup_ability.gd")
 
 var selected_action: int = Action.MOVE
-var _tiles_moved: int = 0
 
 var move_indicator: MeshInstance3D
 
@@ -13,6 +23,7 @@ static var _bar_connected := false
 
 
 func _post_setup() -> void:
+	_build_abilities()
 	move_indicator = get_parent().get_node_or_null("MoveIndicator")
 	if move_indicator:
 		move_indicator.visible = false
@@ -21,8 +32,30 @@ func _post_setup() -> void:
 		_connect_action_bar()
 
 
-func _is_ranged_action(action_type: int) -> bool:
-	return action_type == Action.RANGED or action_type == Action.THROW
+func _build_abilities() -> void:
+	# Order must match the Action enum / action-bar buttons Btn1..Btn7.
+	abilities = [
+		MoveAbilityScript.new(),
+		MeleeAttackAbilityScript.new(),
+		ShoveAbilityScript.new(),
+		TripAbilityScript.new(),
+		RangedAbilityScript.new(),
+		ThrowAbilityScript.new(),
+		PickupAbilityScript.new(),
+	]
+
+
+# Player attacks apply equipped-weapon bonuses on top of the base stats.
+func get_attack_skill() -> int:
+	if inventory and inventory.has_method("get_equipped_attack_bonus"):
+		return attack_skill + inventory.get_equipped_attack_bonus()
+	return attack_skill
+
+
+func get_attack_damage() -> int:
+	if inventory and inventory.has_method("get_equipped_damage_bonus"):
+		return attack_dmg + inventory.get_equipped_damage_bonus()
+	return attack_dmg
 
 
 func enable_turn() -> void:
@@ -31,8 +64,6 @@ func enable_turn() -> void:
 	_stand_up_if_prone()
 	can_act = true
 	selected_action = Action.MOVE
-	_tiles_moved = 0
-	_action_used = Action.MOVE
 	_update_action_bar()
 
 
@@ -52,20 +83,10 @@ func _process(_delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not can_act or is_moving:
 		return
-	if event.is_action_pressed("action_1"):
-		select_action(Action.MOVE)
-	elif event.is_action_pressed("action_2"):
-		select_action(Action.ATTACK)
-	elif event.is_action_pressed("action_3"):
-		select_action(Action.SHOVE)
-	elif event.is_action_pressed("action_4"):
-		select_action(Action.TRIP)
-	elif event.is_action_pressed("action_5"):
-		select_action(Action.RANGED)
-	elif event.is_action_pressed("action_6"):
-		select_action(Action.THROW)
-	elif event.is_action_pressed("action_7"):
-		select_action(Action.PICKUP)
+	for i in range(abilities.size()):
+		if event.is_action_pressed("action_" + str(i + 1)):
+			select_action(i)
+			return
 
 
 func _connect_action_bar() -> void:
@@ -73,8 +94,8 @@ func _connect_action_bar() -> void:
 	var ab := root.get_node_or_null("ActionBar")
 	if not ab:
 		return
-	for i in range(7):
-		var btn: Button = ab.get_node("Panel/Bar/Btn" + str(i + 1))
+	for i in range(abilities.size()):
+		var btn: Button = ab.get_node_or_null("Panel/Bar/Btn" + str(i + 1))
 		if btn:
 			btn.toggled.connect(_on_action_btn_toggled.bind(i, btn))
 	# Defer initial sync so everyone is ready
@@ -90,8 +111,8 @@ func _on_action_btn_toggled(pressed: bool, index: int, btn: Button) -> void:
 		var root := get_parent()
 		var ab := root.get_node_or_null("ActionBar")
 		if ab:
-			for j in range(6):
-				var other: Button = ab.get_node("Panel/Bar/Btn" + str(j + 1))
+			for j in range(abilities.size()):
+				var other: Button = ab.get_node_or_null("Panel/Bar/Btn" + str(j + 1))
 				if other and other.button_pressed:
 					any_on = true
 					break
@@ -109,8 +130,8 @@ func _update_action_bar() -> void:
 	var ab := root.get_node_or_null("ActionBar")
 	if not ab:
 		return
-	for i in range(7):
-		var btn: Button = ab.get_node("Panel/Bar/Btn" + str(i + 1))
+	for i in range(abilities.size()):
+		var btn: Button = ab.get_node_or_null("Panel/Bar/Btn" + str(i + 1))
 		if btn:
 			btn.set_pressed_no_signal(i == selected_action)
 			btn.disabled = not can_act
@@ -132,36 +153,29 @@ func _update_cursor() -> void:
 	var to := from + camera.project_ray_normal(mouse_pos) * 100.0
 	var space_state := get_world_3d().direct_space_state
 
-	# If using an offensive action, check enemies first
-	if selected_action != Action.MOVE:
+	var ability = abilities[selected_action]
+
+	# Enemy-targeted abilities: check enemies first for aim feedback.
+	if ability.targets_enemy():
 		var enemy_query := PhysicsRayQueryParameters3D.create(from, to)
 		enemy_query.collision_mask = LAYER_ENEMY
 		var enemy_result := space_state.intersect_ray(enemy_query)
 		if not enemy_result.is_empty():
 			var collider: Node = enemy_result.collider
 			if collider.has_method("take_damage"):
-				if _can_target(collider):
+				if ability.can_target(self, collider):
 					Input.set_default_cursor_shape(Input.CURSOR_CROSS)
 					_hide_indicator()
 					return
 				# Distinguish "out of resources" from "out of range / blocked"
-				match selected_action:
-					Action.RANGED:
-						if ammo <= 0:
-							Input.set_default_cursor_shape(Input.CURSOR_HELP)
-						else:
-							Input.set_default_cursor_shape(Input.CURSOR_FORBIDDEN)
-					Action.THROW:
-						if not _has_usable_weapon():
-							Input.set_default_cursor_shape(Input.CURSOR_HELP)
-						else:
-							Input.set_default_cursor_shape(Input.CURSOR_FORBIDDEN)
-					_:
-						Input.set_default_cursor_shape(Input.CURSOR_FORBIDDEN)
+				if ability.unavailable_reason(self) == "resource":
+					Input.set_default_cursor_shape(Input.CURSOR_HELP)
+				else:
+					Input.set_default_cursor_shape(Input.CURSOR_FORBIDDEN)
 				_hide_indicator()
 				return
 
-	# Check ground for move (always available)
+	# Ground = move (the fallback action, always available).
 	var ground_query := PhysicsRayQueryParameters3D.create(from, to)
 	ground_query.collision_mask = LAYER_GROUND
 	var result := space_state.intersect_ray(ground_query)
@@ -169,7 +183,7 @@ func _update_cursor() -> void:
 		var clicked: Vector3 = result.position
 		clicked.y = position.y
 		var grid_pos := _snap_to_grid(clicked)
-		if _can_move() and _is_in_range(grid_pos) and not _is_tile_occupied_by_others(grid_pos, self):
+		if abilities[Action.MOVE].can_target(self, grid_pos):
 			Input.set_default_cursor_shape(Input.CURSOR_POINTING_HAND)
 			_show_indicator(grid_pos)
 		else:
@@ -204,82 +218,58 @@ func _handle_click(screen_pos: Vector2) -> void:
 	var camera := get_viewport().get_camera_3d()
 	var from := camera.project_ray_origin(screen_pos)
 	var to := from + camera.project_ray_normal(screen_pos) * 100.0
-
 	var space_state := get_world_3d().direct_space_state
 
-	# Pickup action: scan for nearby ground items
-	if selected_action == Action.PICKUP:
-		_play_attack_anim("pick-up")
-		_do_pickup()
-		is_moving = true
-		target_position = position
+	var ability = abilities[selected_action]
+
+	# Self-targeted abilities (pickup): fire immediately, ends the turn in place.
+	if ability.targets_self():
+		_begin_action(selected_action)
+		ability.execute(self, null)
+		_end_action_in_place()
 		return
 
-	# Offensive actions: check if we clicked an enemy
-	if selected_action != Action.MOVE:
+	# Enemy-targeted abilities: use it if we clicked a valid enemy target.
+	if ability.targets_enemy():
 		var enemy_query := PhysicsRayQueryParameters3D.create(from, to)
 		enemy_query.collision_mask = LAYER_ENEMY
 		var enemy_result := space_state.intersect_ray(enemy_query)
-
 		if not enemy_result.is_empty():
 			var collider: Node = enemy_result.collider
-			if collider.has_method("take_damage") and _can_target(collider):
+			if collider.has_method("take_damage") and ability.can_target(self, collider):
 				Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 				_hide_indicator()
 				_face_target(collider)
-				_action_used = selected_action
-				match selected_action:
-					Action.ATTACK:
-						_play_attack_anim("attack-melee-right")
-						collider.take_damage(_get_effective_attack_dmg(), _get_effective_attack_skill(), Action.ATTACK)
-					Action.SHOVE:
-						_play_attack_anim("attack-kick-right")
-						_try_shove(collider)
-					Action.TRIP:
-						_play_attack_anim("attack-kick-right")
-						_try_trip(collider)
-					Action.RANGED:
-						_play_attack_anim("holding-both-shoot")
-						_do_ranged_attack(collider)
-					Action.THROW:
-						_play_attack_anim("attack-melee-right")
-						_do_throw_attack(collider)
-				is_moving = true
-				target_position = position
+				_begin_action(selected_action)
+				ability.execute(self, collider)
+				_end_action_in_place()
 				return
 
-	# Move on ground
+	# Fallback: move on the ground (always available regardless of selection).
 	var ground_query := PhysicsRayQueryParameters3D.create(from, to)
 	ground_query.collision_mask = LAYER_GROUND
 	var result := space_state.intersect_ray(ground_query)
-
 	if not result.is_empty():
 		var clicked: Vector3 = result.position
 		clicked.y = position.y
 		var grid_pos := _snap_to_grid(clicked)
-		if _can_move() and _is_in_range(grid_pos) and not _is_tile_occupied_by_others(grid_pos, self):
+		var move_ability = abilities[Action.MOVE]
+		if move_ability.can_target(self, grid_pos):
 			Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 			_hide_indicator()
-			_tiles_moved = int(abs(grid_pos.x - position.x) + abs(grid_pos.z - position.z))
-			_action_used = Action.MOVE
-			target_position = grid_pos
-			is_moving = true
+			_begin_action(Action.MOVE)
+			move_ability.execute(self, grid_pos)  # sets target_position + is_moving
 
 
-func _can_target(collider: Node) -> bool:
-	var dist: float = abs(collider.position.x - position.x) + abs(collider.position.z - position.z)
-	match selected_action:
-		Action.ATTACK, Action.SHOVE, Action.TRIP:
-			return dist <= GRID_SIZE * 1.5
-		Action.RANGED:
-			if ammo <= 0:
-				return false
-			return dist <= _get_effective_ranged_range() * GRID_SIZE and _has_line_of_sight(collider)
-		Action.THROW:
-			if not _has_usable_weapon():
-				return false
-			return dist <= _get_effective_throw_range() * GRID_SIZE and _has_line_of_sight(collider)
-	return false
+func _begin_action(slot: int) -> void:
+	## Record the time-unit cost for the action being started this turn.
+	_pending_cost = max(1, abilities[slot].get_cost(self))
+
+
+func _end_action_in_place() -> void:
+	## Instant (non-move) actions play in place, then the turn ends on arrival.
+	is_moving = true
+	target_position = position
 
 
 func _do_ranged_attack(target: Node) -> void:
@@ -288,7 +278,7 @@ func _do_ranged_attack(target: Node) -> void:
 		return
 	ammo -= 1
 	_update_health_bar()
-	target.take_damage(attack_dmg, ranged_skill, Action.RANGED)
+	target.take_damage(attack_dmg, ranged_skill, true)
 	_show_action_text(str(ammo) + " arrows left")
 
 
@@ -306,7 +296,7 @@ func _do_throw_attack(target: Node) -> void:
 		throw_dir = Vector3.RIGHT
 	throw_dir = throw_dir.normalized()
 
-	var defended: bool = target.take_damage(attack_dmg, throw_skill, Action.THROW)
+	var defended: bool = target.take_damage(attack_dmg, throw_skill, true)
 	# Remove the thrown weapon from the character's equipment
 	if inventory and inventory.has_method("unequip_slot"):
 		inventory.unequip_slot(ItemResource.EquipSlot.RIGHT_HAND)
@@ -352,7 +342,6 @@ func _avoid_overlap(tile: Vector3, exclude: Node) -> Vector3:
 
 
 func _do_pickup() -> void:
-	_action_used = Action.PICKUP
 	var picked_up := false
 	for gi in get_tree().get_nodes_in_group("pickups"):
 		if not is_instance_valid(gi):
@@ -414,9 +403,8 @@ func equip_weapon(slot_index: int) -> void:
 		item_name = new_item.item_name
 	_show_action_text("Equipped " + item_name)
 	_update_health_bar()
-	_action_used = Action.EQUIP
-	is_moving = true
-	target_position = position
+	_pending_cost = max(1, equip_cost)
+	_end_action_in_place()
 
 
 func unequip_item(item: ItemResource) -> void:
@@ -433,37 +421,8 @@ func unequip_item(item: ItemResource) -> void:
 	inventory.unequip_item(item)
 	_show_action_text("Unequipped " + item.item_name)
 	_update_health_bar()
-	_action_used = Action.EQUIP
-	is_moving = true
-	target_position = position
-
-
-func _get_effective_ranged_range() -> int:
-	if inventory and inventory.has_method("get_equipped_ranged_range"):
-		var item_range: int = inventory.get_equipped_ranged_range()
-		if item_range > 0:
-			return item_range
-	return ranged_range
-
-
-func _get_effective_throw_range() -> int:
-	if inventory and inventory.has_method("get_equipped_throw_range"):
-		var item_range: int = inventory.get_equipped_throw_range()
-		if item_range > 0:
-			return item_range
-	return throw_range
-
-
-func _get_effective_attack_skill() -> int:
-	if inventory and inventory.has_method("get_equipped_attack_bonus"):
-		return attack_skill + inventory.get_equipped_attack_bonus()
-	return attack_skill
-
-
-func _get_effective_attack_dmg() -> int:
-	if inventory and inventory.has_method("get_equipped_damage_bonus"):
-		return attack_dmg + inventory.get_equipped_damage_bonus()
-	return attack_dmg
+	_pending_cost = max(1, equip_cost)
+	_end_action_in_place()
 
 
 func _try_shove(target: Node) -> int:
@@ -481,36 +440,8 @@ func _try_trip(target: Node) -> bool:
 	return hit
 
 
-func _can_move() -> bool:
-	return not is_prone
-
-
-func _is_in_range(target: Vector3) -> bool:
-	var dist: float = abs(target.x - position.x) + abs(target.z - position.z)
-	return dist <= move_range * GRID_SIZE
-
-
 func _on_move_complete() -> void:
 	can_act = false
-	var cost := 0
-	match _action_used:
-		Action.MOVE:
-			cost = move_cost_per_tile
-		Action.ATTACK:
-			cost = attack_cost
-		Action.SHOVE:
-			cost = shove_cost
-		Action.TRIP:
-			cost = trip_cost
-		Action.RANGED:
-			cost = ranged_cost
-		Action.THROW:
-			cost = throw_cost
-		Action.PICKUP:
-			cost = 1
-		Action.EQUIP:
-			cost = equip_cost
-	cost = max(cost, 1)
 	var combat_mgr := get_parent().get_node_or_null("CombatManager")
 	if combat_mgr:
-		combat_mgr.turn_done(cost)
+		combat_mgr.turn_done(max(_pending_cost, 1))
