@@ -3,6 +3,8 @@ extends MeshInstance3D
 
 @export var item_resource: ItemResource
 
+const SYNTY_MATERIAL_PATH := "res://assets/synty/Dungeon_Material_01_mat.tres"
+
 func _ready() -> void:
 	add_to_group("pickups")
 	_apply_visual()
@@ -26,8 +28,14 @@ func _apply_visual() -> void:
 				model_node = mi
 			if model_node and model_node is Node3D:
 				_center_mesh_on_origin(model_node)
+				# Synty meshes ship without a resolved material and in native
+				# (large) scale, so assign the atlas material and normalize size.
+				if _is_synty_model(model_path):
+					_apply_synty_material(model_node)
+					model_node.scale = _normalized_scale(model_node, 0.6)
+				else:
+					model_node.scale = _get_item_model_scale()
 				model_node.rotation_degrees = _get_item_model_rotation()
-				model_node.scale = _get_item_model_scale()
 				add_child(model_node)
 	else:
 		match item_resource.item_type:
@@ -88,11 +96,48 @@ func _get_item_model_path() -> String:
 	match item_resource.item_name:
 		"Longbow":
 			return "res://assets/weapons/bow.fbx"
-		"Dagger", "Warhammer":
+		"Warhammer":
+			return "res://assets/synty/SM_Wep_Hammer_Small_01.res"
+		"Dagger":
 			return "res://assets/models/kenney/mini-arena/weapon-sword.glb"
 		"Wooden Shield":
 			return "res://assets/weapons/Shield_1.obj"
 	return ""
+
+
+func _is_synty_model(path: String) -> bool:
+	return path.begins_with("res://assets/synty/")
+
+
+func _apply_synty_material(n: Node3D) -> void:
+	var mat: Material = load(SYNTY_MATERIAL_PATH)
+	if not mat:
+		return
+	var meshes: Array = []
+	_collect_meshes(n, meshes)
+	for m in meshes:
+		(m as MeshInstance3D).material_override = mat
+
+
+func _normalized_scale(n: Node3D, target: float) -> Vector3:
+	## Uniform scale so the model's longest dimension equals `target` tiles.
+	var meshes: Array = []
+	_collect_meshes(n, meshes)
+	var aabb := AABB()
+	var first := true
+	for m in meshes:
+		var mi := m as MeshInstance3D
+		if mi.mesh:
+			var maabb: AABB = mi.transform * mi.mesh.get_aabb()
+			aabb = maabb if first else aabb.merge(maabb)
+			first = false
+	if first:
+		return Vector3.ONE
+	var max_dim: float = max(aabb.size.x, max(aabb.size.y, aabb.size.z))
+	if max_dim <= 0.001:
+		return Vector3.ONE
+	var s: float = target / max_dim
+	return Vector3(s, s, s)
 
 
 func _center_mesh_on_origin(n: Node3D) -> void:
@@ -126,8 +171,10 @@ func _get_item_model_rotation() -> Vector3:
 	match item_resource.item_name:
 		"Longbow":
 			return Vector3(0, 180, 0)  # same orientation as equipped
+		"Warhammer":
+			return Vector3(0, 90, 90)  # same orientation as equipped
 		_:
-			return Vector3(-90, 0, 0)   # lay flat for sword/shield
+			return Vector3(-90, 0, 0)   # lay flat for sword/hammer/shield
 
 
 func _get_item_model_scale() -> Vector3:
@@ -136,8 +183,6 @@ func _get_item_model_scale() -> Vector3:
 			return Vector3(0.6, 0.6, 0.6)
 		"Dagger":
 			return Vector3(0.7, 0.7, 0.7)
-		"Warhammer":
-			return Vector3(0.9, 0.9, 0.9)
 		"Wooden Shield":
 			return Vector3(0.4, 0.4, 0.4)
 	return Vector3(1.0, 1.0, 1.0)

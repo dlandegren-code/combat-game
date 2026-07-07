@@ -95,6 +95,9 @@ const DEBUG_EQUIPMENT := false
 const SWORD_MODEL_PATH := "res://assets/models/kenney/mini-arena/weapon-sword.glb"
 const BOW_MODEL_PATH := "res://assets/weapons/bow.fbx"
 const SHIELD_MODEL_PATH := "res://assets/weapons/Shield_1.obj"
+const HAMMER_MODEL_PATH := "res://assets/synty/SM_Wep_Hammer_Small_01.res"
+const AXE_MODEL_PATH := "res://assets/synty/SM_Wep_Goblin_Axe_Large_01.res"
+const SYNTY_MATERIAL_PATH := "res://assets/synty/Dungeon_Material_01_mat.tres"
 
 
 func _ready() -> void:
@@ -279,14 +282,22 @@ func _refresh_socket(socket, item: ItemResource) -> void:
 		c.queue_free()
 	if not item:
 		return
-	# Determine weapon kind: bow vs sword/dagger by name only
-	var is_bow: bool = item.item_name.to_lower().find("bow") >= 0
+	# Determine weapon kind by name: bow vs hammer vs axe/cleaver vs sword/dagger.
+	var lower_name: String = item.item_name.to_lower()
+	var is_bow: bool = lower_name.find("bow") >= 0
+	var is_hammer: bool = lower_name.find("hammer") >= 0
+	var is_axe: bool = lower_name.find("axe") >= 0 or lower_name.find("cleaver") >= 0
+	var is_synty: bool = is_hammer or is_axe  # Synty meshes need the atlas material assigned
 	# Try to load the 3D model for this weapon type
 	var packed: PackedScene = null
 	match item.item_type:
 		ItemResource.ItemType.WEAPON:
 			if is_bow:
 				packed = _safe_load_scene(BOW_MODEL_PATH)
+			elif is_hammer:
+				packed = _safe_load_scene(HAMMER_MODEL_PATH)
+			elif is_axe:
+				packed = _safe_load_scene(AXE_MODEL_PATH)
 			else:
 				packed = _safe_load_scene(SWORD_MODEL_PATH)
 		ItemResource.ItemType.SHIELD:
@@ -298,12 +309,28 @@ func _refresh_socket(socket, item: ItemResource) -> void:
 			# Set per-type target size for scaling
 			match item.item_type:
 				ItemResource.ItemType.WEAPON:
-					_center_target = 0.8 if is_bow else 0.5
+					if is_bow:
+						_center_target = 0.8
+					elif is_hammer:
+						_center_target = 0.6
+					elif is_axe:
+						_center_target = 0.7
+					else:
+						_center_target = 0.5
 				ItemResource.ItemType.SHIELD:
 					_center_target = 0.7
 				_:
 					_center_target = 1.2
 			_center_on_origin(n3d)
+			# The Synty hammer mesh ships without a resolved material; assign the
+			# shared dungeon atlas material to every mesh surface so it renders textured.
+			if is_synty:
+				var hammer_mat: Material = load(SYNTY_MATERIAL_PATH)
+				if hammer_mat:
+					var hammer_meshes: Array = []
+					_find_mesh_instances(n3d, hammer_meshes)
+					for m in hammer_meshes:
+						(m as MeshInstance3D).material_override = hammer_mat
 			# Apply per-weapon-type position and rotation offsets
 			match item.item_type:
 				ItemResource.ItemType.WEAPON:
@@ -312,6 +339,14 @@ func _refresh_socket(socket, item: ItemResource) -> void:
 						# Mirror with Y 180 and shift towards right arm (negative X)
 						n3d.position = Vector3(-0.15, 0, 0.08)
 						n3d.rotation_degrees = Vector3(90, 180, 0)
+					elif is_hammer:
+						# Synty hammer: starting grip offset (tune position/rotation to taste).
+						n3d.position = Vector3(-0.2, 0.1, 0.08)
+						n3d.rotation_degrees = Vector3(0, 30, 190)
+					elif is_axe:
+						# Synty goblin greataxe: starting grip offset (tune to taste).
+						n3d.position = Vector3(-0.2, 0.15, 0.08)
+						n3d.rotation_degrees = Vector3(0, 30, 10)
 					else:
 						# Sword model is already vertical (Y is longest axis)
 						# Flip 180 on Z so blade points down, push away from body
