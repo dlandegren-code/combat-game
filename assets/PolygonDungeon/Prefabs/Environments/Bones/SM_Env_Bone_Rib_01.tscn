@@ -1,0 +1,25 @@
+[gd_scene load_steps=5 format=3 uid="uid://dwyj3o8hyqy6d"]
+
+[ext_resource type="ArrayMesh" uid="uid://bw637a4tm7frc" path="res://Assets/PolygonDungeon/Models/SM_Env_Bone_Rib_01.res" id="1_4hsda"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_lvjar"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_r12ic"]
+points = PackedVector3Array(-0.371348, 0.12719, -1.19426, -1.22305, -0.116246, -0.829096, -1.10142, 0.24881, -0.9509, -0.249715, 1.4656, -0.220826, 1.21015, 0.12719, -0.9509, 0.319547, -0.0381887, -0.989917, 0.115183, -0.243779, -0.684532, 0.115183, -0.548123, -0.172054, -0.979785, -0.237668, 0.87416, -1.10142, 0.12719, 0.995714, -0.371348, 1.4656, 0.508998, 0.601713, 1.4656, 0.0225321, 1.5756, -0.116246, -0.220826, 1.33178, -0.116246, 1.36088, -0.127809, 0.12719, 1.36088, 1.33178, 0.12719, 1.36088)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_hebo1"]
+points = PackedVector3Array(-0.371638, 6.69822, 3.30773, -0.249959, 6.94122, 3.18623, -0.980038, 6.81972, 3.18623, -0.736678, 6.45465, 3.18623, -0.249808, 1.26255, 0.438186, 0.554631, 1.18136, 0.275948, -0.858358, 7.06386, 2.82101, 0.480121, 2.19652, 0.144084, -0.00659889, 5.6036, 1.60423, -0.249959, 6.94122, 2.69916, -0.736678, 5.96752, 1.72644, -0.614848, 4.14277, 0.630799, -0.493168, 1.46639, 0.0225846, -0.00674909, 1.58789, -0.34263, 0.236611, 3.65621, 0.265584, -0.371488, 2.56159, -0.0992727)
+
+[node name="SM_Env_Bone_Rib_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_4hsda")
+surface_material_override/0 = ExtResource("2_lvjar")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_r12ic")
+
+[node name="MeshCollider2" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider2"]
+shape = SubResource("ConvexPolygonShape3D_hebo1")

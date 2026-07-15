@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://fopt5ijdbdmu"]
+
+[ext_resource type="ArrayMesh" uid="uid://b7kq16pkg7ied" path="res://Assets/PolygonDungeon/Models/SM_Env_Sewer_Canal_Drain_02.res" id="1_gquqq"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_orm17"]
+
+[node name="SM_Env_Sewer_Canal_Drain_02" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_gquqq")
+surface_material_override/0 = ExtResource("2_orm17")

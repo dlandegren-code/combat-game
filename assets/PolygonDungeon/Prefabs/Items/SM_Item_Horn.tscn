@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://cm3a510flctla"]
+
+[ext_resource type="ArrayMesh" uid="uid://67ntuk151k7c" path="res://Assets/PolygonDungeon/Models/SM_Item_Horn.res" id="1_anauc"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_anauc"]
+
+[node name="SM_Item_Horn" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_anauc")
+surface_material_override/0 = ExtResource("2_anauc")

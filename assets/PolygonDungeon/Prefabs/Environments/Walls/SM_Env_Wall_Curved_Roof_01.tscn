@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://dbcw4d7ndtb38"]
+
+[ext_resource type="ArrayMesh" uid="uid://b18o2rcfkwxo6" path="res://Assets/PolygonDungeon/Models/SM_Env_Wall_Curved_Roof_01.res" id="1_3aeva"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_oexhp"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_6llfs"]
+points = PackedVector3Array(5.11082, 0.0627028, -0.0353487, 4.95814, -0.207213, -0.0504073, 4.44452, 0.64838, -0.0504073, 5.01771, 0.232954, 4.9776, 4.95814, -0.207213, 5.08249, -0.00329733, -0.121736, -0.0504073, 1.70725, 0.99064, -0.136086, 0.0818045, -0.207213, 0.463143, 3.5039, 0.905046, -0.0504073, 3.6751, 0.905046, 5.16869, 0.338612, 0.562785, 5.16869, 0.122854, -0.095471, 4.95112, -0.00329733, -0.207213, 3.37049, 0.01122, 0.232719, 0.0498102, 0.594918, 0.64838, -0.0504073, 2.04916, 0.99064, 5.16869)
+
+[node name="SM_Env_Wall_Curved_Roof_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_3aeva")
+surface_material_override/0 = ExtResource("2_oexhp")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_6llfs")

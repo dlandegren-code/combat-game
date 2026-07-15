@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://bfdcb6u6s74q7"]
+
+[ext_resource type="ArrayMesh" uid="uid://bhyow186i3der" path="res://Assets/PolygonDungeon/Models/SM_Env_SpikeFence_01.res" id="1_dk676"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_tef80"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_23u37"]
+points = PackedVector3Array(2.97636, 2.02381, -0.111057, 2.4215, 1.70608, 0.0476152, 4.64243, 1.70608, -0.0317754, 4.64243, 1.86485, -0.34912, 0.436241, 1.94443, -0.269784, 0.436241, 1.86485, -0.031721, 5.03968, 0.753922, 0.206396, 0.357685, 0.912885, 0.206396, 4.72198, 1.70608, -0.34912, 0.357685, -0.0396824, -0.031721, -0.039566, 0.754326, -0.031721, -0.039566, 0.754326, 0.206396, 1.1507, -0.0396824, 0.206396, 4.5589, 0.000310834, 0.19563, 4.64193, -0.0394805, -0.031721, 0.119036, -0.0396824, 0.127006)
+
+[node name="SM_Env_Fence_Metal_Spikes_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_dk676")
+surface_material_override/0 = ExtResource("2_tef80")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_23u37")

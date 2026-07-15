@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://dlmr0ewnioupb"]
+
+[ext_resource type="ArrayMesh" uid="uid://dqw3q7j8wt17s" path="res://Assets/PolygonDungeon/Models/SM_Wep_Goblin_Gem_Hammer_01.res" id="1_3aopv"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_bie20"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_isrex"]
+points = PackedVector3Array(0.101673, 0.52011, 0.359285, -0.0371489, -0.636711, 0.0815186, 0.0553793, -0.636711, 0.0815186, 0.0785261, -0.544102, -0.0572688, 0.147967, 0.473735, -0.103531, 0.101673, 0.612576, 0.289763, -0.0602368, 0.612576, 0.312958, -0.0834425, -0.567504, 0.0121249, 0.00908576, -0.567504, -0.0804638, 0.101673, 0.58946, -0.288709, -0.0834425, 0.82091, -0.0341376, -0.129736, 0.658952, 0.17398, -0.152883, 0.473735, -0.103531, -0.0602368, 0.543369, -0.288709, -0.152883, 0.566343, -0.0110064, 0.00834954, 0.624134, -0.291704)
+
+[node name="SM_Wep_Goblin_Gem_Hammer_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_3aopv")
+surface_material_override/0 = ExtResource("2_bie20")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_isrex")

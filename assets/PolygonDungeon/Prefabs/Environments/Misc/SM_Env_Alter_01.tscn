@@ -1,0 +1,25 @@
+[gd_scene load_steps=5 format=3 uid="uid://bnk32r40ktsoc"]
+
+[ext_resource type="ArrayMesh" uid="uid://dk1po64i8q7o5" path="res://Assets/PolygonDungeon/Models/SM_Env_Alter_01.res" id="1_rejeg"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_lxgfp"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_dgq30"]
+points = PackedVector3Array(1.17499, 2.753, -0.512704, 1.28189, 1.63164, -0.619549, 1.17499, 2.53931, -1.20706, 1.08678, 2.70163, -1.18042, -0.907799, 2.753, -0.512704, 1.17499, 2.53931, -0.512704, 1.28189, 1.41783, -0.619549, 1.28189, 1.41783, -1.1537, -1.06801, 2.48586, -1.20706, -0.983729, 2.7015, -1.18035, -0.994295, 2.70791, -0.635793, -1.06801, 2.64609, -0.512704, -1.06801, 2.53931, -0.512704, -1.22847, 1.41783, -0.619549, -1.22847, 1.41783, -1.1537, -1.22847, 1.52487, -0.619549)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_tv8cs"]
+points = PackedVector3Array(1.70918, 0.0826034, -1.26047, 1.70918, 0.0826034, 0.661963, 1.64092, 0.00444297, -1.21045, -1.63289, 0.0079014, -1.20444, -1.19723, 1.39916, -1.12436, 1.25378, 1.40178, -1.12844, 1.28189, 1.41769, -0.619579, 0.788338, 1.31283, 0.6105, 0.480498, 0.296196, 1.19632, -0.44436, 0.0300353, 1.1552, 1.56898, 0.0347388, 0.607373, -1.70918, 0.0826034, 0.661963, -1.22835, 1.41769, -0.619579, -0.147228, 1.31062, 0.608335, -0.480498, 0.402853, 1.14293, -0.701005, 1.27258, 0.62036)
+
+[node name="SM_Env_Alter_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_rejeg")
+surface_material_override/0 = ExtResource("2_lxgfp")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_dgq30")
+
+[node name="MeshCollider2" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider2"]
+shape = SubResource("ConvexPolygonShape3D_tv8cs")

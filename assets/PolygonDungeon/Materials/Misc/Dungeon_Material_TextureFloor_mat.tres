@@ -1,0 +1,13 @@
+[gd_resource type="StandardMaterial3D" load_steps=3 format=3 uid="uid://dmii1ririgxvc"]
+
+[ext_resource type="Texture2D" uid="uid://bcqxiopjbdawf" path="res://Assets/PolygonDungeon/Textures/Misc/Dungeons_Texture_FloorTiles_01.png" id="1_y1t4r"]
+[ext_resource type="Texture2D" uid="uid://dyc8khwsqc0oh" path="res://Assets/PolygonDungeon/Textures/Misc/Dungeons_Texture_FloorTiles_Normal.png" id="2_e2545"]
+
+[resource]
+resource_name = "Dungeon_Material_TextureFloor_mat"
+depth_draw_mode = 1
+albedo_texture = ExtResource("1_y1t4r")
+roughness = 0.8
+normal_enabled = true
+normal_texture = ExtResource("2_e2545")
+uv1_scale = Vector3(1, 1, 0)

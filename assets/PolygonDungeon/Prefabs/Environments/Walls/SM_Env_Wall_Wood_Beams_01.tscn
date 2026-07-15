@@ -1,0 +1,41 @@
+[gd_scene load_steps=7 format=3 uid="uid://mq56hchesuih"]
+
+[ext_resource type="ArrayMesh" uid="uid://b66mjflasa1sb" path="res://Assets/PolygonDungeon/Models/SM_Env_Wall_Wood_Beams_01.res" id="1_ignoh"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_luk7h"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_6rged"]
+points = PackedVector3Array(0.0343021, 0.286663, 0, 0.041541, 0.286214, 0.417779, 4.96444, 0.286663, 0, 0.0511928, 2.77556e-17, 0.00143131, 0.0511928, 2.77556e-17, 0.416961, 4.95672, 0.286214, 0.417779, 4.94706, 2.77556e-17, 0.416961, 4.94706, 2.77556e-17, 0.00143131)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_kde6e"]
+points = PackedVector3Array(4.57682, 3.79632, 0.255974, 4.57827, 3.86168, 0.421711, 4.58221, 4.96026, 0.417749, 4.58809, 4.96819, 0, 4.5815, 3.78418, 0, 4.5772, 0.276957, 0.00895765, 4.99938, 4.96026, 0.417749, 4.62806, 0.239607, 0.202435, 4.68734, 0.198521, 0.416056, 4.99938, 0.332983, 0.417749, 5, 4.96726, 0, 4.67968, 0.32598, 0, 4.58598, 0.374536, 0.00437563, 5, 0.32598, 0)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_7kubu"]
+points = PackedVector3Array(0.420474, 3.86192, 0.421711, 0.417214, 4.96849, -2.77556e-17, 0.416553, 4.96056, 0.417748, -2.77556e-17, 4.95309, 0.417129, -2.77556e-17, 0.339737, 0.417129, 0.295174, 0.43304, 0.408708, 0.318079, 0.202582, 0.395045, 0.42163, 0.275824, 0.0155211, -2.77556e-17, 4.95309, 0.00132094, 0.41354, 0.365395, 0.00355004, 0.338633, 0.325741, -2.77556e-17, -2.77556e-17, 0.339737, 0.00127966)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_87jlr"]
+points = PackedVector3Array(0.458961, 4.99441, -2.77556e-17, 0.452, 3.71257, -2.77556e-17, 0.404092, 3.71141, 0.0486075, 0.420471, 4.89816, 0.38845, 0.465512, 4.99222, 0.41777, 4.53967, 4.99222, 0.41777, 4.54581, 4.99415, -2.77556e-17, 3.68881, 3.67988, -2.77556e-17, 3.74081, 3.68014, 0.0196969, 3.92261, 3.75657, 0.314085, 0.458961, 3.87109, 0.41777, 3.93039, 3.8698, 0.418344, 4.5409, 3.87096, 0.417893, 4.55237, 3.82876, 0.353438, 4.58717, 3.70021, 0.0158066, 4.54581, 3.71269, -2.77556e-17)
+
+[node name="SM_Env_Wall_Wood_Beams_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_ignoh")
+surface_material_override/0 = ExtResource("2_luk7h")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_6rged")
+
+[node name="MeshCollider2" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider2"]
+shape = SubResource("ConvexPolygonShape3D_kde6e")
+
+[node name="MeshCollider3" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider3"]
+shape = SubResource("ConvexPolygonShape3D_7kubu")
+
+[node name="MeshCollider4" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider4"]
+shape = SubResource("ConvexPolygonShape3D_87jlr")

@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://tw1pyt0w6ake"]
+
+[ext_resource type="ArrayMesh" uid="uid://di7ljy58qkrkn" path="res://Assets/PolygonDungeon/Models/SM_Prop_Goblin_Tent_01.res" id="1_xn06v"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_xekpp"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_kflya"]
+points = PackedVector3Array(-1.65599, 1.76269, 1.02722, -1.02685, 4.04972, 0.940259, -1.47823, -0.0531024, -0.692437, -1.55096, 0.012409, 1.39721, -1.38748, 0.444332, 1.58985, 1.27998, 3.40138, 1.30121, 0.197772, 4.41116, 0.00359416, -0.153335, 2.43995, -1.21111, 0.0509396, -0.0463254, -1.52188, 1.27998, -0.204456, -0.140412, 1.13587, -0.0603313, 1.51784, 1.4241, 0.444332, 1.66247, 1.4241, 3.40138, 1.15689, 0.322512, 1.4898, -1.49663, 1.57127, 0.381532, -0.261353, 1.81633, 0.405026, 1.02224)
+
+[node name="SM_Prop_Goblin_Tent_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_xn06v")
+surface_material_override/0 = ExtResource("2_xekpp")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_kflya")

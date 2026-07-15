@@ -1,0 +1,19 @@
+[gd_scene load_steps=4 format=3 uid="uid://b2map8i5heqbj"]
+
+[ext_resource type="ArrayMesh" uid="uid://drx4euikqnhru" path="res://Assets/PolygonDungeon/Models/SM_Trap_Saw_02.res" id="1_le5ri"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_g5eu1"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_le5ri"]
+height = 0.0823975
+radius = 1.25293
+
+[node name="SM_Trap_Saw_02" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_le5ri")
+surface_material_override/0 = ExtResource("2_g5eu1")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0.00714111, 3.12147e-10, 0)
+shape = SubResource("CylinderShape3D_le5ri")

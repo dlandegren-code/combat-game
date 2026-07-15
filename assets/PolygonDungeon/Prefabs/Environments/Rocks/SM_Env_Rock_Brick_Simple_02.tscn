@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://dlcl32jg4se4y"]
+
+[ext_resource type="ArrayMesh" uid="uid://byvfqovlglywf" path="res://Assets/PolygonDungeon/Models/SM_Env_Rock_Brick_Simple_02.res" id="1_7qapf"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_vyuko"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_jr7q8"]
+size = Vector3(0.604182, 0.130073, 0.403645)
+
+[node name="SM_Env_Rock_Brick_Simple_02" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_7qapf")
+surface_material_override/0 = ExtResource("2_vyuko")
+
+[node name="BoxCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BoxCollider"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.43051e-06, 5.96046e-08, -9.53674e-07)
+shape = SubResource("BoxShape3D_jr7q8")

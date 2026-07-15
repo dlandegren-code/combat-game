@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://bgnj12ahekxxx"]
+
+[resource]
+resource_name = "FX_LightRay_mat"
+depth_draw_mode = 1
+roughness = 0.5
+uv1_scale = Vector3(1, 1, 0)

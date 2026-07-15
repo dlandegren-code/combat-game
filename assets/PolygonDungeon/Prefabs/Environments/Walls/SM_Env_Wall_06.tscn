@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://n5dtyaniyy5d"]
+
+[ext_resource type="ArrayMesh" uid="uid://dkx187cy3lth5" path="res://Assets/PolygonDungeon/Models/SM_Env_Wall_06.res" id="1_2oxmo"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_wgjdl"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_d41tx"]
+size = Vector3(5.27658, 5.29981, 0.599148)
+
+[node name="SM_Env_Wall_06" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_2oxmo")
+surface_material_override/0 = ExtResource("2_wgjdl")
+
+[node name="BoxCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BoxCollider"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.48778, 2.54876, 0.00162697)
+shape = SubResource("BoxShape3D_d41tx")

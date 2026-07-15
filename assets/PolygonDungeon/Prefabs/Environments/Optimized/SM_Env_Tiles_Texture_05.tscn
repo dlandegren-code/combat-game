@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://h2lekjj12m2f"]
+
+[ext_resource type="ArrayMesh" uid="uid://c2b276fmrgrju" path="res://Assets/PolygonDungeon/Models/SM_Env_Tiles_Texture_05.res" id="1_556kp"]
+[ext_resource type="Material" uid="uid://dmii1ririgxvc" path="res://Assets/PolygonDungeon/Materials/Misc/Dungeon_Material_TextureFloor_mat.tres" id="2_24owg"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rhcyc"]
+size = Vector3(5, 0, 5)
+
+[node name="SM_Env_Tiles_Texture_05" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_556kp")
+surface_material_override/0 = ExtResource("2_24owg")
+
+[node name="BoxCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BoxCollider"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0, 2.5)
+shape = SubResource("BoxShape3D_rhcyc")

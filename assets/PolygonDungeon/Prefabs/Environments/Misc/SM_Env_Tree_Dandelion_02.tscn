@@ -1,0 +1,25 @@
+[gd_scene load_steps=5 format=3 uid="uid://vy5wwwvkdr0u"]
+
+[ext_resource type="ArrayMesh" uid="uid://fpqy01rruq5r" path="res://Assets/PolygonDungeon/Models/SM_Env_Tree_Dandelion_02.res" id="1_4o0ek"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_bp4mr"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_r6ixo"]
+points = PackedVector3Array(0.577679, 3.89644, -0.84526, 0.28008, 3.89644, -0.84526, 0.577679, 3.30093, -0.84526, 0.676856, -0.171067, -1.24221, 0.676856, 1.11851, -1.63878, 0.577679, 3.40032, -1.24212, 0.28008, 3.89644, -0.944692, -0.0175879, 0.125853, -1.34126, 0.0816572, -0.171067, -1.14297, 0.577611, -0.171067, -1.14297, 0.577611, -0.369848, -1.63878, 0.676856, -0.171067, -1.63878, 0.577611, 0.523834, -1.83725, 0.180834, 1.91196, -1.63868, -0.0175879, -0.171067, -1.63878, 0.180834, -0.171067, -1.83725)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_nk5v2"]
+points = PackedVector3Array(-0.215748, 5.48365, 1.03994, 0.77614, 5.48365, 0.444108, -0.215748, 5.88036, 0.741928, -0.41416, 5.48365, 1.03994, -0.0176851, 4.39262, 0.841008, 0.676497, 4.78933, 0.642654, 0.676497, 5.38428, -0.348921, 0.37914, 5.97973, -0.0514868, 0.577378, 3.49956, -0.745821, -0.513629, 5.88036, -0.24984, -1.00975, 5.38428, 0.543574, -0.81116, 4.49199, 0.543574, 0.425465, 3.38342, -0.933166, 0.0814338, 5.18605, -0.745821, -0.612748, 4.98782, -0.646548, -1.00975, 4.88845, 0.0477866)
+
+[node name="SM_Env_Tree_Dandelion_02" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_4o0ek")
+surface_material_override/0 = ExtResource("2_bp4mr")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_r6ixo")
+
+[node name="MeshCollider2" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider2"]
+shape = SubResource("ConvexPolygonShape3D_nk5v2")

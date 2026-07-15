@@ -1,0 +1,10 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://c0jetvdxw5ap4"]
+
+[resource]
+resource_name = "Dungeons_Material_Lava_mat"
+depth_draw_mode = 1
+albedo_color = Color(1, 0.584314, 0.270588, 1)
+emission_enabled = true
+emission = Color(1, 0.687294, 0, 1)
+emission_energy_multiplier = 0.617647
+uv1_scale = Vector3(1, 1, 0)

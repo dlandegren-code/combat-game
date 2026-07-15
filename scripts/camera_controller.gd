@@ -1,19 +1,17 @@
 extends Camera3D
-## Orbit camera: right-drag to orbit, scroll to zoom, middle-drag to pan
-## Restricted to front-facing hemisphere of the battlefield
+## Orbit camera: right-drag to orbit (full 360°), scroll to zoom, middle-drag to pan
 
 @export var pivot: Vector3 = Vector3(0, 0.5, 0)
-@export var min_distance: float = 4.0
+@export var min_distance: float = 2.0
 @export var max_distance: float = 35.0
 @export var orbit_speed: float = 0.005
 @export var pan_speed: float = 0.02
 @export var zoom_speed: float = 0.8
 
-## Horizontal angle limits (radians): restrict to front-facing arc
-@export var min_theta: float = -PI * 0.45
-@export var max_theta: float = PI * 0.45
-@export var min_phi: float = 0.25
-@export var max_phi: float = PI * 0.45
+## Vertical angle limits (radians): stay just above the floor, below straight-down.
+## Horizontal orbit is unrestricted so all sides are viewable.
+@export var min_phi: float = 0.15
+@export var max_phi: float = PI * 0.49
 
 var _theta: float = PI * 0.49  ## horizontal angle
 var _phi: float = 0.55         ## vertical angle
@@ -61,8 +59,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _is_orbiting:
 			var delta: Vector2 = event.position - _last_mouse
 			_last_mouse = event.position
-			_theta -= delta.x * orbit_speed
-			_theta = clamp(_theta, min_theta, max_theta)
+			_theta -= delta.x * orbit_speed  # unrestricted: orbits fully around
 			_phi -= delta.y * orbit_speed
 			_phi = clamp(_phi, min_phi, max_phi)
 			_apply_orbit()

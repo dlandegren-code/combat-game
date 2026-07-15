@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://bpcgqdn0l8jvk"]
+
+[ext_resource type="ArrayMesh" uid="uid://b4kqra82vswds" path="res://Assets/PolygonDungeon/Models/SM_Env_Grass_02.res" id="1_6ptcs"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_w5t6y"]
+
+[node name="SM_Env_Grass_02" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_6ptcs")
+surface_material_override/0 = ExtResource("2_w5t6y")

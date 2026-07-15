@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" load_steps=2 format=3 uid="uid://dh6m6ipkv5f0i"]
+
+[ext_resource type="Texture2D" uid="uid://d0xy5o7mkcrem" path="res://Assets/PolygonDungeon/Textures/Dungeons_Texture_01.png" id="1_qcpr2"]
+
+[resource]
+resource_name = "Dungeons_Material_Characters_01_mat"
+albedo_texture = ExtResource("1_qcpr2")
+roughness = 0.8

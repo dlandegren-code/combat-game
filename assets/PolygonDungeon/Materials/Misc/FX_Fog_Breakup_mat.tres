@@ -1,0 +1,10 @@
+[gd_resource type="StandardMaterial3D" load_steps=2 format=3 uid="uid://dlll1blunl836"]
+
+[ext_resource type="Texture2D" uid="uid://b187a7h7n75ad" path="res://Assets/PolygonDungeon/Textures/Misc/Dungeon_Fog_Breakup.tga" id="1_y38kw"]
+
+[resource]
+resource_name = "FX_Fog_Breakup_mat"
+depth_draw_mode = 1
+albedo_texture = ExtResource("1_y38kw")
+roughness = 0.5
+uv1_scale = Vector3(1, 1, 0)

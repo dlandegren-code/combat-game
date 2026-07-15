@@ -1,0 +1,36 @@
+[gd_scene load_steps=6 format=3 uid="uid://3i2pkt7srxux"]
+
+[ext_resource type="ArrayMesh" uid="uid://gw1xv154ke2w" path="res://Assets/PolygonDungeon/Models/SM_Prop_Chest_04.res" id="1_x3we2"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_vharb"]
+[ext_resource type="ArrayMesh" uid="uid://dnojxwdclbnp6" path="res://Assets/PolygonDungeon/Models/SM_Prop_Chest_04_Lid.res" id="3_vharb"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_x3we2"]
+size = Vector3(0.966614, 0.369781, 0.555237)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vharb"]
+size = Vector3(0.976898, 0.127434, 0.541016)
+
+[node name="SM_Prop_Chest_04" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_x3we2")
+surface_material_override/0 = ExtResource("2_vharb")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00167847, 0.190872, -0.00131226)
+shape = SubResource("BoxShape3D_x3we2")
+
+[node name="SM_Prop_Chest_04_Lid" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.33261e-10, 0.377927, -0.227922)
+
+[node name="MeshRenderer" type="MeshInstance3D" parent="SM_Prop_Chest_04_Lid"]
+gi_mode = 2
+mesh = ExtResource("3_vharb")
+surface_material_override/0 = ExtResource("2_vharb")
+
+[node name="MeshCollider" type="StaticBody3D" parent="SM_Prop_Chest_04_Lid"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_Prop_Chest_04_Lid/MeshCollider"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00193787, 0.0620995, 0.229492)
+shape = SubResource("BoxShape3D_vharb")

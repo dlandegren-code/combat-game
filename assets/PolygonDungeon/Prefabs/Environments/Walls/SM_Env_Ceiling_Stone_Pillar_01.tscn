@@ -1,0 +1,33 @@
+[gd_scene load_steps=6 format=3 uid="uid://cifnw1asv36ix"]
+
+[ext_resource type="ArrayMesh" uid="uid://dhx7rh0u47tik" path="res://Assets/PolygonDungeon/Models/SM_Env_Ceiling_Stone_Pillar_01.res" id="1_kpd23"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_3dmo6"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_1jb46"]
+points = PackedVector3Array(-0.856645, 0.281555, -0.18089, 0.79249, 0.475537, -0.18089, 0.725485, -0.271837, -0.109866, -0.438037, -0.396644, -0.0380353, -0.772547, -0.257119, 0.424428, -0.856645, 1.15433, 0.885923, -0.662639, 2.60992, 0.110147, 0.695401, 2.60992, 0.110147, 0.889578, 1.34801, 0.498196, 0.795054, 0.106118, 0.340813, 0.695401, -0.397233, 0.401184, -0.468462, -0.106702, 0.982935, -0.662639, 2.51249, 1.46816, 0.501225, 2.60992, 1.46816, 0.780696, 0.123485, 0.601181, 0.550111, -0.0101529, 0.954687)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_dvq7w"]
+points = PackedVector3Array(-0.662639, 2.60992, 0.109985, 0.695401, 2.60992, 0.109985, 0.695401, 2.60992, 0.886208, -0.485555, 2.78325, 1.58534, -0.856645, 3.87108, 2.53517, -0.856645, 4.35599, 1.66274, 0.695401, 2.70695, 0.109985, 0.889578, 4.16193, 1.5656, 0.695401, 4.16193, 3.31139, 0.513874, 2.79312, 1.58659, -0.662639, 4.16193, 3.21425, -0.662639, 4.93818, 3.1171, -0.565721, 5.13224, 2.72915, 0.598484, 4.93818, 2.34119, 0.695401, 4.35599, 1.66274, 0.695401, 5.13224, 3.1171)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_tpiy7"]
+points = PackedVector3Array(0.792566, 5.22926, 4.57266, 0.695488, 4.06511, 4.6697, 0.59841, 4.1622, 3.31166, 0.59841, 5.13217, 3.31166, -0.56561, 5.13217, 3.40843, -0.759461, 5.22926, 5.15411, -0.662688, 5.13217, 5.93043, 0.404407, 5.03519, 6.02774, 0.59841, 4.45323, 5.73609, 0.695488, 4.1622, 5.15411, -0.759461, 4.1622, 5.15411, -0.759461, 4.06511, 4.57266, -0.56561, 4.1622, 3.31166, -0.56561, 5.03519, 3.31166, -0.753688, 4.56229, 4.75398, -0.56561, 4.55021, 5.83339)
+
+[node name="SM_Env_Ceiling_Stone_Pillar_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_kpd23")
+surface_material_override/0 = ExtResource("2_3dmo6")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_1jb46")
+
+[node name="MeshCollider2" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider2"]
+shape = SubResource("ConvexPolygonShape3D_dvq7w")
+
+[node name="MeshCollider3" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider3"]
+shape = SubResource("ConvexPolygonShape3D_tpiy7")

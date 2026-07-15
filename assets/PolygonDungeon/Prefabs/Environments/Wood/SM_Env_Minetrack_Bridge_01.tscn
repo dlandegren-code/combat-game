@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://yhqh4p28n20h"]
+
+[ext_resource type="ArrayMesh" uid="uid://be37wjb1cyi2a" path="res://Assets/PolygonDungeon/Models/SM_Env_Minetrack_Bridge_01.res" id="1_o0cyq"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_e1vc7"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_c7whe"]
+points = PackedVector3Array(1.88171, -5.0778, 2.29652, 1.63922, -0.233069, -0.0455632, 1.72005, -0.3136, -0.0455632, 3.17331, -5.0778, 2.29652, 1.80088, -5.0778, 2.6999, 1.63922, -0.3136, 0.0351125, 1.63922, -0.3136, 5.04199, 1.7481, -0.00440359, 4.79299, 1.74677, 0.000567436, 0.198954, 3.29298, -0.114263, 0.0794343, 3.33481, -0.3136, -0.0455632, 3.17331, -5.0778, 2.6999, 3.33481, -0.3136, 5.04199, 3.29215, -0.116748, 4.914, 3.2885, -0.0511312, 4.74966, 3.28916, -0.0486455, 0.243774)
+
+[node name="SM_Env_Minetrack_Bridge_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_o0cyq")
+surface_material_override/0 = ExtResource("2_e1vc7")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_c7whe")

@@ -1,0 +1,26 @@
+[gd_scene load_steps=5 format=3 uid="uid://bxgv8hy52bew7"]
+
+[ext_resource type="ArrayMesh" uid="uid://bwtd6e0vxxyax" path="res://Assets/PolygonDungeon/Models/SM_Prop_Coffin_01.res" id="1_hyvus"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_v5u5p"]
+[ext_resource type="ArrayMesh" uid="uid://d0i58louhwdhh" path="res://Assets/PolygonDungeon/Models/SM_Prop_Coffin_Lid_01.res" id="3_v5u5p"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_5jfr7"]
+points = PackedVector3Array(0.518225, 0.00242306, -0.271395, 0.416687, 0.498375, 1.07012, 0.344249, 0.00519022, 1.0396, -0.356711, 0.00722917, 1.03012, -0.487967, 0.00805447, -0.563189, 0.342907, 0.0061126, -1.03556, 0.490364, 0.239913, -0.811746, 0.497381, 0.468082, -0.456367, -0.284582, 0.498375, 1.1811, 0.345797, 0.475704, -1.04412, -0.32142, 0.498375, -1.181, -0.522225, 0.239913, -0.398332, -0.377039, 0.380601, 1.12538, -0.432245, 0.498375, -1.144, -0.378174, 0.0282013, -1.12921, -0.535949, 0.444391, -0.408968)
+
+[node name="SM_Prop_Coffin_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_hyvus")
+surface_material_override/0 = ExtResource("2_v5u5p")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_5jfr7")
+
+[node name="SM_Prop_Coffin_Lid_01" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.51446, 0.491475, -0.52963)
+
+[node name="MeshRenderer" type="MeshInstance3D" parent="SM_Prop_Coffin_Lid_01"]
+gi_mode = 2
+mesh = ExtResource("3_v5u5p")
+surface_material_override/0 = ExtResource("2_v5u5p")

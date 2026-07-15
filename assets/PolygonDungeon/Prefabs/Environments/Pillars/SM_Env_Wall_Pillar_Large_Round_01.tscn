@@ -1,0 +1,19 @@
+[gd_scene load_steps=4 format=3 uid="uid://big6xpxmf4g0c"]
+
+[ext_resource type="ArrayMesh" uid="uid://bll1lx3o3t2vu" path="res://Assets/PolygonDungeon/Models/SM_Env_Wall_Pillar_Large_Round_01.res" id="1_ejuui"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_22v6e"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_ejuui"]
+height = 4.97168
+radius = 0.717773
+
+[node name="SM_Env_Wall_Pillar_Large_Round_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_ejuui")
+surface_material_override/0 = ExtResource("2_22v6e")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00603384, 2.39294, 0.00484467)
+shape = SubResource("CylinderShape3D_ejuui")

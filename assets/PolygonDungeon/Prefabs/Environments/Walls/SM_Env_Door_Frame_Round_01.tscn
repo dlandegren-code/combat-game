@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://bqi3q2oi4ay34"]
+
+[ext_resource type="ArrayMesh" uid="uid://dk528am2s81m4" path="res://Assets/PolygonDungeon/Models/SM_Env_Door_Frame_Round_01.res" id="1_gdh86"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_vicpa"]
+
+[node name="SM_Env_Door_Frame_Round_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_gdh86")
+surface_material_override/0 = ExtResource("2_vicpa")

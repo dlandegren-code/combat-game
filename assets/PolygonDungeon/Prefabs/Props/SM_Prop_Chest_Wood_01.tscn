@@ -1,0 +1,34 @@
+[gd_scene load_steps=6 format=3 uid="uid://beschixy66ip5"]
+
+[ext_resource type="ArrayMesh" uid="uid://dnd6wqrphv3pp" path="res://Assets/PolygonDungeon/Models/SM_Prop_Chest_Wood_01.res" id="1_3j0l2"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_5ojy8"]
+[ext_resource type="ArrayMesh" uid="uid://cbdbwtpxhvro1" path="res://Assets/PolygonDungeon/Models/SM_Prop_Chest_Wood_Lid.res" id="3_5ojy8"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_ajjdp"]
+points = PackedVector3Array(0.441078, 0.195804, -0.395357, 0.439341, 0.441956, -0.393845, 0.591501, 0.323495, -0.0814897, 0.438415, 0.108355, -0.375462, -0.44432, -8.32667e-17, -0.344903, -0.457058, 0.441956, -0.358671, 0.43911, 0.441956, 0.379444, 0.314047, 0.471398, -0.340287, 0.43332, 0.0403792, 0.356922, 0.426372, -8.32667e-17, 0.312596, 0.426488, -8.32667e-17, -0.344903, -0.44432, -8.32667e-17, 0.312675, -0.5915, 0.323495, -0.100032, -0.456826, 0.441956, 0.361856, -0.56313, 0.354183, 0.0456808, -0.388042, 0.175638, 0.417643)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_alchl"]
+points = PackedVector3Array(-0.534821, 0.141677, -0.0471589, -0.570565, 0.141677, 0.184713, -0.534821, 0.230858, -0.0471589, 0.534822, 0.230889, -0.0471589, -0.463445, 0.0169688, -0.0292784, -0.463556, 0.0169688, 0.772881, -0.534821, 0.230826, 0.790762, -0.323484, 0.259317, 0.687088, -0.320245, 0.257841, 0.0772661, 0.534822, 0.230889, 0.790762, 0.570454, 0.141677, 0.541173, 0.499078, 0.0169688, -0.011398, 0.267299, 0.266542, 0.772881, -0.39352, 0.00342998, 0.00443196, -0.0178717, -0.0543379, 0.701523, 0.499078, 0.0169688, 0.772881)
+
+[node name="SM_Prop_Chest_Wood_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_3j0l2")
+surface_material_override/0 = ExtResource("2_5ojy8")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_ajjdp")
+
+[node name="SM_Prop_Chest_Wood_Lid" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.01178, 0.416334, -0.381688)
+
+[node name="MeshRenderer" type="MeshInstance3D" parent="SM_Prop_Chest_Wood_Lid"]
+gi_mode = 2
+mesh = ExtResource("3_5ojy8")
+surface_material_override/0 = ExtResource("2_5ojy8")
+
+[node name="MeshCollider" type="StaticBody3D" parent="SM_Prop_Chest_Wood_Lid"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_Prop_Chest_Wood_Lid/MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_alchl")

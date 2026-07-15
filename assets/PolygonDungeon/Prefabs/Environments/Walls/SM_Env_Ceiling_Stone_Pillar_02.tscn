@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://cgnqny3eww21d"]
+
+[ext_resource type="ArrayMesh" uid="uid://ba3wfkyb2klab" path="res://Assets/PolygonDungeon/Models/SM_Env_Ceiling_Stone_Pillar_02.res" id="1_sum7u"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_lj14f"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_sum7u"]
+size = Vector3(1, 0.848022, 5.1111)
+
+[node name="SM_Env_Ceiling_Stone_Pillar_02" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_sum7u")
+surface_material_override/0 = ExtResource("2_lj14f")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.161804, 2.53489)
+shape = SubResource("BoxShape3D_sum7u")

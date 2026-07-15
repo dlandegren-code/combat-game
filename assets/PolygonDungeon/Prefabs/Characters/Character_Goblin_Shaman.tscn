@@ -1,0 +1,880 @@
+[gd_scene load_steps=60 format=3 uid="uid://b2ph6y4fu7h1y"]
+
+[ext_resource type="ArrayMesh" uid="uid://by5a5amq4dt1h" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Ghost_01.mesh" id="2_owyps"]
+[ext_resource type="Material" uid="uid://dh6m6ipkv5f0i" path="res://Assets/PolygonDungeon/Materials/Dungeons_Material_Characters_01_mat.tres" id="2_ur4bf"]
+[ext_resource type="Skin" uid="uid://dr4d5aexay6hw" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Ghost_01_skin.tres" id="3_ksj3t"]
+[ext_resource type="ArrayMesh" uid="uid://cc3iksgumnibx" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Ghost_02.mesh" id="3_vmavg"]
+[ext_resource type="Material" uid="uid://bi8113mpyvrl5" path="res://Assets/PolygonDungeon/Materials/Misc/Dungeons_Texture_Ghost_mat.tres" id="4_1owog"]
+[ext_resource type="Skin" uid="uid://dhwk47ca6p6gl" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Ghost_02_skin.tres" id="5_e76vy"]
+[ext_resource type="ArrayMesh" uid="uid://52mhbn7vhcp7" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Goblin_Female.mesh" id="6_rmclf"]
+[ext_resource type="Skin" uid="uid://enkx6mexp2so" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Goblin_Female_skin.tres" id="7_1wymc"]
+[ext_resource type="ArrayMesh" uid="uid://d060k4erxnu2o" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Goblin_Male.mesh" id="9_t7y02"]
+[ext_resource type="Skin" uid="uid://6mhq6cbovxd0" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Goblin_Male_skin.tres" id="10_e6uuc"]
+[ext_resource type="ArrayMesh" uid="uid://cmxfuf3gu1bt7" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Goblin_Shaman.mesh" id="11_w3eid"]
+[ext_resource type="Skin" uid="uid://dl0p5yqa5u1st" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Goblin_Shaman_skin.tres" id="12_m83ig"]
+[ext_resource type="ArrayMesh" uid="uid://bsrvuk3lexnnr" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Goblin_WarChief.mesh" id="13_xvr72"]
+[ext_resource type="Skin" uid="uid://dcathd0mftnlj" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Goblin_WarChief_skin.tres" id="14_l1xg6"]
+[ext_resource type="ArrayMesh" uid="uid://o5up5e70pw0y" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Goblin_Warrior_Female.mesh" id="15_xii3l"]
+[ext_resource type="Skin" uid="uid://cyk280w5fvs2a" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Goblin_Warrior_Female_skin.tres" id="16_4tdjc"]
+[ext_resource type="ArrayMesh" uid="uid://bfvvin1q44g0k" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Goblin_Warrior_Male.mesh" id="17_gv6d8"]
+[ext_resource type="Skin" uid="uid://wm65okcmtin6" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Goblin_Warrior_Male_skin.tres" id="18_py2ni"]
+[ext_resource type="ArrayMesh" uid="uid://buynabxh177lo" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Hero_Knight_Female.mesh" id="19_lb4cr"]
+[ext_resource type="Skin" uid="uid://bv712b8w4u2tj" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Hero_Knight_Female_skin.tres" id="20_7l2km"]
+[ext_resource type="ArrayMesh" uid="uid://42nncbna0w8w" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Hero_Knight_Male.mesh" id="21_rqua8"]
+[ext_resource type="Skin" uid="uid://00igmsknr8ns" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Hero_Knight_Male_skin.tres" id="22_kgf4h"]
+[ext_resource type="ArrayMesh" uid="uid://byta10x682h7x" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Rock_Golem.mesh" id="23_a754j"]
+[ext_resource type="Skin" uid="uid://c31bweoeyseno" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Rock_Golem_skin.tres" id="24_gnfeh"]
+[ext_resource type="ArrayMesh" uid="uid://dxt3wy2hbydy8" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Skeleton_Knight.mesh" id="25_ellm6"]
+[ext_resource type="Skin" uid="uid://hu0h0as83xob" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Skeleton_Knight_skin.tres" id="26_cohko"]
+[ext_resource type="ArrayMesh" uid="uid://da0nqa5u3db2f" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Skeleton_Slave_01.mesh" id="27_8hvfh"]
+[ext_resource type="Skin" uid="uid://bb3pots2ah1hk" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Skeleton_Slave_01_skin.tres" id="28_r1cyt"]
+[ext_resource type="ArrayMesh" uid="uid://c1jt0gjqinhow" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Skeleton_Soldier_01.mesh" id="29_5srbr"]
+[ext_resource type="Skin" uid="uid://t4jmcfsxxnal" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Skeleton_Soldier_01_skin.tres" id="30_11qo5"]
+[ext_resource type="ArrayMesh" uid="uid://c31fre0l2xfvq" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Skeleton_Soldier_02.mesh" id="31_d3hde"]
+[ext_resource type="Skin" uid="uid://muogg5wdvlfi" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Skeleton_Soldier_02_skin.tres" id="32_dw1k3"]
+[ext_resource type="ArrayMesh" uid="uid://bxw7ogxisjk6c" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Tormented_Soul.mesh" id="33_eto1u"]
+[ext_resource type="Skin" uid="uid://8rl2vg505buv" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/Character_Tormented_Soul_skin.tres" id="34_t8ew0"]
+[ext_resource type="ArrayMesh" uid="uid://b68mw75x5yeow" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Goblin_Hair.mesh" id="35_jy3ay"]
+[ext_resource type="Skin" uid="uid://c34a38sv4kqme" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Goblin_Hair_skin.tres" id="36_23h60"]
+[ext_resource type="ArrayMesh" uid="uid://dgy4a8pg2nyd7" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Mask_01.mesh" id="37_pw0k0"]
+[ext_resource type="Skin" uid="uid://e8n078oivu0x" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Mask_01_skin.tres" id="38_20kje"]
+[ext_resource type="ArrayMesh" uid="uid://b1bnpeyc6myit" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Mask_02.mesh" id="39_3litx"]
+[ext_resource type="Skin" uid="uid://d0vgx5xvvgla1" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Mask_02_skin.tres" id="40_8d4p5"]
+[ext_resource type="ArrayMesh" uid="uid://bnfyevsrgy2ma" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Goblin_WarBanner.mesh" id="41_80lq8"]
+[ext_resource type="Skin" uid="uid://dukpbvuo074r4" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Goblin_WarBanner_skin.tres" id="42_806j1"]
+[ext_resource type="ArrayMesh" uid="uid://c3f3m86es4ei7" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Sword.mesh" id="43_iewms"]
+[ext_resource type="Skin" uid="uid://dx4jbxph4mvt6" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Sword_skin.tres" id="44_qpd6i"]
+[ext_resource type="ArrayMesh" uid="uid://bsic2hvm2gdj5" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Shield.mesh" id="45_yk3ds"]
+[ext_resource type="Skin" uid="uid://dsxuwu7jy7s6b" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Shield_skin.tres" id="46_6xsc1"]
+[ext_resource type="ArrayMesh" uid="uid://dquyxqeqlqcmy" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Shrunken_Head.mesh" id="47_b1v07"]
+[ext_resource type="Skin" uid="uid://d1st61f0hesj1" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Shrunken_Head_skin.tres" id="48_kbjp3"]
+[ext_resource type="ArrayMesh" uid="uid://d3mly8b0wqf3e" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Bags.mesh" id="49_513ds"]
+[ext_resource type="Skin" uid="uid://cxh30vtjj18t6" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Bags_skin.tres" id="50_4yso7"]
+[ext_resource type="ArrayMesh" uid="uid://bx2u8fcgpfu1g" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Shrooms.mesh" id="51_8vh35"]
+[ext_resource type="Skin" uid="uid://dlxkv8hrxx2mh" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Shrooms_skin.tres" id="52_i3qal"]
+[ext_resource type="ArrayMesh" uid="uid://bkds2dl77pbqu" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Horn.mesh" id="53_vlhs3"]
+[ext_resource type="Skin" uid="uid://d2dl01mi34ux7" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Horn_skin.tres" id="54_i7lwl"]
+[ext_resource type="ArrayMesh" uid="uid://btvd0gg8bp2gq" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Bones.mesh" id="55_y3b0w"]
+[ext_resource type="Skin" uid="uid://be0hn4isagcjm" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Bones_skin.tres" id="56_l0omw"]
+[ext_resource type="ArrayMesh" uid="uid://cdmkbyo78sxby" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Bag_Large.mesh" id="57_cy1pd"]
+[ext_resource type="Skin" uid="uid://be24fqn8b3oq8" path="res://Assets/PolygonDungeon/Models/Characters/IndividualCharacters/SM_Item_Bag_Large_skin.tres" id="58_1mvos"]
+[ext_resource type="Shape3D" uid="uid://bprf0x6oabdg6" path="res://Assets/PolygonDungeon/Prefabs/Characters/Synty_Character_Collider.tres" id="59_qalo0"]
+
+[node name="Character_Goblin_Shaman" type="CharacterBody3D"]
+
+[node name="GeneralSkeleton" type="Skeleton3D" parent="."]
+unique_name_in_owner = true
+motion_scale = 0.876276
+bones/0/name = "Root"
+bones/0/parent = -1
+bones/0/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/0/enabled = true
+bones/0/position = Vector3(0, 0, 0)
+bones/0/rotation = Quaternion(0, 0, 0, 1)
+bones/0/scale = Vector3(1, 1, 1)
+bones/1/name = "Hips"
+bones/1/parent = 0
+bones/1/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.04871e-31, 0.876276, 3.51283e-17)
+bones/1/enabled = true
+bones/1/position = Vector3(0, 0.876276, 0)
+bones/1/rotation = Quaternion(-0.0749165, 0, 0, 0.99719)
+bones/1/scale = Vector3(1, 1, 1)
+bones/2/name = "Spine"
+bones/2/parent = 1
+bones/2/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.98523e-23, 0.103933, -4.64615e-09)
+bones/2/enabled = true
+bones/2/position = Vector3(-1.03089e-17, 0.103933, -4.64615e-09)
+bones/2/rotation = Quaternion(0.099679, 0, 0, 0.99502)
+bones/2/scale = Vector3(1, 1, 1)
+bones/3/name = "Chest"
+bones/3/parent = 2
+bones/3/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.27919e-23, 0.181512, -5.40947e-09)
+bones/3/enabled = true
+bones/3/position = Vector3(4.71804e-18, 0.181512, -5.40947e-09)
+bones/3/rotation = Quaternion(-0.0980028, 0, 0, 0.995186)
+bones/3/scale = Vector3(1, 1, 1)
+bones/4/name = "UpperChest"
+bones/4/parent = 3
+bones/4/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.61744e-24, 0.179037, -2.66786e-09)
+bones/4/enabled = true
+bones/4/position = Vector3(-2.16196e-17, 0.179037, -2.66786e-09)
+bones/4/rotation = Quaternion(0.283598, 2.98023e-08, -7.45058e-08, 0.958943)
+bones/4/scale = Vector3(1, 1, 1)
+bones/5/name = "Neck"
+bones/5/parent = 4
+bones/5/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.61091e-08, 0.105012, -0.0386238)
+bones/5/enabled = true
+bones/5/position = Vector3(-1.61091e-08, 0.105012, -0.0386238)
+bones/5/rotation = Quaternion(-0.134073, 2.98023e-08, 4.47035e-08, 0.990971)
+bones/5/scale = Vector3(1, 1, 1)
+bones/6/name = "Head"
+bones/6/parent = 5
+bones/6/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.24497e-15, 0.121644, 1.81264e-08)
+bones/6/enabled = true
+bones/6/position = Vector3(5.2366e-15, 0.121644, 1.81264e-08)
+bones/6/rotation = Quaternion(0, 0, 0, 1)
+bones/6/scale = Vector3(1, 1, 1)
+bones/7/name = "RightEye"
+bones/7/parent = 6
+bones/7/rest = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -4.32724e-09, 0.112771, 0.106156)
+bones/7/enabled = true
+bones/7/position = Vector3(-4.32724e-09, 0.112771, 0.106156)
+bones/7/rotation = Quaternion(0.707107, 0, 0, 0.707107)
+bones/7/scale = Vector3(1, 1, 1)
+bones/8/name = "Jaw"
+bones/8/parent = 6
+bones/8/rest = Transform3D(-1, 0, 0, 0, 0, 1, 0, 1, 0, -4.1123e-09, 0.145543, 0.100884)
+bones/8/enabled = true
+bones/8/position = Vector3(-4.1123e-09, 0.145543, 0.100884)
+bones/8/rotation = Quaternion(0, 0.707107, 0.707107, 0)
+bones/8/scale = Vector3(1, 1, 1)
+bones/9/name = "Jaw2"
+bones/9/parent = 6
+bones/9/rest = Transform3D(1, 6.47526e-09, -4.02453e-08, -2.84217e-14, 0.987303, 0.158851, 4.07629e-08, -0.158851, 0.987303, 4.59193e-05, 0.0651194, 0.0114411)
+bones/9/enabled = true
+bones/9/position = Vector3(4.59193e-05, 0.0651194, 0.0114411)
+bones/9/rotation = Quaternion(-0.0796786, -2.03167e-08, -1.62398e-09, 0.996821)
+bones/9/scale = Vector3(1, 1, 1)
+bones/10/name = "LeftShoulder"
+bones/10/parent = 4
+bones/10/rest = Transform3D(0, 1, 0, 0, 0, 1, 1, 0, 0, 0.0744715, 0.0689145, 0.0193126)
+bones/10/enabled = true
+bones/10/position = Vector3(0.0744715, 0.0689145, 0.0193126)
+bones/10/rotation = Quaternion(0.657073, 0.335903, 0.414355, -0.532667)
+bones/10/scale = Vector3(1, 1, 1)
+bones/11/name = "LeftUpperArm"
+bones/11/parent = 10
+bones/11/rest = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2.24816e-09, 0.131979, -4.28382e-08)
+bones/11/enabled = true
+bones/11/position = Vector3(2.24817e-09, 0.131979, -4.28382e-08)
+bones/11/rotation = Quaternion(0.232362, 0.971316, 0.0491491, 0.0117577)
+bones/11/scale = Vector3(1, 1, 1)
+bones/12/name = "LeftLowerArm"
+bones/12/parent = 11
+bones/12/rest = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -1.64146e-08, 0.33948, -7.4011e-08)
+bones/12/enabled = true
+bones/12/position = Vector3(-1.64146e-08, 0.33948, -7.4011e-08)
+bones/12/rotation = Quaternion(-0.0207306, -0.704819, 0.0568315, 0.706803)
+bones/12/scale = Vector3(1, 1, 1)
+bones/13/name = "LeftHand"
+bones/13/parent = 12
+bones/13/rest = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 4.57803e-08, 0.271146, 2.32831e-09)
+bones/13/enabled = true
+bones/13/position = Vector3(4.57803e-08, 0.271146, 2.32831e-09)
+bones/13/rotation = Quaternion(-0.0810366, 0.685103, -0.175025, 0.702448)
+bones/13/scale = Vector3(1, 1, 1)
+bones/14/name = "LeftThumbMetacarpal"
+bones/14/parent = 13
+bones/14/rest = Transform3D(0, -0.577, 0.816, 0, 0.816, 0.577, -1, 0, 0, -0.0547091, 0.019432, -0.00558623)
+bones/14/enabled = true
+bones/14/position = Vector3(-0.0547091, 0.019432, -0.00558623)
+bones/14/rotation = Quaternion(-0.325486, 0.627741, 0.283386, 0.647837)
+bones/14/scale = Vector3(1, 0.999392, 0.999393)
+bones/15/name = "LeftThumbProximal"
+bones/15/parent = 14
+bones/15/rest = Transform3D(1, 0, 0, 0, 1, 2.98023e-08, 0, -2.98023e-08, 1, -5.64795e-08, 0.0637409, 1.70862e-08)
+bones/15/enabled = true
+bones/15/position = Vector3(-5.64795e-08, 0.0637409, 1.70862e-08)
+bones/15/rotation = Quaternion(0.0848797, -0.0141238, 0.163532, 0.982778)
+bones/15/scale = Vector3(1, 1, 0.999998)
+bones/16/name = "LeftThumbDistal"
+bones/16/parent = 15
+bones/16/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.98779e-08, 0.0566902, 1.19554e-08)
+bones/16/enabled = true
+bones/16/position = Vector3(4.98779e-08, 0.0566902, 1.19554e-08)
+bones/16/rotation = Quaternion(1.49012e-08, 1.49012e-08, 0, 1)
+bones/16/scale = Vector3(1.00008, 0.999915, 1)
+bones/17/name = "LeftIndexProximal"
+bones/17/parent = 13
+bones/17/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.053541, 0.0903607, -0.0225244)
+bones/17/enabled = true
+bones/17/position = Vector3(-0.053541, 0.0903607, -0.0225244)
+bones/17/rotation = Quaternion(-0.0660135, -0.0144134, 0.212827, 0.974751)
+bones/17/scale = Vector3(1, 1, 1)
+bones/18/name = "LeftIndexIntermediate"
+bones/18/parent = 17
+bones/18/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.31998e-09, 0.0409363, 9.45498e-09)
+bones/18/enabled = true
+bones/18/position = Vector3(-7.31998e-09, 0.0409363, 9.45498e-09)
+bones/18/rotation = Quaternion(0.0975063, -0.00162992, 0.0166341, 0.995095)
+bones/18/scale = Vector3(1, 1, 1)
+bones/19/name = "LeftIndexDistal"
+bones/19/parent = 18
+bones/19/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.54539e-09, 0.0379119, 1.05822e-10)
+bones/19/enabled = true
+bones/19/position = Vector3(-2.54539e-09, 0.0379119, 1.05823e-10)
+bones/19/rotation = Quaternion(0, 0, 5.96046e-08, 1)
+bones/19/scale = Vector3(1, 1, 1)
+bones/20/name = "IndexFinger_04_L"
+bones/20/parent = 19
+bones/20/rest = Transform3D(0.161188, 0.267999, -0.94984, 0.973031, -0.204073, 0.107544, -0.165014, -0.941558, -0.293665, 0.000656495, 0.0375023, 0.00467226)
+bones/20/enabled = true
+bones/20/position = Vector3(0.000656495, 0.0375023, 0.00467226)
+bones/20/rotation = Quaternion(0.643996, 0.481769, -0.432787, -0.407262)
+bones/20/scale = Vector3(1, 1, 1)
+bones/21/name = "LeftMiddleProximal"
+bones/21/parent = 13
+bones/21/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.31323e-09, 0.105093, -1.58325e-08)
+bones/21/enabled = true
+bones/21/position = Vector3(-9.31323e-09, 0.105093, -1.58325e-08)
+bones/21/rotation = Quaternion(0.0137886, 0.00172922, 0.124421, 0.992132)
+bones/21/scale = Vector3(1, 1, 1)
+bones/22/name = "LeftMiddleIntermediate"
+bones/22/parent = 21
+bones/22/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.33123e-09, 0.0424881, -5.9197e-08)
+bones/22/enabled = true
+bones/22/position = Vector3(-6.33123e-09, 0.0424881, -5.9197e-08)
+bones/22/rotation = Quaternion(0.0145787, 0.000363156, 0.0248948, 0.999584)
+bones/22/scale = Vector3(1, 1, 1)
+bones/23/name = "LeftMiddleDistal"
+bones/23/parent = 22
+bones/23/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.76199e-10, 0.0351333, 4.28073e-08)
+bones/23/enabled = true
+bones/23/position = Vector3(7.76199e-10, 0.0351333, 4.28073e-08)
+bones/23/rotation = Quaternion(-4.47035e-08, 5.96046e-08, -1.63913e-07, 1)
+bones/23/scale = Vector3(1, 1, 1)
+bones/24/name = "Finger_04_L"
+bones/24/parent = 23
+bones/24/rest = Transform3D(-0.00111465, 0.289001, -0.957329, 0.986729, -0.155128, -0.0479791, -0.162375, -0.944677, -0.284993, 0.00234334, 0.0292115, 0.00656846)
+bones/24/enabled = true
+bones/24/position = Vector3(0.00234334, 0.0292115, 0.00656846)
+bones/24/rotation = Quaternion(0.599793, 0.531737, -0.466704, -0.373753)
+bones/24/scale = Vector3(1, 1, 1)
+bones/25/name = "RightShoulder"
+bones/25/parent = 4
+bones/25/rest = Transform3D(0, -1, 0, 0, 0, 1, -1, 0, 0, -0.0744715, 0.0689178, 0.0193111)
+bones/25/enabled = true
+bones/25/position = Vector3(-0.0744715, 0.0689178, 0.0193111)
+bones/25/rotation = Quaternion(0.657082, -0.335899, -0.414369, -0.532648)
+bones/25/scale = Vector3(1, 1, 1)
+bones/26/name = "RightUpperArm"
+bones/26/parent = 25
+bones/26/rest = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 3.45783e-09, 0.131979, 1.73512e-08)
+bones/26/enabled = true
+bones/26/position = Vector3(3.45783e-09, 0.131979, 1.73512e-08)
+bones/26/rotation = Quaternion(-0.232353, 0.971317, 0.0491722, -0.0117626)
+bones/26/scale = Vector3(1, 1, 1)
+bones/27/name = "RightLowerArm"
+bones/27/parent = 26
+bones/27/rest = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 4.5402e-09, 0.339481, 3.01225e-08)
+bones/27/enabled = true
+bones/27/position = Vector3(4.5402e-09, 0.339481, 3.01225e-08)
+bones/27/rotation = Quaternion(-0.0207276, 0.704819, -0.0568306, 0.706803)
+bones/27/scale = Vector3(1, 1, 1)
+bones/28/name = "RightHand"
+bones/28/parent = 27
+bones/28/rest = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 5.13683e-09, 0.271145, 1.74623e-10)
+bones/28/enabled = true
+bones/28/position = Vector3(5.13683e-09, 0.271145, 1.74623e-10)
+bones/28/rotation = Quaternion(-0.0810382, -0.685103, 0.175025, 0.702448)
+bones/28/scale = Vector3(1, 1, 1)
+bones/29/name = "RightThumbMetacarpal"
+bones/29/parent = 28
+bones/29/rest = Transform3D(0, 0.577, -0.816, 0, 0.816, 0.577, 1, 0, 0, 0.05471, 0.0194316, -0.00558242)
+bones/29/enabled = true
+bones/29/position = Vector3(0.05471, 0.0194316, -0.00558242)
+bones/29/rotation = Quaternion(-0.32551, -0.627729, -0.283341, 0.647856)
+bones/29/scale = Vector3(1, 0.999392, 0.999392)
+bones/30/name = "RightThumbProximal"
+bones/30/parent = 29
+bones/30/rest = Transform3D(1, 0, 0, 0, 1, 2.98023e-08, 0, -2.98023e-08, 1, -8.0414e-09, 0.0637402, -1.83496e-09)
+bones/30/enabled = true
+bones/30/position = Vector3(-8.0414e-09, 0.0637402, -1.83496e-09)
+bones/30/rotation = Quaternion(0.0848672, 0.0141267, -0.163589, 0.98277)
+bones/30/scale = Vector3(1, 1, 0.999998)
+bones/31/name = "RightThumbDistal"
+bones/31/parent = 30
+bones/31/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.61208e-08, 0.0566895, 1.52965e-08)
+bones/31/enabled = true
+bones/31/position = Vector3(-3.61208e-08, 0.0566895, 1.52965e-08)
+bones/31/rotation = Quaternion(1.49012e-08, 1.49012e-08, 0, 1)
+bones/31/scale = Vector3(1.00009, 0.999915, 1)
+bones/32/name = "RightIndexProximal"
+bones/32/parent = 28
+bones/32/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0535406, 0.090361, -0.0225265)
+bones/32/enabled = true
+bones/32/position = Vector3(0.0535406, 0.090361, -0.0225265)
+bones/32/rotation = Quaternion(-0.0660013, 0.014411, -0.212832, 0.974751)
+bones/32/scale = Vector3(1, 1, 1)
+bones/33/name = "RightIndexIntermediate"
+bones/33/parent = 32
+bones/33/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.04678e-08, 0.0409359, 6.22197e-08)
+bones/33/enabled = true
+bones/33/position = Vector3(-1.04678e-08, 0.0409359, 6.22197e-08)
+bones/33/rotation = Quaternion(0.0975378, 0.00163116, -0.0166408, 0.995091)
+bones/33/scale = Vector3(1, 1, 1)
+bones/34/name = "RightIndexDistal"
+bones/34/parent = 33
+bones/34/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.47586e-09, 0.0379121, -5.61229e-08)
+bones/34/enabled = true
+bones/34/position = Vector3(1.47586e-09, 0.0379121, -5.61229e-08)
+bones/34/rotation = Quaternion(0, 0, 0, 1)
+bones/34/scale = Vector3(1, 1, 1)
+bones/35/name = "IndexFinger_04_R"
+bones/35/parent = 34
+bones/35/rest = Transform3D(0.161209, 0.267976, -0.949843, -0.973013, 0.204158, -0.107542, 0.165099, 0.941546, 0.293657, -0.000658792, 0.0374987, 0.00466349)
+bones/35/enabled = true
+bones/35/position = Vector3(-0.000658792, 0.0374987, 0.00466349)
+bones/35/rotation = Quaternion(0.407245, -0.432808, -0.481739, 0.644015)
+bones/35/scale = Vector3(1, 1, 1)
+bones/36/name = "RightMiddleProximal"
+bones/36/parent = 28
+bones/36/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.49012e-08, 0.105092, 6.0536e-08)
+bones/36/enabled = true
+bones/36/position = Vector3(-1.49012e-08, 0.105092, 6.0536e-08)
+bones/36/rotation = Quaternion(0.0137914, -0.00172958, -0.124421, 0.992132)
+bones/36/scale = Vector3(1, 1, 1)
+bones/37/name = "RightMiddleIntermediate"
+bones/37/parent = 36
+bones/37/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.03461e-09, 0.0424881, -1.74552e-08)
+bones/37/enabled = true
+bones/37/position = Vector3(9.03461e-09, 0.0424881, -1.74552e-08)
+bones/37/rotation = Quaternion(0.0145754, -0.000362992, -0.0248924, 0.999584)
+bones/37/scale = Vector3(1, 1, 1)
+bones/38/name = "RightMiddleDistal"
+bones/38/parent = 37
+bones/38/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.825e-10, 0.0351333, -4.77642e-08)
+bones/38/enabled = true
+bones/38/position = Vector3(1.825e-10, 0.0351333, -4.77642e-08)
+bones/38/rotation = Quaternion(0, 5.96046e-08, -5.96046e-08, 1)
+bones/38/scale = Vector3(1, 1, 1)
+bones/39/name = "Finger_04_R"
+bones/39/parent = 38
+bones/39/rest = Transform3D(-0.00111946, 0.288985, -0.957333, -0.986729, 0.155125, 0.0479808, 0.162372, 0.944682, 0.284977, -0.00234325, 0.02921, 0.00656938)
+bones/39/enabled = true
+bones/39/position = Vector3(-0.00234325, 0.02921, 0.00656938)
+bones/39/rotation = Quaternion(0.373758, -0.466709, -0.531736, 0.599788)
+bones/39/scale = Vector3(1, 1, 1)
+bones/40/name = "RightUpperLeg"
+bones/40/parent = 1
+bones/40/rest = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, -0.0989671, -0.0411577, -0.0269207)
+bones/40/enabled = true
+bones/40/position = Vector3(-0.0989671, -0.0411577, -0.0269207)
+bones/40/rotation = Quaternion(0.00118905, -0.0749071, 0.997064, 0.0158279)
+bones/40/scale = Vector3(1, 1, 1)
+bones/41/name = "RightLowerLeg"
+bones/41/parent = 40
+bones/41/rest = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -1.48754e-09, 0.399309, -5.96815e-09)
+bones/41/enabled = true
+bones/41/position = Vector3(-1.48754e-09, 0.399309, -5.96815e-09)
+bones/41/rotation = Quaternion(2.98023e-08, 1, -7.05644e-08, 1.82107e-08)
+bones/41/scale = Vector3(1, 1, 1)
+bones/42/name = "RightFoot"
+bones/42/parent = 41
+bones/42/rest = Transform3D(-1, 0, 0, 0, 0, -1, 0, -1, 0, 0.00915822, 0.376655, 0.0164047)
+bones/42/enabled = true
+bones/42/position = Vector3(0.00915822, 0.376655, 0.0164047)
+bones/42/rotation = Quaternion(-2.10734e-08, 0.707107, -0.707107, 2.10734e-08)
+bones/42/scale = Vector3(1, 1, 1)
+bones/43/name = "RightToes"
+bones/43/parent = 42
+bones/43/rest = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -0.00186237, 0.0963863, -0.0586443)
+bones/43/enabled = true
+bones/43/position = Vector3(-0.00186237, 0.0963863, -0.0586443)
+bones/43/rotation = Quaternion(-3.95127e-08, 1, 2.98023e-08, -1.84392e-08)
+bones/43/scale = Vector3(1, 1, 1)
+bones/44/name = "Toes_R"
+bones/44/parent = 43
+bones/44/rest = Transform3D(0.999496, -0.0317411, 9.31459e-10, -1.78814e-07, -2.98022e-08, 1, -0.0317411, -0.999496, 2.98025e-08, 6.79472e-11, 0.0729576, 2.17431e-09)
+bones/44/enabled = true
+bones/44/position = Vector3(6.79566e-11, 0.0729576, 2.1743e-09)
+bones/44/rotation = Quaternion(-0.707018, 0.0112236, 0.0112235, 0.707018)
+bones/44/scale = Vector3(1, 1, 1)
+bones/45/name = "LeftUpperLeg"
+bones/45/parent = 1
+bones/45/rest = Transform3D(-1, 0, 0, 0, -1, 0, 0, 0, 1, 0.0989671, -0.0411578, -0.0269207)
+bones/45/enabled = true
+bones/45/position = Vector3(0.0989671, -0.0411578, -0.0269207)
+bones/45/rotation = Quaternion(-0.00118914, -0.0749071, 0.997064, -0.0158284)
+bones/45/scale = Vector3(1, 1, 1)
+bones/46/name = "LeftLowerLeg"
+bones/46/parent = 45
+bones/46/rest = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -4.15437e-09, 0.399309, -5.97401e-09)
+bones/46/enabled = true
+bones/46/position = Vector3(-4.15437e-09, 0.399309, -5.97401e-09)
+bones/46/rotation = Quaternion(-2.98023e-08, 1, -1.73796e-08, -2.13786e-08)
+bones/46/scale = Vector3(1, 1, 1)
+bones/47/name = "LeftFoot"
+bones/47/parent = 46
+bones/47/rest = Transform3D(-1, 0, 0, 0, 0, -1, 0, -1, 0, -0.00915942, 0.376655, 0.0164047)
+bones/47/enabled = true
+bones/47/position = Vector3(-0.00915942, 0.376655, 0.0164047)
+bones/47/rotation = Quaternion(6.32203e-08, 0.707107, -0.707107, 2.10734e-08)
+bones/47/scale = Vector3(1, 1, 1)
+bones/48/name = "LeftToes"
+bones/48/parent = 47
+bones/48/rest = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0.00186244, 0.0963863, -0.0586443)
+bones/48/enabled = true
+bones/48/position = Vector3(0.00186244, 0.0963863, -0.0586443)
+bones/48/rotation = Quaternion(-5.26836e-09, 1, 0, 4.74152e-08)
+bones/48/scale = Vector3(1, 1, 1)
+bones/49/name = "Toes_L"
+bones/49/parent = 48
+bones/49/rest = Transform3D(0.999496, -0.0317421, 1.61119e-07, 1.63913e-07, 1.86196e-13, -1, 0.031742, 0.999496, 2.04944e-13, -1.17548e-08, 0.0729575, 4.29333e-14)
+bones/49/enabled = true
+bones/49/position = Vector3(-1.17549e-08, 0.0729575, -1.3486e-15)
+bones/49/rotation = Quaternion(0.707018, -0.0112239, 0.011224, 0.707018)
+bones/49/scale = Vector3(1, 1, 1)
+bones/50/name = "Character_Goblin_Warrior_Female"
+bones/50/parent = -1
+bones/50/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/50/enabled = true
+bones/50/position = Vector3(0, 0, 0)
+bones/50/rotation = Quaternion(0, 0, 0, 1)
+bones/50/scale = Vector3(1, 1, 1)
+bones/51/name = "Character_Skeleton_Knight"
+bones/51/parent = -1
+bones/51/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/51/enabled = true
+bones/51/position = Vector3(0, 0, 0)
+bones/51/rotation = Quaternion(0, 0, 0, 1)
+bones/51/scale = Vector3(1, 1, 1)
+bones/52/name = "Character_Goblin_Female"
+bones/52/parent = -1
+bones/52/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/52/enabled = true
+bones/52/position = Vector3(0, 0, 0)
+bones/52/rotation = Quaternion(0, 0, 0, 1)
+bones/52/scale = Vector3(1, 1, 1)
+bones/53/name = "Character_Hero_Knight_Female"
+bones/53/parent = -1
+bones/53/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/53/enabled = true
+bones/53/position = Vector3(0, 0, 0)
+bones/53/rotation = Quaternion(0, 0, 0, 1)
+bones/53/scale = Vector3(1, 1, 1)
+bones/54/name = "Character_Ghost_02"
+bones/54/parent = -1
+bones/54/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/54/enabled = true
+bones/54/position = Vector3(0, 0, 0)
+bones/54/rotation = Quaternion(0, 0, 0, 1)
+bones/54/scale = Vector3(1, 1, 1)
+bones/55/name = "Character_Goblin_Warrior_Male"
+bones/55/parent = -1
+bones/55/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/55/enabled = true
+bones/55/position = Vector3(0, 0, 0)
+bones/55/rotation = Quaternion(0, 0, 0, 1)
+bones/55/scale = Vector3(1, 1, 1)
+bones/56/name = "Character_Rock_Golem"
+bones/56/parent = -1
+bones/56/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/56/enabled = true
+bones/56/position = Vector3(0, 0, 0)
+bones/56/rotation = Quaternion(0, 0, 0, 1)
+bones/56/scale = Vector3(1, 1, 1)
+bones/57/name = "Character_Goblin_Shaman"
+bones/57/parent = -1
+bones/57/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/57/enabled = true
+bones/57/position = Vector3(0, 0, 0)
+bones/57/rotation = Quaternion(0, 0, 0, 1)
+bones/57/scale = Vector3(1, 1, 1)
+bones/58/name = "Character_Ghost_01"
+bones/58/parent = -1
+bones/58/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/58/enabled = true
+bones/58/position = Vector3(0, 0, 0)
+bones/58/rotation = Quaternion(0, 0, 0, 1)
+bones/58/scale = Vector3(1, 1, 1)
+bones/59/name = "Character_Tormented_Soul"
+bones/59/parent = -1
+bones/59/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/59/enabled = true
+bones/59/position = Vector3(0, 0, 0)
+bones/59/rotation = Quaternion(0, 0, 0, 1)
+bones/59/scale = Vector3(1, 1, 1)
+bones/60/name = "Character_Skeleton_Soldier_02"
+bones/60/parent = -1
+bones/60/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/60/enabled = true
+bones/60/position = Vector3(0, 0, 0)
+bones/60/rotation = Quaternion(0, 0, 0, 1)
+bones/60/scale = Vector3(1, 1, 1)
+bones/61/name = "Character_Goblin_Male"
+bones/61/parent = -1
+bones/61/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/61/enabled = true
+bones/61/position = Vector3(0, 0, 0)
+bones/61/rotation = Quaternion(0, 0, 0, 1)
+bones/61/scale = Vector3(1, 1, 1)
+bones/62/name = "Character_Hero_Knight_Male"
+bones/62/parent = -1
+bones/62/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/62/enabled = true
+bones/62/position = Vector3(0, 0, 0)
+bones/62/rotation = Quaternion(0, 0, 0, 1)
+bones/62/scale = Vector3(1, 1, 1)
+bones/63/name = "Character_Skeleton_Slave_01"
+bones/63/parent = -1
+bones/63/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/63/enabled = true
+bones/63/position = Vector3(0, 0, 0)
+bones/63/rotation = Quaternion(0, 0, 0, 1)
+bones/63/scale = Vector3(1, 1, 1)
+bones/64/name = "Character_Goblin_WarChief"
+bones/64/parent = -1
+bones/64/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/64/enabled = true
+bones/64/position = Vector3(0, 0, 0)
+bones/64/rotation = Quaternion(0, 0, 0, 1)
+bones/64/scale = Vector3(1, 1, 1)
+bones/65/name = "Character_Skeleton_Soldier_01"
+bones/65/parent = -1
+bones/65/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/65/enabled = true
+bones/65/position = Vector3(0, 0, 0)
+bones/65/rotation = Quaternion(0, 0, 0, 1)
+bones/65/scale = Vector3(1, 1, 1)
+bones/66/name = "Attachments"
+bones/66/parent = -1
+bones/66/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/66/enabled = true
+bones/66/position = Vector3(0, 0, 0)
+bones/66/rotation = Quaternion(0, 0, 0, 1)
+bones/66/scale = Vector3(1, 1, 1)
+bones/67/name = "SM_Item_Goblin_Hair"
+bones/67/parent = 66
+bones/67/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/67/enabled = true
+bones/67/position = Vector3(0, 0, 0)
+bones/67/rotation = Quaternion(0, 0, 0, 1)
+bones/67/scale = Vector3(1, 1, 1)
+bones/68/name = "SM_Item_Mask_01"
+bones/68/parent = 66
+bones/68/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/68/enabled = true
+bones/68/position = Vector3(0, 0, 0)
+bones/68/rotation = Quaternion(0, 0, 0, 1)
+bones/68/scale = Vector3(1, 1, 1)
+bones/69/name = "SM_Item_Mask_02"
+bones/69/parent = 66
+bones/69/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/69/enabled = true
+bones/69/position = Vector3(0, 0, 0)
+bones/69/rotation = Quaternion(0, 0, 0, 1)
+bones/69/scale = Vector3(1, 1, 1)
+bones/70/name = "SM_Item_Goblin_WarBanner"
+bones/70/parent = 66
+bones/70/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/70/enabled = true
+bones/70/position = Vector3(0, 0, 0)
+bones/70/rotation = Quaternion(0, 0, 0, 1)
+bones/70/scale = Vector3(1, 1, 1)
+bones/71/name = "SM_Item_Sword"
+bones/71/parent = 66
+bones/71/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/71/enabled = true
+bones/71/position = Vector3(0, 0, 0)
+bones/71/rotation = Quaternion(0, 0, 0, 1)
+bones/71/scale = Vector3(1, 1, 1)
+bones/72/name = "SM_Item_Shield"
+bones/72/parent = 66
+bones/72/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/72/enabled = true
+bones/72/position = Vector3(0, 0, 0)
+bones/72/rotation = Quaternion(0, 0, 0, 1)
+bones/72/scale = Vector3(1, 1, 1)
+bones/73/name = "SM_Item_Shrunken_Head"
+bones/73/parent = 66
+bones/73/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/73/enabled = true
+bones/73/position = Vector3(0, 0, 0)
+bones/73/rotation = Quaternion(0, 0, 0, 1)
+bones/73/scale = Vector3(1, 1, 1)
+bones/74/name = "SM_Item_Bags"
+bones/74/parent = 66
+bones/74/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/74/enabled = true
+bones/74/position = Vector3(0, 0, 0)
+bones/74/rotation = Quaternion(0, 0, 0, 1)
+bones/74/scale = Vector3(1, 1, 1)
+bones/75/name = "SM_Item_Shrooms"
+bones/75/parent = 66
+bones/75/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/75/enabled = true
+bones/75/position = Vector3(0, 0, 0)
+bones/75/rotation = Quaternion(0, 0, 0, 1)
+bones/75/scale = Vector3(1, 1, 1)
+bones/76/name = "SM_Item_Horn"
+bones/76/parent = 66
+bones/76/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/76/enabled = true
+bones/76/position = Vector3(0, 0, 0)
+bones/76/rotation = Quaternion(0, 0, 0, 1)
+bones/76/scale = Vector3(1, 1, 1)
+bones/77/name = "SM_Item_Bones"
+bones/77/parent = 66
+bones/77/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/77/enabled = true
+bones/77/position = Vector3(0, 0, 0)
+bones/77/rotation = Quaternion(0, 0, 0, 1)
+bones/77/scale = Vector3(1, 1, 1)
+bones/78/name = "SM_Item_Bag_Large"
+bones/78/parent = 66
+bones/78/rest = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+bones/78/enabled = true
+bones/78/position = Vector3(0, 0, 0)
+bones/78/rotation = Quaternion(0, 0, 0, 1)
+bones/78/scale = Vector3(1, 1, 1)
+metadata/humanoid_rotation_delta = {
+"Chest": Transform3D(-3.56763e-15, 5.4528e-16, 1, 1, -1.19209e-07, 3.56763e-15, 2.98023e-08, 1, -5.4528e-16, -1.32349e-23, 1.19209e-07, 2.98023e-08),
+"Head": Transform3D(1, -3.6318e-08, -1.11084e-07, 5.35026e-08, 0.987303, 0.158851, 1.03904e-07, -0.158851, 0.987303, -3.55271e-15, 1.19209e-07, -2.98023e-08),
+"Hips": Transform3D(0, 0, 1, 1, -5.96046e-08, 0, 2.98023e-08, 1, 0, 0, 0, 0),
+"Jaw": Transform3D(-1, 3.6318e-08, 1.11084e-07, 1.03904e-07, -0.158851, 0.987303, 5.35026e-08, 0.987303, 0.158851, 7.10543e-15, -2.98023e-08, 1.19209e-07),
+"Jaw2": Transform3D(1, -2.45219e-08, -1.16982e-07, 4.27932e-08, 0.987303, 0.15885, 1.11601e-07, -0.158851, 0.987303, -4.07454e-09, 0.00264442, -0.010199),
+"LeftFoot": Transform3D(-0.0165053, 0.0271134, 0.999496, -0.854183, -0.519973, -2.554e-07, 0.519711, -0.853753, 0.0317421, 0, 0, 2.98023e-08),
+"LeftHand": Transform3D(-0.294109, 0.307229, -0.905048, 0.949879, -0.0110341, -0.312423, -0.105972, -0.951572, -0.288585, 4.47035e-08, 0, -1.19209e-07),
+"LeftIndexDistal": Transform3D(0.0173683, 0.288044, -0.95746, 0.992179, 0.113423, 0.0521213, 0.123612, -0.950877, -0.283822, 0, -5.96046e-08, -1.19209e-07),
+"LeftIndexIntermediate": Transform3D(-4.17233e-07, 0.27376, -0.961799, 1, -2.32831e-09, 2.90573e-07, 7.07805e-08, -0.961799, -0.27376, 5.96046e-08, -5.96046e-08, -1.19209e-07),
+"LeftIndexProximal": Transform3D(-3.42727e-07, 0.27468, -0.961536, 1, 2.38157e-07, 4.32134e-07, 1.00583e-07, -0.961536, -0.27468, 2.98023e-08, 0, -1.19209e-07),
+"LeftLowerArm": Transform3D(-0.000462435, -0.944368, -0.328892, 0.999999, 8.68016e-08, -0.00140586, 0.00132822, -0.328892, 0.944367, -1.19209e-07, 0, 0),
+"LeftLowerLeg": Transform3D(0.0242853, -0.16951, 0.985229, -0.998758, 0.0387684, 0.0312889, -0.0434995, -0.984766, -0.168358, 0, 0, 0),
+"LeftMiddleDistal": Transform3D(0.0780269, 0.334456, -0.939177, 0.972665, 0.181129, 0.145312, 0.218713, -0.924842, -0.311181, 2.98023e-08, 0, -1.19209e-07),
+"LeftMiddleIntermediate": Transform3D(1.11759e-08, 0.292543, -0.956253, 1, 1.04477e-06, 8.08388e-07, 1.31689e-06, -0.956254, -0.292543, 2.98023e-08, 0, -1.19209e-07),
+"LeftMiddleProximal": Transform3D(-3.72529e-08, 0.296891, -0.954912, 1, -1.4645e-06, -8.9407e-08, -1.38767e-06, -0.954912, -0.296891, 2.98023e-08, 0, -1.19209e-07),
+"LeftShoulder": Transform3D(-1.78814e-07, -0.374959, 0.927042, 1, 1.99303e-07, 0, -3.42727e-07, 0.927042, 0.374959, -8.9407e-08, 0, 1.19209e-07),
+"LeftThumbDistal": Transform3D(0.344584, 0.865586, 0.36329, 0.848573, -0.453039, 0.275571, 0.403115, 0.213321, -0.890625, 0, -5.96046e-08, 0),
+"LeftThumbMetacarpal": Transform3D(-7.00355e-07, 0.982211, 0.187784, 1.00061, 5.99772e-07, 1.3411e-06, 3.27826e-07, 0.187897, -0.982808, 1.19209e-07, 2.98023e-08, 0),
+"LeftThumbProximal": Transform3D(0.000187136, 0.97105, 0.239138, 1.00054, 0.000179913, 4.53591e-05, -7.45058e-08, 0.239268, -0.971582, 1.19209e-07, -5.96046e-08, 0),
+"LeftToes": Transform3D(2.89564e-07, -0.031742, -0.999496, -1, 1.0605e-07, -2.65932e-07, 1.15736e-07, 0.999496, -0.031742, 0, -1.49012e-08, -3.72529e-08),
+"LeftUpperArm": Transform3D(-0.00258896, 0.329372, -0.944198, 0.999982, -0.00426881, -0.00423055, -0.00542409, -0.944191, -0.329355, 0, -7.45058e-09, -1.19209e-07),
+"LeftUpperLeg": Transform3D(-8.71718e-07, 1, 1.34283e-07, -1, -8.45641e-07, 1.06441e-08, -4.47035e-08, -1.30851e-07, 1, 0, 0, 0),
+"Neck": Transform3D(-5.35026e-08, 1.03904e-07, -1, 1, 8.9407e-08, -5.35026e-08, 8.9407e-08, -1, -1.03904e-07, -3.55271e-15, 1.19209e-07, -2.98023e-08),
+"RightEye": Transform3D(1, -3.6318e-08, -1.11084e-07, 1.03904e-07, -0.158851, 0.987303, -5.35026e-08, -0.987303, -0.158851, -3.55271e-15, -2.98023e-08, -1.19209e-07),
+"RightFoot": Transform3D(-0.0165046, 0.0271127, 0.999496, 0.854183, 0.519973, 2.64606e-07, -0.51971, 0.853753, -0.0317411, 0, 0, 2.98023e-08),
+"RightHand": Transform3D(-0.29411, 0.307213, -0.905053, -0.949878, 0.0110371, 0.312424, 0.10597, 0.951577, 0.288569, -2.98023e-08, 0, -1.19209e-07),
+"RightIndexDistal": Transform3D(0.0173948, 0.28803, -0.957464, -0.992188, -0.113337, -0.0521208, -0.123528, 0.950891, 0.283809, 0, 5.96046e-08, -1.19209e-07),
+"RightIndexIntermediate": Transform3D(2.42218e-05, 0.273742, -0.961804, -1, 8.71506e-05, -8.27014e-07, 8.34651e-05, 0.961803, 0.273743, -5.96046e-08, 0, -1.19209e-07),
+"RightIndexProximal": Transform3D(7.6443e-06, 0.274664, -0.961541, -1, 2.20857e-05, -1.98185e-06, 2.06642e-05, 0.961541, 0.274663, -2.98023e-08, 5.96046e-08, -1.19209e-07),
+"RightLowerArm": Transform3D(-0.000462312, -0.944373, -0.328876, -0.999999, -2.20563e-07, 0.00140645, -0.0013285, 0.328876, -0.944373, 1.19209e-07, 0, -5.96046e-08),
+"RightLowerLeg": Transform3D(0.0242843, -0.16951, 0.985229, 0.998758, -0.0387685, -0.031288, 0.0434994, 0.984766, 0.168358, 0, 0, 0),
+"RightMiddleDistal": Transform3D(0.0780287, 0.33444, -0.939182, -0.972664, -0.181132, -0.145311, -0.218714, 0.924847, 0.311164, -2.98023e-08, -5.96046e-08, -1.19209e-07),
+"RightMiddleIntermediate": Transform3D(-2.30223e-06, 0.292527, -0.956258, -1, -4.59104e-06, 8.82894e-07, -4.35952e-06, 0.956258, 0.292527, 0, -1.19209e-07, -1.19209e-07),
+"RightMiddleProximal": Transform3D(1.80304e-06, 0.296875, -0.954917, -1, 6.22298e-06, 3.72529e-08, 5.7593e-06, 0.954917, 0.296875, -2.98023e-08, 0, -1.19209e-07),
+"RightShoulder": Transform3D(-1.81198e-05, -0.374963, 0.92704, -1, 4.89985e-05, 7.45058e-07, -4.55528e-05, -0.92704, -0.374963, 5.96046e-08, 0, 1.19209e-07),
+"RightThumbDistal": Transform3D(0.344597, 0.865591, 0.363262, -0.848571, 0.453041, -0.275574, -0.403107, -0.213292, 0.890636, -1.19209e-07, 0, 0),
+"RightThumbMetacarpal": Transform3D(-0.000119224, 0.982213, 0.187773, -1.00061, -0.000122584, 6.31809e-06, 3.03686e-05, -0.187887, 0.98281, -1.19209e-07, -2.98023e-08, 5.96046e-08),
+"RightThumbProximal": Transform3D(0.000187702, 0.971057, 0.239107, -1.00054, -0.000178214, -4.84884e-05, -3.56138e-06, -0.239238, 0.971589, -1.19209e-07, -5.96046e-08, 0),
+"RightToes": Transform3D(1.83328e-09, -0.0317411, -0.999496, 1, -9.62728e-08, 1.83728e-07, -1.00157e-07, -0.999496, 0.0317411, 0, 7.45058e-09, -2.23517e-08),
+"RightUpperArm": Transform3D(-0.00259058, 0.329355, -0.944203, -0.999982, 0.0042639, 0.0042308, 0.00541931, 0.944197, 0.329338, -5.96046e-08, 0, -1.19209e-07),
+"RightUpperLeg": Transform3D(1.22935e-07, 1, 6.14892e-08, 1, -1.49012e-07, -1.02408e-07, -4.47035e-08, 2.37953e-07, -1, 0, 0, 0),
+"Spine": Transform3D(-2.41926e-15, -3.53934e-16, -1, 1, 4.84288e-08, -2.41926e-15, -7.45058e-09, -1, 3.53934e-16, 0, 5.96046e-08, -7.45058e-09),
+"UpperChest": Transform3D(-1.44832e-07, 6.91438e-08, -1, 0.938531, -0.345196, -1.59797e-07, -0.345196, -0.938531, -1.48981e-08, -1.42109e-14, 1.19209e-07, -5.96046e-08)
+}
+
+[node name="Character_Ghost_01" type="MeshInstance3D" parent="GeneralSkeleton"]
+process_mode = 1
+visible = false
+mesh = ExtResource("2_owyps")
+skin = ExtResource("3_ksj3t")
+surface_material_override/0 = ExtResource("4_1owog")
+
+[node name="Character_Ghost_02" type="MeshInstance3D" parent="GeneralSkeleton"]
+process_mode = 1
+visible = false
+mesh = ExtResource("3_vmavg")
+skin = ExtResource("5_e76vy")
+surface_material_override/0 = ExtResource("4_1owog")
+
+[node name="Character_Goblin_Female" type="MeshInstance3D" parent="GeneralSkeleton"]
+process_mode = 1
+visible = false
+mesh = ExtResource("6_rmclf")
+skin = ExtResource("7_1wymc")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="Character_Goblin_Male" type="MeshInstance3D" parent="GeneralSkeleton"]
+process_mode = 1
+visible = false
+mesh = ExtResource("9_t7y02")
+skin = ExtResource("10_e6uuc")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="Character_Goblin_Shaman" type="MeshInstance3D" parent="GeneralSkeleton"]
+process_mode = 1
+mesh = ExtResource("11_w3eid")
+skin = ExtResource("12_m83ig")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="Character_Goblin_WarChief" type="MeshInstance3D" parent="GeneralSkeleton"]
+process_mode = 1
+visible = false
+mesh = ExtResource("13_xvr72")
+skin = ExtResource("14_l1xg6")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="Character_Goblin_Warrior_Female" type="MeshInstance3D" parent="GeneralSkeleton"]
+process_mode = 1
+visible = false
+mesh = ExtResource("15_xii3l")
+skin = ExtResource("16_4tdjc")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="Character_Goblin_Warrior_Male" type="MeshInstance3D" parent="GeneralSkeleton"]
+process_mode = 1
+visible = false
+mesh = ExtResource("17_gv6d8")
+skin = ExtResource("18_py2ni")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="Character_Hero_Knight_Female" type="MeshInstance3D" parent="GeneralSkeleton"]
+process_mode = 1
+visible = false
+mesh = ExtResource("19_lb4cr")
+skin = ExtResource("20_7l2km")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="Character_Hero_Knight_Male" type="MeshInstance3D" parent="GeneralSkeleton"]
+process_mode = 1
+visible = false
+mesh = ExtResource("21_rqua8")
+skin = ExtResource("22_kgf4h")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="Character_Rock_Golem" type="MeshInstance3D" parent="GeneralSkeleton"]
+process_mode = 1
+visible = false
+mesh = ExtResource("23_a754j")
+skin = ExtResource("24_gnfeh")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="Character_Skeleton_Knight" type="MeshInstance3D" parent="GeneralSkeleton"]
+process_mode = 1
+visible = false
+mesh = ExtResource("25_ellm6")
+skin = ExtResource("26_cohko")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="Character_Skeleton_Slave_01" type="MeshInstance3D" parent="GeneralSkeleton"]
+process_mode = 1
+visible = false
+mesh = ExtResource("27_8hvfh")
+skin = ExtResource("28_r1cyt")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="Character_Skeleton_Soldier_01" type="MeshInstance3D" parent="GeneralSkeleton"]
+process_mode = 1
+visible = false
+mesh = ExtResource("29_5srbr")
+skin = ExtResource("30_11qo5")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="Character_Skeleton_Soldier_02" type="MeshInstance3D" parent="GeneralSkeleton"]
+process_mode = 1
+visible = false
+mesh = ExtResource("31_d3hde")
+skin = ExtResource("32_dw1k3")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="Character_Tormented_Soul" type="MeshInstance3D" parent="GeneralSkeleton"]
+process_mode = 1
+visible = false
+mesh = ExtResource("33_eto1u")
+skin = ExtResource("34_t8ew0")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="Attachments" type="Node3D" parent="GeneralSkeleton"]
+process_mode = 1
+
+[node name="SM_Item_Goblin_Hair" type="MeshInstance3D" parent="GeneralSkeleton/Attachments"]
+process_mode = 1
+visible = false
+mesh = ExtResource("35_jy3ay")
+skin = ExtResource("36_23h60")
+skeleton = NodePath("../..")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="SM_Item_Mask_01" type="MeshInstance3D" parent="GeneralSkeleton/Attachments"]
+process_mode = 1
+visible = false
+mesh = ExtResource("37_pw0k0")
+skin = ExtResource("38_20kje")
+skeleton = NodePath("../..")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="SM_Item_Mask_02" type="MeshInstance3D" parent="GeneralSkeleton/Attachments"]
+process_mode = 1
+mesh = ExtResource("39_3litx")
+skin = ExtResource("40_8d4p5")
+skeleton = NodePath("../..")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="SM_Item_Goblin_WarBanner" type="MeshInstance3D" parent="GeneralSkeleton/Attachments"]
+process_mode = 1
+visible = false
+mesh = ExtResource("41_80lq8")
+skin = ExtResource("42_806j1")
+skeleton = NodePath("../..")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="SM_Item_Sword" type="MeshInstance3D" parent="GeneralSkeleton/Attachments"]
+process_mode = 1
+visible = false
+mesh = ExtResource("43_iewms")
+skin = ExtResource("44_qpd6i")
+skeleton = NodePath("../..")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="SM_Item_Shield" type="MeshInstance3D" parent="GeneralSkeleton/Attachments"]
+process_mode = 1
+visible = false
+mesh = ExtResource("45_yk3ds")
+skin = ExtResource("46_6xsc1")
+skeleton = NodePath("../..")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="SM_Item_Shrunken_Head" type="MeshInstance3D" parent="GeneralSkeleton/Attachments"]
+process_mode = 1
+mesh = ExtResource("47_b1v07")
+skin = ExtResource("48_kbjp3")
+skeleton = NodePath("../..")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="SM_Item_Bags" type="MeshInstance3D" parent="GeneralSkeleton/Attachments"]
+process_mode = 1
+visible = false
+mesh = ExtResource("49_513ds")
+skin = ExtResource("50_4yso7")
+skeleton = NodePath("../..")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="SM_Item_Shrooms" type="MeshInstance3D" parent="GeneralSkeleton/Attachments"]
+process_mode = 1
+visible = false
+mesh = ExtResource("51_8vh35")
+skin = ExtResource("52_i3qal")
+skeleton = NodePath("../..")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="SM_Item_Horn" type="MeshInstance3D" parent="GeneralSkeleton/Attachments"]
+process_mode = 1
+visible = false
+mesh = ExtResource("53_vlhs3")
+skin = ExtResource("54_i7lwl")
+skeleton = NodePath("../..")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="SM_Item_Bones" type="MeshInstance3D" parent="GeneralSkeleton/Attachments"]
+process_mode = 1
+visible = false
+mesh = ExtResource("55_y3b0w")
+skin = ExtResource("56_l0omw")
+skeleton = NodePath("../..")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="SM_Item_Bag_Large" type="MeshInstance3D" parent="GeneralSkeleton/Attachments"]
+process_mode = 1
+visible = false
+mesh = ExtResource("57_cy1pd")
+skin = ExtResource("58_1mvos")
+skeleton = NodePath("../..")
+surface_material_override/0 = ExtResource("2_ur4bf")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+root_node = NodePath("../..")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.91, 0)
+shape = ExtResource("59_qalo0")

@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://bi0f7evbw40fi"]
+
+[ext_resource type="ArrayMesh" uid="uid://d2wi5j6cw5eof" path="res://Assets/PolygonDungeon/Models/SM_Env_Ceiling_Arch_01.res" id="1_sfmq7"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_raloy"]
+
+[node name="SM_Env_Ceiling_Arch_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_sfmq7")
+surface_material_override/0 = ExtResource("2_raloy")

@@ -1,0 +1,25 @@
+[gd_scene load_steps=5 format=3 uid="uid://dse4y804qd7rr"]
+
+[ext_resource type="ArrayMesh" uid="uid://dqqbrtigl6vek" path="res://Assets/PolygonDungeon/Models/SM_Env_Bone_Rib_02.res" id="1_nsnka"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_sc101"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_hlj2v"]
+points = PackedVector3Array(2.11141, -0.144688, -0.0539012, 2.03365, 0.320208, 0.023839, 2.20011, 0.236352, -0.000739299, 2.26636, -0.144688, -0.0539012, -0.368629, -0.222262, 1.41861, -0.368629, -0.144688, 1.18594, -0.368629, 0.475355, 1.18594, 1.0262, 0.475355, 1.65092, 1.72347, 0.397782, 1.18575, 2.26636, 0.320208, 0.5662, 2.49906, 0.0103228, 0.411265, 1.8787, -0.144688, 1.1082, -0.291435, -0.222262, 1.7283, -0.2934, 0.456986, 1.61232, 0.251451, 0.475355, 1.80604, 0.56107, -0.144688, 1.80604)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_ngsem"]
+points = PackedVector3Array(-0.368917, -0.222239, 1.6509, -0.405176, 0.463147, 1.5915, -0.911773, 0.475249, 1.4184, -1.17193, -0.186351, 1.12753, -2.22897, -0.299775, -0.519054, -1.99667, -0.299775, -1.75903, -0.368917, -0.14462, 1.10807, -0.368917, 0.475249, 1.10807, -0.7567, 0.552868, 0.953073, -1.83811, 0.484346, 0.27061, -1.92804, -0.112737, 0.218716, -2.46168, 0.0102849, -1.44903, -2.38404, -0.299775, -1.68187, -1.99667, -0.144703, -1.83687, -1.99667, 0.552868, -1.75903, -2.3066, 0.552868, -1.75903)
+
+[node name="SM_Env_Bone_Rib_02" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_nsnka")
+surface_material_override/0 = ExtResource("2_sc101")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_hlj2v")
+
+[node name="MeshCollider2" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider2"]
+shape = SubResource("ConvexPolygonShape3D_ngsem")

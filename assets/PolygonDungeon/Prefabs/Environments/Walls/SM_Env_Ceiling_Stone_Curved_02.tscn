@@ -1,0 +1,33 @@
+[gd_scene load_steps=6 format=3 uid="uid://dkma8jb4ka84m"]
+
+[ext_resource type="ArrayMesh" uid="uid://dkffm73o1p8c8" path="res://Assets/PolygonDungeon/Models/SM_Env_Ceiling_Stone_Curved_02.res" id="1_xv7iy"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_b12r7"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_x0yrt"]
+points = PackedVector3Array(5.03942, 2.35173, 0.0175252, 5.03942, 2.35173, -0.0622103, 4.79972, 2.35173, 0.176949, 5.03942, -0.0396259, 0.0175252, 5.03942, -0.0396259, -0.0622103, -0.0622082, 2.35173, -0.0622103, 4.79972, 0.837003, 0.176949, 0.336794, 2.35173, 0.176949, 4.72032, 0.199604, 0.176949, -0.0622082, -0.0396259, 0.0175252, -0.0622082, -0.0396259, -0.0622103, 0.0975923, 2.35173, 0.0971669, 0.177493, 1.95286, 0.176949, 1.6926, 0.199604, 0.176949, 0.336794, 0.279659, 0.176949, 0.256893, 0.359246, 0.176949)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_e0mmx"]
+points = PackedVector3Array(-0.0622082, 4.98244, 2.56879, -0.0622082, 5.06216, 2.56879, 0.256921, 4.82305, 2.56879, -0.0622082, 4.98244, 5.03962, -0.0622082, 5.06216, 5.03962, 5.03986, 5.06216, 2.56879, 0.256921, 4.82305, 4.72036, 4.80014, 4.82305, 2.56879, 4.72073, 4.82305, 4.79993, 5.03986, 4.98244, 5.03962, 5.03986, 5.06216, 5.03962, 5.03986, 4.98244, 2.56879, 4.80014, 4.82305, 4.72036)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_cjb7g"]
+points = PackedVector3Array(5.03966, 5.06201, 2.40863, 5.03966, 4.98199, 2.56854, 5.03917, 2.35157, 0.0176187, 5.03917, 2.59081, -0.0622103, -0.0617088, 5.06201, 2.40863, -0.0617088, 4.98199, 2.56854, 4.72005, 4.74276, 2.56854, 4.72005, 2.35157, 0.177019, 2.75741, 2.18335, 0.132985, -0.0622082, 2.35157, 0.0176187, -0.0622082, 2.59081, -0.0622103, 0.256909, 4.66301, 2.48871, 0.336313, 4.74276, 2.56854, 0.416217, 2.43132, 0.336677, 0.416217, 2.35157, 0.256848)
+
+[node name="SM_Env_Ceiling_Stone_Curved_02" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_xv7iy")
+surface_material_override/0 = ExtResource("2_b12r7")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_x0yrt")
+
+[node name="MeshCollider2" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider2"]
+shape = SubResource("ConvexPolygonShape3D_e0mmx")
+
+[node name="MeshCollider3" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider3"]
+shape = SubResource("ConvexPolygonShape3D_cjb7g")

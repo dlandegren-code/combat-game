@@ -1,0 +1,35 @@
+[gd_scene load_steps=6 format=3 uid="uid://btlok2tpksol4"]
+
+[ext_resource type="ArrayMesh" uid="uid://dwieljxvu5tdx" path="res://Assets/PolygonDungeon/Models/SM_Prop_Minecart_01.res" id="1_mab2p"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_0s2wu"]
+[ext_resource type="ArrayMesh" uid="uid://d3jw8h1c8kh51" path="res://Assets/PolygonDungeon/Models/SM_Prop_Minecart_Wheel_01.res" id="3_0s2wu"]
+[ext_resource type="ArrayMesh" uid="uid://b8hj6rpsrupb8" path="res://Assets/PolygonDungeon/Models/SM_Prop_Minecart_Wheel_02.res" id="4_826wu"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_ouque"]
+points = PackedVector3Array(0.499446, 0.879913, -0.701917, -0.0602202, 0.310478, -0.810441, 0.474525, 1.00049, -0.700965, 0.474525, 1.00049, 0.700965, 0.495942, 0.853921, 0.69684, 0.398202, 0.278468, 0.550713, 0.384476, 0.269483, -0.590378, -0.136251, 0.183803, -0.709057, -0.395202, 0.275821, -0.579589, -0.488756, 0.805465, -0.67193, -0.471525, 1.00322, -0.705884, -0.471622, 1.00338, 0.705884, 0.0409268, 0.335829, 0.810441, -0.136251, 0.183803, 0.709057, -0.395786, 0.275259, 0.580224, -0.495084, 0.954041, 0.704614)
+
+[node name="SM_Prop_Minecart_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_mab2p")
+surface_material_override/0 = ExtResource("2_0s2wu")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_ouque")
+
+[node name="SM_Prop_Minecart_Wheel_01" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.211259, -0.33372)
+
+[node name="MeshRenderer" type="MeshInstance3D" parent="SM_Prop_Minecart_Wheel_01"]
+gi_mode = 2
+mesh = ExtResource("3_0s2wu")
+surface_material_override/0 = ExtResource("2_0s2wu")
+
+[node name="SM_Prop_Minecart_Wheel_02" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.211259, 0.339743)
+
+[node name="MeshRenderer" type="MeshInstance3D" parent="SM_Prop_Minecart_Wheel_02"]
+gi_mode = 2
+mesh = ExtResource("4_826wu")
+surface_material_override/0 = ExtResource("2_0s2wu")

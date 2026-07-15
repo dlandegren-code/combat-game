@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://cka2ky1a8atky"]
+
+[ext_resource type="ArrayMesh" uid="uid://caqugk8t77e12" path="res://Assets/PolygonDungeon/Models/SM_Env_Door_Large_Stone_01.res" id="1_pkv8h"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_khk80"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_cal5l"]
+size = Vector3(2.05401, 4.51592, 0.43325)
+
+[node name="SM_Env_Door_Large_Stone_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_pkv8h")
+surface_material_override/0 = ExtResource("2_khk80")
+
+[node name="BoxCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BoxCollider"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.02487, 2.25796, 2.38419e-07)
+shape = SubResource("BoxShape3D_cal5l")

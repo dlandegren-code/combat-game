@@ -1,0 +1,25 @@
+[gd_scene load_steps=5 format=3 uid="uid://yuasrgcpvi72"]
+
+[ext_resource type="ArrayMesh" uid="uid://b6j0u8c8ms6no" path="res://Assets/PolygonDungeon/Models/SM_Prop_Bed_02.res" id="1_1802t"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_qi32y"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_v54ko"]
+points = PackedVector3Array(-0.63028, -0.0480232, -1.41357, 0.0273731, 0.789013, -1.65261, 0.625157, 0.0115995, -1.47329, 0.625157, -0.0480232, -1.23432, -0.63028, -0.0480232, -1.17459, -0.63028, 2.1043, -1.41357, 0.206593, 0.789013, -1.65261, 0.385941, 1.98463, -1.35377, 0.505549, 2.1043, -1.23432, 0.685026, 0.789013, -0.995083, 0.640865, 0.0240297, -1.35178, 0.470915, 0.307185, -1.01883, -0.53655, 0.351639, -1.01381, -0.570411, 1.08755, -0.995083, -0.63028, 2.04446, -1.17459, 0.44568, 2.1043, -1.055)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_qffpd"]
+points = PackedVector3Array(2.35905, 0.0718544, 0.857869, 2.23498, -0.000198599, -0.124748, 2.23937, 0.131266, -0.217488, -0.390923, 2.1043, 1.09732, -0.390923, 2.1043, 1.2766, 1.40221, 0.191311, 2.17361, 1.46219, -0.0480232, 2.11313, 1.58158, -0.0480232, -0.397076, 0.506228, 0.251144, -0.995083, 0.745878, 0.848636, -0.93491, -0.629987, 2.1043, 1.09732, -0.63028, 1.08776, -0.995083, -0.490411, 0.0120209, 1.40749, 1.22284, 0.071433, 2.17361, -0.629987, -0.0480232, 1.21705, -0.517039, 0.337523, -0.936151)
+
+[node name="SM_Prop_Bed_02" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_1802t")
+surface_material_override/0 = ExtResource("2_qi32y")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_v54ko")
+
+[node name="MeshCollider2" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider2"]
+shape = SubResource("ConvexPolygonShape3D_qffpd")

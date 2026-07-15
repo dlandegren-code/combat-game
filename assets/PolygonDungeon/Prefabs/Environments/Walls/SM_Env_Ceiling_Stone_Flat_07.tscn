@@ -1,0 +1,25 @@
+[gd_scene load_steps=5 format=3 uid="uid://cgdylcy4hr657"]
+
+[ext_resource type="ArrayMesh" uid="uid://bufpgvfpj63t0" path="res://Assets/PolygonDungeon/Models/SM_Env_Ceiling_Stone_Flat_07.res" id="1_vsron"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_72f82"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_um7c1"]
+points = PackedVector3Array(8.18918, -0.149865, 3.38223, 7.69755, -2.6916, 2.61935, 7.77236, -0.0356832, 2.64033, 6.86342, -0.0567961, 6.03764, 8.01477, -0.946123, 4.9993, 7.8564, -2.21634, 4.68187, 5.31809, -0.470006, 1.3491, 5.62269, -0.149865, 1.15654, 5.95206, -4.43751, 4.9993, 5.95206, -4.43751, 4.84084, 4.84152, -3.32628, 3.25473, 3.22623, -0.149865, 4.23641, 3.91121, -0.149865, 2.52648, 5.96761, -0.104192, 6.51667, 3.73049, -0.470006, 5.15775, 3.57163, -0.311443, 4.84084)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_ieb2h"]
+points = PackedVector3Array(-0.0793648, 0.00676802, -0.0793648, 0.324359, -0.120592, 0.324347, -0.0793648, 0.00644174, 10.0791, 5, 0.800186, 1.82683, 10.0794, 0.00676802, -0.0793648, 0.391978, -0.115263, 9.60673, 9.57918, -0.113196, 0.419806, 5.60161, -0.283844, 1.52753, 3.72916, -0.310925, 5.31705, 9.67465, -0.120592, 9.67435, 10.0794, 0.00644174, 10.0791, 5.1233, 0.680983, 5.8719, 7.85689, 0.800186, 2.77844, 8.015, -0.310925, 4.68264, 7.6431, -0.269487, 3.09067, 6.9868, 0.679243, 4.99984)
+
+[node name="SM_Env_Ceiling_Stone_Flat_07" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_vsron")
+surface_material_override/0 = ExtResource("2_72f82")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_um7c1")
+
+[node name="MeshCollider2" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider2"]
+shape = SubResource("ConvexPolygonShape3D_ieb2h")

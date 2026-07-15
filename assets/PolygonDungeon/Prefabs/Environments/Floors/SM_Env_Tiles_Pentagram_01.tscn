@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://b7m3meuffxghn"]
+
+[ext_resource type="ArrayMesh" uid="uid://dffcssjjgfv54" path="res://Assets/PolygonDungeon/Models/SM_Env_Tiles_Pentagram_01.res" id="1_3egmt"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_3kqiv"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_0tll5"]
+points = PackedVector3Array(0.202804, 0.258151, -3.30433, 2.06133, 0.258151, -2.58111, 1.33875, -0.0516302, -3.09733, 0.822528, -0.0516302, -3.20083, 0.30566, -0.0516302, -3.30433, -1.34586, -0.0516302, -3.09733, -1.44872, 0.258151, -2.99447, 3.19728, 0.258151, -0.619078, 3.09377, 0.15487, -1.2388, 2.68105, -0.0516302, -1.96138, -2.48181, -0.0516302, -2.27125, -2.58466, 0.258151, -2.06489, 3.19728, 0.258151, 0.619077, 3.30078, -0.0516302, -0.309216, -3.10088, -0.0516302, -1.34231, -3.10088, 0.258151, -1.1353, 2.99092, 0.258151, 1.44516, 3.09377, -0.0516302, 1.2388, -3.30789, -0.0516302, -0.309216, -3.30789, 0.258151, -0.102856, 2.37119, -0.0516302, 2.37475, 1.75147, 0.258151, 2.78747, -3.10088, -0.0516302, 1.3423, -3.10088, 0.258151, 1.1353, 1.23525, -0.0516302, 3.09733, 0.719025, 0.258151, 3.20083, -2.48181, -0.0516302, 2.27124, -2.48181, 0.258151, 2.16839, -0.312771, -0.0516302, 3.30433, -0.622633, 0.258151, 3.20083, -1.34586, -0.0516302, 3.09733, -1.34586, 0.258151, 2.99447)
+
+[node name="SM_Env_Tiles_Pentagram_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_3egmt")
+surface_material_override/0 = ExtResource("2_3kqiv")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_0tll5")

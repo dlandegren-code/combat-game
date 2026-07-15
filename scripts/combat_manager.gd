@@ -182,60 +182,20 @@ func _update_turn_label(combatant: Node) -> void:
 
 
 func _spawn_ground_items() -> void:
-	## Spawn pickups on the battlefield at combat start
-	# Health Potion at (-2, 0.2, 5)
-	var potion := ItemResource.new()
-	potion.item_name = "Health Potion"
-	potion.item_type = ItemResource.ItemType.CONSUMABLE
-	potion.heal_amount = 8
-	_spawn_gi(potion, Vector3(-2, 0.2, 5))
+	## Spawn pickups on the battlefield at combat start (data-driven from .tres).
+	_spawn_item("res://resources/items/health_potion.tres", Vector3(-1, 0.2, 5))
+	_spawn_item("res://resources/items/arrow_bundle.tres", Vector3(3, 0.2, -3))
+	_spawn_item("res://resources/items/warhammer.tres", Vector3(1, 0.2, -5))
+	_spawn_item("res://resources/items/dagger.tres", Vector3(-7, 0.2, -3))
+	_spawn_item("res://resources/items/wooden_shield.tres", Vector3(-3, 0.2, -7))
+	_spawn_item("res://resources/items/longbow.tres", Vector3(5, 0.2, 5))
 
-	# Arrow Bundle at (3, 0.2, -3)
-	var arrows := ItemResource.new()
-	arrows.item_name = "Arrow Bundle"
-	arrows.item_type = ItemResource.ItemType.AMMO
-	arrows.ammo_amount = 9
-	_spawn_gi(arrows, Vector3(3, 0.2, -3))
 
-	# Warhammer at (1, 0.2, -5)
-	var hammer := ItemResource.new()
-	hammer.item_name = "Warhammer"
-	hammer.item_type = ItemResource.ItemType.WEAPON
-	hammer.attack_bonus = 1
-	hammer.damage_bonus = 3
-	hammer.durability = 8
-	hammer.throw_range = 3
-	_spawn_gi(hammer, Vector3(1, 0.2, -5))
-
-	# Dagger at (-6, 0.2, -4)
-	var dagger := ItemResource.new()
-	dagger.item_name = "Dagger"
-	dagger.item_type = ItemResource.ItemType.WEAPON
-	dagger.attack_bonus = 4
-	dagger.damage_bonus = 0
-	dagger.durability = 5
-	dagger.throw_range = 7
-	_spawn_gi(dagger, Vector3(-6, 0.2, -4))
-
-	# Wooden Shield at (-3, 0.2, -6)
-	var shield := ItemResource.new()
-	shield.item_name = "Wooden Shield"
-	shield.item_type = ItemResource.ItemType.SHIELD
-	shield.durability = 10
-	shield.is_shield = true
-	_spawn_gi(shield, Vector3(-3, 0.2, -6))
-
-	# Longbow at (5, 0.2, 4)
-	var bow := ItemResource.new()
-	bow.item_name = "Longbow"
-	bow.item_type = ItemResource.ItemType.WEAPON
-	bow.handedness = ItemResource.Handedness.TWO_HANDED
-	bow.attack_bonus = 2
-	bow.damage_bonus = 1
-	bow.durability = 12
-	bow.ranged_range = 20
-	bow.throw_range = 2
-	_spawn_gi(bow, Vector3(5, 0.2, 4))
+func _spawn_item(path: String, at: Vector3) -> void:
+	var item: ItemResource = load(path)
+	if item:
+		# Duplicate so runtime changes (durability, pickup) don't mutate the cached .tres.
+		_spawn_gi(item.duplicate(), at)
 
 
 func _spawn_gi(item: ItemResource, at: Vector3) -> void:

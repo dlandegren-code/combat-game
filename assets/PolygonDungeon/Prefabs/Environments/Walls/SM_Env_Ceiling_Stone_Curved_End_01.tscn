@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://njlsjmb5itbq"]
+
+[ext_resource type="ArrayMesh" uid="uid://dauv7ayeqkw4a" path="res://Assets/PolygonDungeon/Models/SM_Env_Ceiling_Stone_Curved_End_01.res" id="1_wdhjt"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_csokc"]
+
+[node name="SM_Env_Ceiling_Stone_Curved_End_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_wdhjt")
+surface_material_override/0 = ExtResource("2_csokc")

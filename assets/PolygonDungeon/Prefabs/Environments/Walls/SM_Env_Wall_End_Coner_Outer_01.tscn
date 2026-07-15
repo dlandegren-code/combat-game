@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://dy7yx7asii5jx"]
+
+[ext_resource type="ArrayMesh" uid="uid://rhufdtkykgb4" path="res://Assets/PolygonDungeon/Models/SM_Env_Wall_End_Coner_Outer_01.res" id="1_mm1om"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_uk2ho"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8pobn"]
+size = Vector3(0.829876, 5.02597, 0.833042)
+
+[node name="SM_Env_Wall_End_Coner_Outer_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_mm1om")
+surface_material_override/0 = ExtResource("2_uk2ho")
+
+[node name="BoxCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BoxCollider"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.72205e-06, 2.51298, 1.90735e-06)
+shape = SubResource("BoxShape3D_8pobn")

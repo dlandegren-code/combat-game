@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://bf8amavewejgu"]
+
+[ext_resource type="ArrayMesh" uid="uid://dqm2j3lc654d1" path="res://Assets/PolygonDungeon/Models/SM_Env_Basement_Support_Beam_Bolt_01.res" id="1_k3hql"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_hbcee"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_k3hql"]
+size = Vector3(0.398407, 0.525238, 0.376648)
+
+[node name="SM_Env_Basement_Support_Beam_Bolt_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_k3hql")
+surface_material_override/0 = ExtResource("2_hbcee")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00285339, 0.000350952, 0.0627747)
+shape = SubResource("BoxShape3D_k3hql")

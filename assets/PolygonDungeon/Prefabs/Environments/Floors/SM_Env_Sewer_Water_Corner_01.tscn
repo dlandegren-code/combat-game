@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://st8b2t7rb7ka"]
+
+[ext_resource type="ArrayMesh" uid="uid://cnvjsf0ylrlhn" path="res://Assets/PolygonDungeon/Models/SM_Env_Sewer_Water_Corner_01.res" id="1_l3igj"]
+[ext_resource type="Material" uid="uid://bqdeej57y4srf" path="res://Assets/PolygonDungeon/Materials/Misc/FX_Water_Sewer_mat.tres" id="2_ymn76"]
+
+[node name="SM_Env_Sewer_Water_Corner_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_l3igj")
+surface_material_override/0 = ExtResource("2_ymn76")

@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://d6bg5f2s1j8v"]
+
+[ext_resource type="ArrayMesh" uid="uid://brfwgpyuqeefx" path="res://Assets/PolygonDungeon/Models/SM_Item_Shrunken_Head.res" id="1_yw35k"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_yw35k"]
+
+[node name="SM_Item_Shrunken_Head" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_yw35k")
+surface_material_override/0 = ExtResource("2_yw35k")

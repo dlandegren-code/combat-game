@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/item_resource.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+item_name = "Longbow"
+item_type = 0
+handedness = 1
+attack_bonus = 2
+damage_bonus = 1
+durability = 12
+ranged_range = 20
+throw_range = 2

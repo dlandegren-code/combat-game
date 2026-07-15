@@ -1,0 +1,27 @@
+[gd_scene load_steps=5 format=3 uid="uid://i5wxel2auogg"]
+
+[ext_resource type="ArrayMesh" uid="uid://dylkylcpddrea" path="res://Assets/PolygonDungeon/Models/SM_Env_Wall_Trim_Top_02.res" id="1_xsi2n"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_6fwp8"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_c12x6"]
+size = Vector3(5.09296, 0.663008, 0.410929)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_45r55"]
+size = Vector3(5.09296, 0.663008, 0.410929)
+
+[node name="SM_Env_Wall_Trim_Top_02" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_xsi2n")
+surface_material_override/0 = ExtResource("2_6fwp8")
+
+[node name="BoxCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BoxCollider"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.90735e-06, 0.331504, -9.53674e-07)
+shape = SubResource("BoxShape3D_c12x6")
+
+[node name="BoxCollider2" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BoxCollider2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.90735e-06, 0.331504, -9.53674e-07)
+shape = SubResource("BoxShape3D_45r55")

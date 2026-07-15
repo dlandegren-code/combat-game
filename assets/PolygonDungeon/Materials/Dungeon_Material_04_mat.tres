@@ -1,0 +1,14 @@
+[gd_resource type="StandardMaterial3D" load_steps=3 format=3 uid="uid://dt2eljn7l6bol"]
+
+[ext_resource type="Texture2D" uid="uid://dwm0efer6qf6r" path="res://Assets/PolygonDungeon/Textures/Dungeons_Texture_04.png" id="1_cwimx"]
+[ext_resource type="Texture2D" uid="uid://ccyj6sluvb047" path="res://Assets/PolygonDungeon/Textures/Emmisive/Emmisive_04.png" id="2_7abv1"]
+
+[resource]
+resource_name = "Dungeon_Material_04_mat"
+depth_draw_mode = 1
+albedo_texture = ExtResource("1_cwimx")
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+emission_operator = 1
+emission_texture = ExtResource("2_7abv1")
+uv1_scale = Vector3(1, 1, 0)

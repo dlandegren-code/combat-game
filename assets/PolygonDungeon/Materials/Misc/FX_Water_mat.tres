@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://d00aywx3d8uxc"]
+
+[resource]
+resource_name = "FX_Water_mat"
+transparency = 1
+depth_draw_mode = 1
+albedo_color = Color(0.190582, 0.551471, 0.551471, 0.160784)
+roughness = 0.5
+uv1_scale = Vector3(1, 1, 0)

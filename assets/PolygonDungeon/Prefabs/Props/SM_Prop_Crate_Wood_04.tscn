@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://cd2im821hqc5g"]
+
+[ext_resource type="ArrayMesh" uid="uid://drlx27owkx78v" path="res://Assets/PolygonDungeon/Models/SM_Prop_Crate_Wood_04.res" id="1_nbu4y"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_w0kbr"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_nbu4y"]
+size = Vector3(1.07825, 1.06213, 1.05652)
+
+[node name="SM_Prop_Crate_Wood_04" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_nbu4y")
+surface_material_override/0 = ExtResource("2_w0kbr")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.10352e-05, 0.543015, -0.00299072)
+shape = SubResource("BoxShape3D_nbu4y")

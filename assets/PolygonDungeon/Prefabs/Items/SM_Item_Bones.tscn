@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://cm13ji10qjlxw"]
+
+[ext_resource type="ArrayMesh" uid="uid://c30vg5ngb2hh2" path="res://Assets/PolygonDungeon/Models/SM_Item_Bones.res" id="1_oeyaf"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_oeyaf"]
+
+[node name="SM_Item_Bones" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_oeyaf")
+surface_material_override/0 = ExtResource("2_oeyaf")

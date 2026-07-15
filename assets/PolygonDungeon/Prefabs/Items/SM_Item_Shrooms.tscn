@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://845e3r0k25pi"]
+
+[ext_resource type="ArrayMesh" uid="uid://b6x2vpil823r4" path="res://Assets/PolygonDungeon/Models/SM_Item_Shrooms.res" id="1_1q0oh"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_1q0oh"]
+
+[node name="SM_Item_Shrooms" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_1q0oh")
+surface_material_override/0 = ExtResource("2_1q0oh")

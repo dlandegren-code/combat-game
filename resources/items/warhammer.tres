@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/item_resource.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+item_name = "Warhammer"
+item_type = 0
+attack_bonus = 1
+damage_bonus = 3
+durability = 8
+throw_range = 3
+model_path = "res://Assets/PolygonDungeon/Models/SM_Wep_Hammer_Small_01.res"
+model_material_path = "res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres"
+model_scale = 0.6
+model_hand_position = Vector3(-0.2, 0.1, 0.08)
+model_hand_rotation = Vector3(0, 30, 10)
+model_ground_rotation = Vector3(0, 90, 90)

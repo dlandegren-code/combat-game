@@ -1,0 +1,10 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://1ftnoyw0f1ca"]
+
+[resource]
+resource_name = "FX_CandleFlame_mat"
+depth_draw_mode = 1
+albedo_color = Color(0.992647, 0.970499, 0.84667, 1)
+roughness = 0.5
+emission_enabled = true
+emission = Color(1, 0.87468, 0.622619, 1)
+uv1_scale = Vector3(1, 1, 0)

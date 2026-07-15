@@ -1,0 +1,15 @@
+[gd_scene load_steps=4 format=3 uid="uid://7lqtabtqi0tf"]
+
+[ext_resource type="ArrayMesh" uid="uid://bp2iqgqapkyua" path="res://Assets/PolygonDungeon/Models/SM_Env_Stairs_02.res" id="1_fwgl0"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_n13h7"]
+[ext_resource type="Shape3D" uid="uid://dargc61pqv4cq" path="res://Assets/PolygonDungeon/Models/CollisionCustom/SM_Env_Stairs_02_Collision.res" id="3_n13h7"]
+
+[node name="SM_Env_Stairs_02" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_fwgl0")
+surface_material_override/0 = ExtResource("2_n13h7")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = ExtResource("3_n13h7")

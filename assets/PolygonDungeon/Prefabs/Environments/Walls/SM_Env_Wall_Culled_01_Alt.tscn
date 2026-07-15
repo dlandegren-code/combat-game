@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://cahhufktggwq7"]
+
+[ext_resource type="ArrayMesh" uid="uid://cdmh5i7axjtey" path="res://Assets/PolygonDungeon/Models/SM_Env_Wall_Culled_01_Alt.res" id="1_v6ltd"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_7msie"]
+
+[node name="SM_Env_Wall_Culled_01_Alt" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_v6ltd")
+surface_material_override/0 = ExtResource("2_7msie")

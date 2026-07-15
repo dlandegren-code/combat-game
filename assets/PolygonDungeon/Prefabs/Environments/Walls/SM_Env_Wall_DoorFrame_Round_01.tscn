@@ -1,0 +1,33 @@
+[gd_scene load_steps=6 format=3 uid="uid://bikgtkyc4v4br"]
+
+[ext_resource type="ArrayMesh" uid="uid://b6xuaao2ffu68" path="res://Assets/PolygonDungeon/Models/SM_Env_Wall_DoorFrame_Round_01.res" id="1_tutjh"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_y2n52"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_xwt0o"]
+points = PackedVector3Array(0.769456, 5.07731, -0.0793609, 0.0580669, 5.00836, -0.124275, 0.92402, 5.07567, 0.0861226, 4.93079, 5.02368, -0.142728, -0.0524065, 2.32964, -0.102804, -0.0335814, 3.00657, 0.27962, 0.112065, 4.94324, 0.267919, 0.529189, 4.96978, -0.148725, 0.102157, 2.3477, -0.148389, 4.9724, 5.00015, 0.251732, 5.00856, 2.28203, -0.118278, 4.83022, 2.62843, -0.148809, 0.0669841, 2.32089, 0.223886, 4.80644, 2.52336, 0.269261, 4.90552, 3.88516, 0.270436, 4.88026, 2.30228, 0.213359)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_o5gew"]
+points = PackedVector3Array(-0.110099, 2.26798, -0.0913401, 1.66851, 2.30558, 0.178598, 1.58964, 2.23617, -0.148624, 0.0250026, 2.23706, -0.148792, 0.0227393, 0.775268, -0.146024, 0.0182127, 0.0807427, -0.107779, -0.0115585, 0.0329135, 0.0988786, -0.0744088, 2.23306, 0.20053, 1.64066, 0.0863043, 0.213027, 1.63073, 0.0480409, -0.12753, 1.62116, 2.26487, 0.239697, 1.62464, 0.118116, 0.260162, 0.00219541, 0.064948, 0.198265, -0.0428966, 2.15542, 0.244268, 0.168636, 0.0972049, 0.246952, 1.40823, 0.483621, 0.27962)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_b41aq"]
+points = PackedVector3Array(3.27883, 2.17693, 0.144129, 3.40898, 2.18925, 0.270576, 3.32602, 2.22146, -0.148123, 3.31358, 0.104743, -0.12635, 3.2991, 0.0986899, 0.251274, 4.99973, 1.20417, 0.27962, 4.94845, 2.22621, 0.248008, 4.2001, 2.25215, 0.237666, 5.01182, 2.25561, -0.116762, 4.88934, 1.01892, -0.145694, 3.33147, 0.22558, -0.146699, 4.93925, 0.087233, -0.139749, 5.01404, 0.047242, -0.040894, 5.00024, 0.0863683, 0.25119, 5.01915, 0.850306, -0.115632, 5.00467, 1.05329, -0.125136)
+
+[node name="SM_Env_Wall_DoorFrame_Round_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_tutjh")
+surface_material_override/0 = ExtResource("2_y2n52")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_xwt0o")
+
+[node name="MeshCollider2" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider2"]
+shape = SubResource("ConvexPolygonShape3D_o5gew")
+
+[node name="MeshCollider3" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider3"]
+shape = SubResource("ConvexPolygonShape3D_b41aq")

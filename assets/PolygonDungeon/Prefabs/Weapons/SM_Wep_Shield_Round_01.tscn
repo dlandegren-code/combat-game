@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://dq4c4w6crhari"]
+
+[ext_resource type="ArrayMesh" uid="uid://bncwrfrumem1l" path="res://Assets/PolygonDungeon/Models/SM_Wep_Shield_Round_01.res" id="1_7ywpv"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_qtprl"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_3yxxs"]
+points = PackedVector3Array(0.221652, 0.300745, 0.040125, 0.210057, 0.289034, 0.110104, 0.350051, 0.148966, 0.098492, 0.353181, -0.0357906, 0.0426668, -0.0186422, 0.0624433, -0.00643776, -0.221804, 0.300745, 0.040125, -0.210138, 0.289034, 0.110123, 0.0102386, -0.0130674, 0.190289, 0.350051, -0.142764, 0.098492, 0.233318, -0.294485, 0.040125, -0.233399, -0.294485, 0.040125, -0.321322, -0.157855, 0.0424935, -0.373535, 0.0204929, 0.098492, -0.233399, -0.271237, 0.110123, 0.233318, -0.271237, 0.110104, 0.165882, -0.290406, 0.0868032)
+
+[node name="SM_Wep_Shield_Round_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_7ywpv")
+surface_material_override/0 = ExtResource("2_qtprl")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_3yxxs")

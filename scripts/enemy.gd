@@ -11,7 +11,7 @@ enum Action { MOVE, ATTACK, SHOVE, TRIP, RANGED, THROW }
 ## Distance (in tiles) an archer tries to keep from its target before shooting.
 ## It backs away when the target is closer than this and fires from here or
 ## farther. Capped at the archer's actual ranged range. Raise to hang back more.
-const ARCHER_PREFERRED_DIST := 10
+const ARCHER_PREFERRED_DIST := 5
 
 
 func _pre_setup() -> void:

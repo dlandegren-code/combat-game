@@ -1,0 +1,27 @@
+[gd_scene load_steps=6 format=3 uid="uid://dbi7nix807ql"]
+
+[ext_resource type="ArrayMesh" uid="uid://eoheos3qmjj" path="res://Assets/PolygonDungeon/Models/SM_Prop_Tech_Chamber_01.res" id="1_yfhvo"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_ixws3"]
+[ext_resource type="ArrayMesh" uid="uid://ekwhlr7bgvrx" path="res://Assets/PolygonDungeon/Models/SM_Prop_Tech_Chamber_Glass.res" id="3_ixws3"]
+[ext_resource type="Material" uid="uid://uqbwf76geexc" path="res://Assets/PolygonDungeon/Materials/Misc/Dungeon_Material_Transparent_mat.tres" id="4_seto6"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_bnesl"]
+points = PackedVector3Array(0.0491747, 0.0903773, 0.7911, -0.0707025, 2.07008, 0.731055, -0.430922, 0.0302039, 0.671011, 0.409394, 0.0302039, 0.671011, 0.10926, 3.8121, 0.130607, -0.731056, 2.07008, 0.0705621, 0.76976, 1.95124, 0.0705621, -0.731056, 0.0302039, 0.310741, 0.76976, -0.0299695, 0.0705621, -0.0707025, 2.1908, -0.709563, 0.76976, 1.95124, -0.0492221, 0.0491747, 1.95162, -0.76976, -0.671117, 0.0302039, -0.409491, -0.130641, 0.0302039, -0.76976, 0.46948, 0.0903773, -0.649671, 0.726863, 0.0749579, -0.0460136)
+
+[node name="SM_Prop_Tech_Chamber_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_yfhvo")
+surface_material_override/0 = ExtResource("2_ixws3")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_bnesl")
+
+[node name="SM_Prop_Tech_Chamber_Glass" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.100929, -2.34899e-07)
+
+[node name="MeshRenderer" type="MeshInstance3D" parent="SM_Prop_Tech_Chamber_Glass"]
+gi_mode = 2
+mesh = ExtResource("3_ixws3")
+surface_material_override/0 = ExtResource("4_seto6")

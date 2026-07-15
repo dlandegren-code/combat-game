@@ -1,0 +1,15 @@
+[gd_scene load_steps=4 format=3 uid="uid://b22ii8itvmh34"]
+
+[ext_resource type="ArrayMesh" uid="uid://br4ym6sakm2wo" path="res://Assets/PolygonDungeon/Models/SM_Env_Wood_Bridge_Start_01.res" id="1_mb0pg"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_fccgi"]
+[ext_resource type="Shape3D" uid="uid://b5ufneqes1spe" path="res://Assets/PolygonDungeon/Models/CollisionCustom/SM_Env_Wood_Bridge_Start_01_Collision.res" id="3_fccgi"]
+
+[node name="SM_Env_Wood_Bridge_Start_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_mb0pg")
+surface_material_override/0 = ExtResource("2_fccgi")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = ExtResource("3_fccgi")

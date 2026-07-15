@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://0f6roosgym1v"]
+
+[ext_resource type="ArrayMesh" uid="uid://bdu4hbdhc8a1s" path="res://Assets/PolygonDungeon/Models/SM_Env_Railing_Broken_02.res" id="1_jcnsq"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_hmpcq"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_qygya"]
+size = Vector3(5, 1, 0.406128)
+
+[node name="SM_Env_Railing_Broken_02" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_jcnsq")
+surface_material_override/0 = ExtResource("2_hmpcq")
+
+[node name="BoxCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BoxCollider"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0.5, 7.62939e-06)
+shape = SubResource("BoxShape3D_qygya")

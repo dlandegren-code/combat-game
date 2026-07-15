@@ -1,0 +1,15 @@
+[gd_scene load_steps=4 format=3 uid="uid://dlx5tm2pbhr0i"]
+
+[ext_resource type="ArrayMesh" uid="uid://cswkss3froqtj" path="res://Assets/PolygonDungeon/Models/SM_Env_Entrance_Crypt_01.res" id="1_okyi1"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_hoaof"]
+[ext_resource type="Shape3D" uid="uid://du7a4bb4cjlq7" path="res://Assets/PolygonDungeon/Models/CollisionCustom/SM_Env_Entrance_Crypt_01_Collision.res" id="3_hoaof"]
+
+[node name="SM_Env_Entrance_Crypt_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_okyi1")
+surface_material_override/0 = ExtResource("2_hoaof")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = ExtResource("3_hoaof")

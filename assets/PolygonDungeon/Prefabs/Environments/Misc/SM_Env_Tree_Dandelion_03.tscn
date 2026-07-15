@@ -1,0 +1,25 @@
+[gd_scene load_steps=5 format=3 uid="uid://b6je1iq7oenv2"]
+
+[ext_resource type="ArrayMesh" uid="uid://bfiif84oski31" path="res://Assets/PolygonDungeon/Models/SM_Env_Tree_Dandelion_03.res" id="1_71t8g"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_gkwk5"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_5fe7h"]
+points = PackedVector3Array(0.141816, 2.94052, 0.363674, 0.216318, 2.94052, 0.586887, 0.365263, 2.94052, 0.363674, 0.365205, 0.335156, 0.0658415, 0.290703, 0.111815, 0.140285, 0.21626, 0.111815, 0.438001, 0.290703, 2.26993, 0.661331, 0.588419, 2.34466, 0.661331, 0.662921, 1.82353, 0.363674, 0.662862, 0.335156, 0.0658415, 0.642517, 0.098176, 0.228253, 0.737364, 0.0376523, 0.512502, 0.365205, 0.111815, 0.586946, 0.662862, 0.558213, 0.661389, 0.737364, 0.707107, 0.586946, 0.706992, 0.181432, 0.229885)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_t1anm"]
+points = PackedVector3Array(-0.0814995, 3.75943, 0.810276, 0.66277, 4.20587, 0.512415, -0.155865, 4.5035, 0.661345, -0.751403, 3.61062, 0.288939, 0.141751, 2.94052, 0.512415, 0.364848, 2.94052, 0.512415, 0.439367, 4.65232, 0.140168, 0.811808, 3.75943, -0.0828269, -0.304903, 4.72699, -0.157372, -0.610017, 4.43653, -0.142624, -0.453787, 3.4618, -0.529619, -0.155865, 3.01501, -0.157212, 0.290788, 3.4618, -0.604004, 0.290788, 4.50333, -0.604004, 0.648234, 3.7026, -0.270714, -0.155865, 4.28019, -0.82748)
+
+[node name="SM_Env_Tree_Dandelion_03" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_71t8g")
+surface_material_override/0 = ExtResource("2_gkwk5")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_5fe7h")
+
+[node name="MeshCollider2" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider2"]
+shape = SubResource("ConvexPolygonShape3D_t1anm")

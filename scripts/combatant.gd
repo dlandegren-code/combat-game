@@ -5,7 +5,7 @@ class_name Combatant
 ## animation and health-bar logic. Player and Enemy extend this and add only
 ## their control-specific behaviour (input vs AI).
 
-const GRID_SIZE := 1.0
+const GRID_SIZE := 2.0
 const ARENA_MIN := -14.0
 const ARENA_MAX := 14.0
 
@@ -24,7 +24,7 @@ const LAYER_ENEMY_AND_OBSTACLE := 6  ## enemy (2) + obstacle (4), for line-of-si
 
 ## Movement tunables (subclasses may override in _pre_setup / from stats).
 var move_speed: float = 6.0
-var move_range: int = 5
+var move_range: int = 3
 
 @export var initiative: int = 10
 @export var character_name: String = "Hero"
@@ -45,10 +45,10 @@ var move_range: int = 5
 @export var ranged_cost: int = 3
 @export var ammo: int = 0
 @export var max_ammo: int = 0
-@export var ranged_range: int = 15      ## max tiles for ranged
+@export var ranged_range: int = 7       ## max tiles for ranged
 @export var throw_skill: int = 3        ## used for thrown weapon attacks
 @export var throw_cost: int = 3
-@export var throw_range: int = 5        ## max tiles for thrown
+@export var throw_range: int = 3        ## max tiles for thrown
 @export var equip_cost: int = 1         ## time cost to swap equipped weapon/shield
 @export var strength: int = 3
 @export var weight: int = 2
@@ -88,6 +88,11 @@ var _last_left_hand: ItemResource = null
 var _anim_player = null
 var _is_attacking := false
 
+## Uniform scale applied to the CharacterModel (and its held weapons) so the
+## ~1-unit Kenney models fill the 2-unit grid cells. Multiplies any per-type
+## scale an enemy sets. Tune to taste.
+const CHARACTER_SCALE := 1.6
+
 ## Set true in project to re-enable verbose equipment logging.
 const DEBUG_EQUIPMENT := false
 
@@ -95,9 +100,9 @@ const DEBUG_EQUIPMENT := false
 const SWORD_MODEL_PATH := "res://assets/models/kenney/mini-arena/weapon-sword.glb"
 const BOW_MODEL_PATH := "res://assets/weapons/bow.fbx"
 const SHIELD_MODEL_PATH := "res://assets/weapons/Shield_1.obj"
-const HAMMER_MODEL_PATH := "res://assets/synty/SM_Wep_Hammer_Small_01.res"
-const AXE_MODEL_PATH := "res://assets/synty/SM_Wep_Goblin_Axe_Large_01.res"
-const SYNTY_MATERIAL_PATH := "res://assets/synty/Dungeon_Material_01_mat.tres"
+const HAMMER_MODEL_PATH := "res://Assets/PolygonDungeon/Models/SM_Wep_Hammer_Small_01.res"
+const AXE_MODEL_PATH := "res://Assets/PolygonDungeon/Models/SM_Wep_Goblin_Axe_Large_01.res"
+const SYNTY_MATERIAL_PATH := "res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres"
 
 
 func _ready() -> void:
@@ -107,6 +112,7 @@ func _ready() -> void:
 	inventory = get_node_or_null("Inventory")
 	_apply_stats()
 	_pre_setup()
+	_apply_character_scale()
 	_setup_sockets()
 	_update_health_bar()
 	add_to_group("combatants")
@@ -119,6 +125,12 @@ func _ready() -> void:
 ## Hook: runs before sockets/health bar are set up (enemy configures stats here).
 func _pre_setup() -> void:
 	pass
+
+
+func _apply_character_scale() -> void:
+	var model := get_node_or_null("CharacterModel") as Node3D
+	if model:
+		model.scale *= CHARACTER_SCALE
 
 
 ## Hook: runs at the end of _ready (player wires up UI here).
@@ -282,6 +294,16 @@ func _refresh_socket(socket, item: ItemResource) -> void:
 		c.queue_free()
 	if not item:
 		return
+	# Data-driven model: if the item declares its own model, use it directly.
+	if item.has_model():
+		var model_node := item.instantiate_model()
+		if model_node:
+			model_node.position = item.model_hand_position
+			model_node.rotation_degrees = item.model_hand_rotation
+			_apply_offhand_mirror(model_node, socket, item)
+			socket.add_child(model_node)
+			return
+	# Otherwise fall back to the name/type-based lookup below.
 	# Determine weapon kind by name: bow vs hammer vs axe/cleaver vs sword/dagger.
 	var lower_name: String = item.item_name.to_lower()
 	var is_bow: bool = lower_name.find("bow") >= 0
@@ -357,6 +379,7 @@ func _refresh_socket(socket, item: ItemResource) -> void:
 					# Push outward on left arm (positive X = outward from body on left side)
 					n3d.position = Vector3(0.2, 0, 0.15)
 					n3d.rotation_degrees = Vector3(0, 20, 0)
+			_apply_offhand_mirror(n3d, socket, item)
 		socket.add_child(node)
 		return
 	# Fallback: procedural box placeholder
@@ -382,6 +405,23 @@ func _refresh_socket(socket, item: ItemResource) -> void:
 	mi.mesh = box
 	mi.material_override = mat
 	socket.add_child(mi)
+
+
+func _apply_offhand_mirror(node: Node3D, socket, item: ItemResource) -> void:
+	## Hand placement offsets are tuned for the right-hand socket. The left-hand
+	## (shield) socket is a mirrored bone, so mirror non-shield items across X or
+	## they end up flipped and floating near the neck.
+	if socket != _shield_socket:
+		return
+	if item.item_type == ItemResource.ItemType.SHIELD or item.is_shield:
+		return
+	var p: Vector3 = node.position
+	p.x = -p.x
+	node.position = p
+	var r: Vector3 = node.rotation_degrees
+	r.y = -r.y
+	r.z = -r.z
+	node.rotation_degrees = r
 
 
 func _has_line_of_sight(target: Node) -> bool:
@@ -550,7 +590,7 @@ func _is_obstacle_at(tile: Vector3) -> bool:
 	for o in get_tree().get_nodes_in_group("obstacles"):
 		if not is_instance_valid(o):
 			continue
-		var obs_tile := Vector3(round(o.position.x / GRID_SIZE) * GRID_SIZE, tile.y, round(o.position.z / GRID_SIZE) * GRID_SIZE)
+		var obs_tile := Vector3((floor(o.position.x / GRID_SIZE) + 0.5) * GRID_SIZE, tile.y, (floor(o.position.z / GRID_SIZE) + 0.5) * GRID_SIZE)
 		if obs_tile.distance_to(tile) < 0.5:
 			return true
 	return false
@@ -646,9 +686,9 @@ func _show_damage_number(amount: int) -> void:
 
 func _snap_to_grid(pos: Vector3) -> Vector3:
 	return Vector3(
-		round(pos.x / GRID_SIZE) * GRID_SIZE,
+		(floor(pos.x / GRID_SIZE) + 0.5) * GRID_SIZE,
 		pos.y,
-		round(pos.z / GRID_SIZE) * GRID_SIZE
+		(floor(pos.z / GRID_SIZE) + 0.5) * GRID_SIZE
 	)
 
 

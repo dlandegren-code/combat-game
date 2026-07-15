@@ -1,0 +1,10 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://ihw5hyv7t5ud"]
+
+[resource]
+resource_name = "Dungeons_Material_Emmision_mat"
+depth_draw_mode = 1
+roughness = 0.5
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+emission_energy_multiplier = 5.0
+uv1_scale = Vector3(1, 1, 0)

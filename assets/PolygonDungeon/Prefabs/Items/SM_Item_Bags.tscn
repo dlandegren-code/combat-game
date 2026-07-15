@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://dejj0m5ps7w17"]
+
+[ext_resource type="ArrayMesh" uid="uid://y01unt6nd7su" path="res://Assets/PolygonDungeon/Models/SM_Item_Bags.res" id="1_jxtvp"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_jxtvp"]
+
+[node name="SM_Item_Bags" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_jxtvp")
+surface_material_override/0 = ExtResource("2_jxtvp")

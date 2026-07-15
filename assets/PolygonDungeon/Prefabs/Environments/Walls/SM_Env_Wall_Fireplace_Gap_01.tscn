@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://6oaq2ephigq4"]
+
+[ext_resource type="ArrayMesh" uid="uid://bo2y65ixis1xm" path="res://Assets/PolygonDungeon/Models/SM_Env_Wall_DoorFrame_Double_01.res" id="1_ltp4k"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_s7ok6"]
+
+[node name="SM_Env_Wall_Fireplace_Gap_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_ltp4k")
+surface_material_override/0 = ExtResource("2_s7ok6")

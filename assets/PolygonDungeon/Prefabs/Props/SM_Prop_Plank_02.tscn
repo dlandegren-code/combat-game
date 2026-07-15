@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://b5feq6mp83mbf"]
+
+[ext_resource type="ArrayMesh" uid="uid://f1gap6tyad8b" path="res://Assets/PolygonDungeon/Models/SM_Prop_Plank_02.res" id="1_r7d0s"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_3whuw"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_puyc6"]
+points = PackedVector3Array(-1.2323, -0.0192547, -0.190621, -1.2323, 0.0962736, -0.190621, 1.2323, -0.0192547, -0.190621, -1.2323, -0.0192547, 0.194474, -1.2323, 0.0962736, 0.194474, 1.2323, 0.0962736, -0.190621, 1.2323, -0.0192547, 0.194474, 1.2323, 0.0962736, 0.194474)
+
+[node name="SM_Prop_Plank_02" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_r7d0s")
+surface_material_override/0 = ExtResource("2_3whuw")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_puyc6")

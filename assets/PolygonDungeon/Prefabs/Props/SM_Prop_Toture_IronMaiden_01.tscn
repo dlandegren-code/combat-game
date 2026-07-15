@@ -1,0 +1,59 @@
+[gd_scene load_steps=9 format=3 uid="uid://baraoh1qq442k"]
+
+[ext_resource type="ArrayMesh" uid="uid://dyvvi5nmh62ig" path="res://Assets/PolygonDungeon/Models/SM_Prop_Toture_IronMaiden_01.res" id="1_guqc4"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_q4f3m"]
+[ext_resource type="ArrayMesh" uid="uid://jcdutqwr2aia" path="res://Assets/PolygonDungeon/Models/SM_Prop_Toture_IronMaiden_Door_L.res" id="3_q4f3m"]
+[ext_resource type="ArrayMesh" uid="uid://cwdjkxgsvmxxu" path="res://Assets/PolygonDungeon/Models/SM_Prop_Toture_IronMaiden_Door_R.res" id="4_cyymg"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_7xmf7"]
+points = PackedVector3Array(-0.946702, 0.154189, -0.657121, -0.946702, -0.0220326, 0.267961, -0.902559, 0.110128, 0.664832, -0.638074, 0.198293, 0.0475928, 0.178938, 0.187165, -0.392368, 0.859812, 0.154189, -0.657121, -0.638074, -0.0220326, -0.657121, -0.852667, 0.0286277, -0.591515, -0.902559, -0.0220326, 0.664832, 0.903955, 0.110128, 0.664832, 0.55137, 0.198293, 0.0475928, 0.814186, 0.0286277, -0.591515, 0.63947, -0.0220326, -0.657121, 0.903955, 0.154189, -0.260639, 0.948098, -0.0220326, -0.0401406, 0.903955, -0.0220326, 0.620577)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_1a0dp"]
+points = PackedVector3Array(-0.683947, 0.0982182, -0.0860425, 0.216972, 0.10103, -0.464702, 0.586066, 0.122503, 0.0542721, -0.68059, 0.105632, 0.0557171, -0.588099, 1.76009, 0.0386055, -0.408711, 2.017, -0.196849, -0.303042, 0.104609, -0.463713, 0.538329, 0.12506, -0.271684, -0.109358, 2.66554, -0.260504, 0.154814, 2.66554, -0.216394, 0.547653, 0.622009, -0.0826962, 0.463242, 2.04869, 0.0478838, 0.0666738, 2.53337, 0.312238, -0.109358, 2.62157, 0.312238, -0.285762, 2.66554, 0.135875, 0.198822, 2.70976, 0.135875)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_guqc4"]
+points = PackedVector3Array(-0.56044126, -0.7417412, 0.32223997, -0.49216276, 0.6555095, 0.083688885, 0.018935204, -0.7417412, -0.052641273, -0.18554, -0.7417412, 0.39040506, -0.015174016, 1.1668811, -0.018532038, -0.56044126, 1.0985558, 0.39040506, -0.32179677, 1.4395413, -0.018532038, -0.35584593, 0.2807884, 0.49267936, -0.015174016, 1.0302305, 0.15185396, -0.56044126, -0.7417412, 0.45857012, 0.05304444, -0.7417412, 0.11779812, -0.56044126, 1.4053787, 0.11779812, -0.2877476, 0.110402375, -0.018532038, -0.2536984, 1.2347791, 0.32223997, -0.015174016, -0.50302994, 0.2540749, -0.3900152, -0.33264393, 0.083688885, -0.18554, 1.2689419, -0.052641273, -0.21964923, 1.371216, 0.22001904, -0.04928325, -0.7417412, -0.052641273, 0.05304444, 0.008128077, 0.11779812, -0.45817363, 1.2689419, 0.3563492, -0.3900152, 0.38263565, 0.49267936, -0.56044126, 1.4395413, 0.15185396, -0.08333242, 1.0302305, 0.22001904, -0.1173816, 1.3031044, 0.18601657, -0.1173816, 1.2689419, -0.052641273, 0.018935204, 1.0302305, 0.083688885, -0.35584593, 0.076239765, 0.49267936, -0.04928325, -0.50302994, 0.28813073, -0.49216276, -0.7417412, 0.45857012, -0.015174016, -0.7417412, 0.2540749, 0.018935204, -0.50302994, -0.052641273)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_q4f3m"]
+points = PackedVector3Array(0.52537435, 1.2772312, 0.31605157, -0.069541276, -0.7417412, 0.04963304, 0.5439444, -0.7417412, 0.32223997, 0.3393491, 1.4053787, -0.018532038, 0.100884765, 1.2008301, 0.22001904, 0.37351838, 0.076239765, 0.49267936, -0.0013228208, -0.7417412, 0.2540749, 0.5098352, 0.6555095, 0.083688885, 0.06683558, -0.6734159, -0.052641273, 0.06683558, 1.1668811, -0.052641273, 0.5439444, -0.7417412, 0.45857012, -0.03543204, 0.8942207, 0.04963304, 0.5439444, 1.4053787, 0.11779812, 0.5439444, 1.0985558, 0.39040506, 0.40756756, -0.33264393, 0.083688885, 0.37351838, 0.38263565, 0.49267936, 0.40756756, 1.3370535, 0.32223997, 0.20315239, -0.7417412, 0.39040506, -0.03543204, -0.7417412, -0.052641273, 0.13505405, 1.3370535, 0.18601657, 0.27125075, 0.110402375, -0.018532038, -0.0013228208, -0.50302994, 0.2540749, -0.069541276, 0.008128077, -0.018532038, 0.23720157, 1.2008301, 0.32223997, -0.0013228208, 0.8942207, 0.15185396, -0.069541276, -0.2645322, 0.083688885, 0.032786414, 1.2347791, 0.04963304, 0.16904317, 1.2689419, -0.052641273, 0.5319248, 1.3968048, 0.22001904, 0.40756756, 1.2347791, 0.3563492, 0.30529994, -0.7417412, 0.4245143, 0.17319894, 1.3409629, -0.003987065)
+
+[node name="SM_Prop_Toture_IronMaiden_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_guqc4")
+surface_material_override/0 = ExtResource("2_q4f3m")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+shape = SubResource("ConvexPolygonShape3D_7xmf7")
+
+[node name="MeshCollider2" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider2"]
+shape = SubResource("ConvexPolygonShape3D_1a0dp")
+
+[node name="SM_Prop_Toture_IronMaiden_Door_L" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.499071, 0.804738, -0.00224984)
+
+[node name="MeshRenderer" type="MeshInstance3D" parent="SM_Prop_Toture_IronMaiden_Door_L"]
+gi_mode = 2
+mesh = ExtResource("3_q4f3m")
+surface_material_override/0 = ExtResource("2_q4f3m")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="SM_Prop_Toture_IronMaiden_Door_L/MeshRenderer"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_Prop_Toture_IronMaiden_Door_L/MeshRenderer/StaticBody3D"]
+shape = SubResource("ConvexPolygonShape3D_guqc4")
+
+[node name="SM_Prop_Toture_IronMaiden_Door_R" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.570518, 0.804738, -0.00224984)
+
+[node name="MeshRenderer" type="MeshInstance3D" parent="SM_Prop_Toture_IronMaiden_Door_R"]
+gi_mode = 2
+mesh = ExtResource("4_cyymg")
+surface_material_override/0 = ExtResource("2_q4f3m")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="SM_Prop_Toture_IronMaiden_Door_R/MeshRenderer"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_Prop_Toture_IronMaiden_Door_R/MeshRenderer/StaticBody3D"]
+shape = SubResource("ConvexPolygonShape3D_q4f3m")

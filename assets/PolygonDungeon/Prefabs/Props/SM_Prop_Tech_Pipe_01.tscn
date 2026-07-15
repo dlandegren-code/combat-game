@@ -1,0 +1,19 @@
+[gd_scene load_steps=4 format=3 uid="uid://latcmlpg68k"]
+
+[ext_resource type="ArrayMesh" uid="uid://c44cwuw5inxin" path="res://Assets/PolygonDungeon/Models/SM_Prop_Tech_Pipe_01.res" id="1_pfesq"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_e1a0n"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_pfesq"]
+height = 1.98369
+radius = 0.359375
+
+[node name="SM_Prop_Tech_Pipe_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_pfesq")
+surface_material_override/0 = ExtResource("2_e1a0n")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+transform = Transform3D(1.91069e-15, 4.37114e-08, 1, 1, -4.37114e-08, 0, 4.37114e-08, 1, -4.37114e-08, 4.2892e-08, 0.381496, 0.981255)
+shape = SubResource("CylinderShape3D_pfesq")

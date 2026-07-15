@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://djm64g0sna7lr"]
+
+[ext_resource type="ArrayMesh" uid="uid://d2umv8swsxknk" path="res://Assets/PolygonDungeon/Models/SM_Trap_Saw_Rail_02.res" id="1_8rfr2"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_wvyf3"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8rfr2"]
+size = Vector3(0.30423, 0.187683, 1.88855)
+
+[node name="SM_Trap_Saw_Rail_02" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_8rfr2")
+surface_material_override/0 = ExtResource("2_wvyf3")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00914001, -0.0310364, -0.00262451)
+shape = SubResource("BoxShape3D_8rfr2")

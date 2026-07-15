@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ItemResource" format=3 uid="uid://6splfx088ds6"]
+
+[ext_resource type="Script" uid="uid://56vniq8jwqqr" path="res://scripts/item_resource.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+item_name = "Rusty Sword"
+attack_bonus = 1
+damage_bonus = 1
+durability = 71

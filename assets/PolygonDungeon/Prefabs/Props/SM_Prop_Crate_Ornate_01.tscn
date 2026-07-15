@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://cx08uqdsicfea"]
+
+[ext_resource type="ArrayMesh" uid="uid://ds76n1c7da6pf" path="res://Assets/PolygonDungeon/Models/SM_Prop_Crate_Ornate_01.res" id="1_nim8l"]
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_4rxbg"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_nim8l"]
+
+[node name="SM_Prop_Crate_Ornate_01" type="MeshInstance3D"]
+gi_mode = 2
+mesh = ExtResource("1_nim8l")
+surface_material_override/0 = ExtResource("2_4rxbg")
+
+[node name="MeshCollider" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.519269, 0)
+shape = SubResource("BoxShape3D_nim8l")
