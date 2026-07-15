@@ -13,13 +13,20 @@ const MAIN_TILES := ["SM_Env_Tiles_01.tscn", "SM_Env_Tiles_02.tscn", "SM_Env_Til
 const ROOM_CENTER_TILE := "SM_Env_Tiles_05.tscn"
 const CIRCLE_QUARTER := "SM_Env_Tiles_06.tscn"
 
+# Walls (double-sided so facing never matters) + a single doorway piece.
+const WALL_MESH := "res://Assets/PolygonDungeon/Models/SM_Env_Wall_01_DoubleSided.res"
+const DOOR_MESH := "res://Assets/PolygonDungeon/Models/SM_Env_Wall_DoorFrame_01.res"
+const WALL_MAT := "res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres"
+
 const SCALE := 0.8                 # dial the whole environment's size here
 const TILE := 5.0 * SCALE          # world units per tile (= 4.0 at 0.8)
 const FLOOR_Y := 0.0
 const SEED := 1337
 
 const CHAMBER_TILES := 8           # 8x8 chamber, centered on origin
-const ROOM_TILES := 3              # 3x3 room, centered on the chamber's north edge
+const ROOM_TILES := 3              # 3x3 room, north of the chamber
+const ROOM_X0 := -8.0              # room's near-x corner (aligned to the door segment)
+const DOOR_X0 := -4.0              # chamber north wall segment that holds the doorway
 
 var _rng := RandomNumberGenerator.new()
 
@@ -34,6 +41,7 @@ func _build() -> void:
 	_rng.seed = SEED
 	_build_chamber()
 	_build_room()
+	_build_walls()
 
 
 func _build_chamber() -> void:
@@ -55,7 +63,7 @@ func _build_chamber() -> void:
 
 
 func _build_room() -> void:
-	var x0 := -ROOM_TILES / 2.0 * TILE                    # -6 (centered on x=0)
+	var x0 := ROOM_X0                                     # aligned so the door is the center tile
 	var z0 := CHAMBER_TILES / 2.0 * TILE                  # 16 (chamber's north edge)
 	@warning_ignore("integer_division")
 	var mid := ROOM_TILES / 2                             # 1
@@ -63,6 +71,43 @@ func _build_room() -> void:
 		for c in range(ROOM_TILES):
 			var tile: String = ROOM_CENTER_TILE if (c == mid and r == mid) else _random_main_tile()
 			_place_tile(tile, x0 + c * TILE, z0 + r * TILE, 0.0)
+
+
+func _build_walls() -> void:
+	var half := CHAMBER_TILES / 2.0 * TILE                # 16
+	# Chamber south & north walls (run along +X). North has the doorway.
+	for i in range(CHAMBER_TILES):
+		var x := -half + i * TILE
+		_place_wall(WALL_MESH, x, -half, 0.0)
+		var north_mesh := DOOR_MESH if is_equal_approx(x, DOOR_X0) else WALL_MESH
+		_place_wall(north_mesh, x, half, 0.0)
+	# Chamber east & west walls (rotated 90 -> run along Z).
+	for i in range(CHAMBER_TILES):
+		var z := half - i * TILE
+		_place_wall(WALL_MESH, half, z, 90.0)
+		_place_wall(WALL_MESH, -half, z, 90.0)
+	# Room walls: north side + the two sides; the south side is the shared chamber
+	# wall (with the doorway), so it's left open here.
+	var rx_east := ROOM_X0 + ROOM_TILES * TILE            # 4
+	var rz_north := half + ROOM_TILES * TILE              # 28
+	for i in range(ROOM_TILES):
+		_place_wall(WALL_MESH, ROOM_X0 + i * TILE, rz_north, 0.0)   # room north
+		var z := rz_north - i * TILE
+		_place_wall(WALL_MESH, rx_east, z, 90.0)                    # room east
+		_place_wall(WALL_MESH, ROOM_X0, z, 90.0)                    # room west
+
+
+func _place_wall(mesh_path: String, x: float, z: float, rot_y_deg: float) -> void:
+	var m: Mesh = load(mesh_path)
+	if m == null:
+		return
+	var mi := MeshInstance3D.new()
+	mi.mesh = m
+	mi.material_override = load(WALL_MAT)
+	mi.position = Vector3(x, FLOOR_Y, z)
+	mi.rotation_degrees = Vector3(0, rot_y_deg, 0)
+	mi.scale = Vector3(SCALE, SCALE, SCALE)
+	add_child(mi)
 
 
 func _place_tile(prefab_file: String, x: float, z: float, rot_y_deg: float) -> void:
