@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="ArrayMesh" path="res://Assets/PolygonDungeon/Models/SM_Env_Pillar_Round_01.res" id="1_mesh"]
+[ext_resource type="Material" path="res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="2_mat"]
+
+[node name="PillarVisual" type="MeshInstance3D"]
+mesh = ExtResource("1_mesh")
+surface_material_override/0 = ExtResource("2_mat")

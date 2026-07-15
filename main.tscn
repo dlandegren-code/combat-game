@@ -21,7 +21,7 @@
 [ext_resource type="Script" uid="uid://l5mteh6g25ar" path="res://scripts/dungeon_floor.gd" id="14_floor"]
 [ext_resource type="Script" uid="uid://bj17a31dxfh1g" path="res://scripts/column_obstacle.gd" id="16_2cqfq"]
 [ext_resource type="Resource" path="res://resources/items/goblin_short_bow.tres" id="16_jq2sk"]
-[ext_resource type="PackedScene" uid="uid://d2rve774d52oj" path="res://assets/models/kenney/mini-dungeon/column.glb" id="17_yaehf"]
+[ext_resource type="PackedScene" path="res://scenes/pillar_visual.tscn" id="17_yaehf"]
 [ext_resource type="Resource" path="res://resources/items/boss_cleaver.tres" id="18_4k2k6"]
 [ext_resource type="Resource" path="res://resources/stats/goblin_stats.tres" id="18_goblin_stats"]
 [ext_resource type="Resource" path="res://resources/items/heavy_armor.tres" id="19_0rl1p"]
