@@ -467,9 +467,14 @@ func _find_path(from_tile: Vector3, to_tile: Vector3, max_steps: int = -1) -> Ar
 	## walls, obstacles and HOSTILE combatants (allies are walk-through). The goal tile
 	## stays passable so an enemy can still path onto its target's cell (the caller stops
 	## short). Pass max_steps to bound search depth (players cap it at move_range).
+	# 8-directional: cardinals + diagonals, so a unit can slip through a diagonal gap
+	# between two obstacles instead of being forced around. Walls still block via the
+	# per-step ray, and an obstacle/hostile ON the diagonal cell is still rejected.
 	var dirs := [
 		Vector3(GRID_SIZE, 0, 0), Vector3(-GRID_SIZE, 0, 0),
-		Vector3(0, 0, GRID_SIZE), Vector3(0, 0, -GRID_SIZE)
+		Vector3(0, 0, GRID_SIZE), Vector3(0, 0, -GRID_SIZE),
+		Vector3(GRID_SIZE, 0, GRID_SIZE), Vector3(GRID_SIZE, 0, -GRID_SIZE),
+		Vector3(-GRID_SIZE, 0, GRID_SIZE), Vector3(-GRID_SIZE, 0, -GRID_SIZE)
 	]
 	var queue: Array = [[from_tile]]
 	var visited: Dictionary = {}
@@ -609,11 +614,17 @@ func _apply_impact_damage(amount: int) -> void:
 func _apply_push(push_dir: Vector3, force: int) -> void:
 	if force <= 0:
 		return
+	# Snap the push to one of the 8 grid directions. Both axes fire for a diagonal
+	# shove, so an enemy shoved from a diagonal square is knocked back diagonally
+	# rather than sideways. push_dir is normalized: a cardinal push has one ~1.0
+	# component and one ~0.0; a diagonal push has two ~0.7 components.
 	var dir := Vector3.ZERO
-	if abs(push_dir.x) >= abs(push_dir.z):
+	if abs(push_dir.x) > 0.4:
 		dir.x = sign(push_dir.x)
-	else:
+	if abs(push_dir.z) > 0.4:
 		dir.z = sign(push_dir.z)
+	if dir == Vector3.ZERO:
+		dir.x = 1.0
 	var start: Vector3 = _snap_to_grid(position)
 	for i in range(1, force + 1):
 		var next: Vector3 = _snap_to_grid(start + dir * GRID_SIZE * i)
@@ -714,8 +725,11 @@ func _is_tile_occupied_by_others(tile: Vector3, exclude: Node = null) -> bool:
 func _is_adjacent(target_pos: Vector3, source_pos: Vector3 = Vector3.INF) -> bool:
 	if source_pos == Vector3.INF:
 		source_pos = position
-	var dist: float = abs(target_pos.x - source_pos.x) + abs(target_pos.z - source_pos.z)
-	return dist <= GRID_SIZE * 1.5
+	# King-move adjacency: any of the 8 surrounding cells (or the same cell) counts,
+	# so diagonal squares are "adjacent" for melee/shove/trip and the enemy AI.
+	var dx: float = abs(target_pos.x - source_pos.x)
+	var dz: float = abs(target_pos.z - source_pos.z)
+	return max(dx, dz) <= GRID_SIZE * 1.5
 
 
 func _has_usable_weapon() -> bool:
