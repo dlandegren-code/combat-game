@@ -13,7 +13,9 @@ func get_range(actor) -> int:
 
 func can_target(actor, target) -> bool:
 	return actor._can_move() and actor._is_in_range(target) \
-		and not actor._is_tile_occupied_by_others(target, actor)
+		and not actor._is_tile_occupied_by_others(target, actor) \
+		and not actor._is_path_blocked(target) \
+		and not actor._is_path_blocked_by_enemy(target)
 
 func execute(actor, target) -> void:
 	actor.target_position = target

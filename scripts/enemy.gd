@@ -391,6 +391,11 @@ func _find_path(from_tile: Vector3, to_tile: Vector3) -> Array:
 				continue
 			if _is_obstacle_at(nxt):
 				continue
+			# Route around hostiles (no walking through the heroes); allies stay
+			# passable. The goal tile (the target's own cell) is kept open so a path
+			# can still be found, then _move_toward stops short / _avoid_overlap shifts.
+			if nxt.distance_to(to_tile) >= 0.5 and _hostile_combatant_at(nxt) != null:
+				continue
 			visited[k] = true
 			var new_path: Array = path.duplicate()
 			new_path.append(nxt)

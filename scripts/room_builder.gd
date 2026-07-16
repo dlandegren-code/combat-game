@@ -28,6 +28,8 @@ const ROOM_TILES := 3              # 3x3 room, north of the chamber
 const ROOM_X0 := -8.0              # room's near-x corner (aligned to the door segment)
 const DOOR_X0 := -4.0              # chamber north wall segment that holds the doorway
 
+const LAYER_OBSTACLE := 4          # matches Combatant.LAYER_OBSTACLE (blocks move + LOS)
+
 var _rng := RandomNumberGenerator.new()
 
 
@@ -108,6 +110,21 @@ func _place_wall(mesh_path: String, x: float, z: float, rot_y_deg: float) -> voi
 	mi.rotation_degrees = Vector3(0, rot_y_deg, 0)
 	mi.scale = Vector3(SCALE, SCALE, SCALE)
 	add_child(mi)
+	# Solid walls block movement + line of sight (obstacle layer 4). The doorway is
+	# left collision-free so units can walk/shoot through the opening. The box is
+	# sized from the mesh AABB and rides the MeshInstance's scale, so it matches.
+	if mesh_path != DOOR_MESH:
+		var aabb := m.get_aabb()
+		var body := StaticBody3D.new()
+		body.collision_layer = LAYER_OBSTACLE
+		body.collision_mask = 0
+		var cs := CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		box.size = aabb.size
+		cs.shape = box
+		cs.position = aabb.get_center()
+		body.add_child(cs)
+		mi.add_child(body)
 
 
 func _place_tile(prefab_file: String, x: float, z: float, rot_y_deg: float) -> void:

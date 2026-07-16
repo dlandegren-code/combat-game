@@ -424,6 +424,65 @@ func _apply_offhand_mirror(node: Node3D, socket, item: ItemResource) -> void:
 	node.rotation_degrees = r
 
 
+func _is_path_blocked(target: Vector3) -> bool:
+	## True if a wall / obstacle lies on the straight line to `target`. Movement is a
+	## straight tween to target_position, so this ray matches the actual trajectory:
+	## blocks walking through walls, while the collision-free doorway lets moves pass.
+	var space_state := get_world_3d().direct_space_state
+	var from_pos := position + Vector3(0, 0.5, 0)
+	var to_pos := Vector3(target.x, position.y + 0.5, target.z)
+	var query := PhysicsRayQueryParameters3D.create(from_pos, to_pos)
+	query.collision_mask = LAYER_OBSTACLE
+	query.exclude = [get_rid()]
+	return not space_state.intersect_ray(query).is_empty()
+
+
+func _is_hostile(other: Node) -> bool:
+	## Two combatants are hostile when they sit on opposite sides. Same side = allies.
+	return other != null and "is_player_controlled" in other \
+		and other.is_player_controlled != is_player_controlled
+
+
+func _hostile_combatant_at(tile: Vector3) -> Node:
+	for c in get_tree().get_nodes_in_group("combatants"):
+		if c == self or not is_instance_valid(c):
+			continue
+		if "is_alive" in c and not c.is_alive:
+			continue
+		if not _is_hostile(c):
+			continue
+		if c._snap_to_grid(c.position).distance_to(tile) < 0.5:
+			return c
+	return null
+
+
+func _is_path_blocked_by_enemy(target: Vector3) -> bool:
+	## A unit tweens in a straight line to its destination, so a move is blocked when
+	## that line passes through a hostile combatant's cell. Allies are pass-through;
+	## the destination cell itself is guarded separately by _is_tile_occupied_by_others.
+	var a := Vector2(position.x, position.z)
+	var b := Vector2(target.x, target.z)
+	if a.distance_to(b) < 0.01:
+		return false
+	var ab := b - a
+	var ab_len2: float = ab.length_squared()
+	for c in get_tree().get_nodes_in_group("combatants"):
+		if c == self or not is_instance_valid(c):
+			continue
+		if "is_alive" in c and not c.is_alive:
+			continue
+		if not _is_hostile(c):
+			continue
+		var ct: Vector3 = c._snap_to_grid(c.position)
+		var p := Vector2(ct.x, ct.z)
+		if p.distance_to(b) < 0.5:  # sitting on our destination -> occupancy handles it
+			continue
+		var t: float = clamp((p - a).dot(ab) / ab_len2, 0.0, 1.0)
+		if p.distance_to(a + ab * t) < GRID_SIZE * 0.5:
+			return true
+	return false
+
+
 func _has_line_of_sight(target: Node) -> bool:
 	var target_node := target as Node3D
 	if not target_node:
