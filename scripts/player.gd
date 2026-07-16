@@ -183,6 +183,14 @@ func _update_cursor() -> void:
 		var clicked: Vector3 = result.position
 		clicked.y = position.y
 		var grid_pos := _snap_to_grid(clicked)
+		# Selected tile-ability other than Move (e.g. Pick Up): its own cursor feedback.
+		if ability.targets_tile() and selected_action != Action.MOVE:
+			if ability.can_target(self, grid_pos):
+				Input.set_default_cursor_shape(Input.CURSOR_CROSS)
+			else:
+				Input.set_default_cursor_shape(Input.CURSOR_FORBIDDEN)
+			_hide_indicator()
+			return
 		if abilities[Action.MOVE].can_target(self, grid_pos):
 			Input.set_default_cursor_shape(Input.CURSOR_POINTING_HAND)
 			_show_indicator(grid_pos)
@@ -245,7 +253,8 @@ func _handle_click(screen_pos: Vector2) -> void:
 				_end_action_in_place()
 				return
 
-	# Fallback: move on the ground (always available regardless of selection).
+	# Ground click. A selected tile-ability other than Move (e.g. Pick Up) acts on the
+	# clicked tile if valid; otherwise fall back to Move (always available).
 	var ground_query := PhysicsRayQueryParameters3D.create(from, to)
 	ground_query.collision_mask = LAYER_GROUND
 	var result := space_state.intersect_ray(ground_query)
@@ -253,6 +262,13 @@ func _handle_click(screen_pos: Vector2) -> void:
 		var clicked: Vector3 = result.position
 		clicked.y = position.y
 		var grid_pos := _snap_to_grid(clicked)
+		if ability.targets_tile() and selected_action != Action.MOVE and ability.can_target(self, grid_pos):
+			Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+			_hide_indicator()
+			_begin_action(selected_action)
+			ability.execute(self, grid_pos)
+			_end_action_in_place()
+			return
 		var move_ability = abilities[Action.MOVE]
 		if move_ability.can_target(self, grid_pos):
 			Input.set_default_cursor_shape(Input.CURSOR_ARROW)
@@ -341,50 +357,70 @@ func _avoid_overlap(tile: Vector3, exclude: Node) -> Vector3:
 	return tile
 
 
-func _do_pickup() -> void:
-	var picked_up := false
+## Manhattan reach (in tiles) for grabbing a ground item: 1 = adjacent square (or
+## the hero's own tile). Diagonals are 2 tiles of Manhattan distance, so excluded.
+const PICKUP_REACH_TILES := 1
+
+
+func _pickup_at(tile: Vector3) -> Node:
+	## The ground item a click at `tile` should grab: the reachable pickup nearest the
+	## clicked square (so clicking the warhammer grabs it, not whatever's closest to the
+	## hero). Returns null if no pickup lies within reach.
+	var best: Node = null
+	var best_d := INF
 	for gi in get_tree().get_nodes_in_group("pickups"):
 		if not is_instance_valid(gi):
 			continue
-		var gi_node: Node3D = gi as Node3D
+		var gi_node := gi as Node3D
 		if not gi_node:
 			continue
-		var dist: float = abs(gi_node.position.x - position.x) + abs(gi_node.position.z - position.z)
-		if dist > GRID_SIZE * 2:
+		var reach: float = abs(gi_node.position.x - position.x) + abs(gi_node.position.z - position.z)
+		if reach > PICKUP_REACH_TILES * GRID_SIZE:
 			continue
-		var item: ItemResource = gi.get("item_resource")
-		if not item:
-			continue
-		# Ammo and consumables are used immediately, not stored
-		if item.item_type == ItemResource.ItemType.AMMO or item.item_type == ItemResource.ItemType.CONSUMABLE:
-			var applied := false
-			if item.heal_amount > 0:
-				hp = min(hp + item.heal_amount, max_hp)
-				_show_action_text("+" + str(item.heal_amount) + " HP")
-				applied = true
-			if item.ammo_amount > 0:
-				if max_ammo <= 0:
-					max_ammo = 10
-				ammo = min(ammo + item.ammo_amount, max_ammo)
-				_show_action_text("+" + str(item.ammo_amount) + " arrows")
-				applied = true
-			if applied:
-				_update_health_bar()
-				gi.queue_free()
-				picked_up = true
-				break
-			continue
-		if inventory and inventory.has_method("add_item"):
-			if inventory.add_item(item):
-				_show_action_text("Picked up " + item.item_name)
-				gi.queue_free()
-				picked_up = true
-				break
-	if not picked_up:
-		if not inventory or inventory.is_full():
+		var d: float = abs(gi_node.position.x - tile.x) + abs(gi_node.position.z - tile.z)
+		if d < best_d:
+			best_d = d
+			best = gi
+	return best
+
+
+func _do_pickup(target_tile: Vector3 = Vector3.INF) -> void:
+	var ref: Vector3 = target_tile if target_tile != Vector3.INF else position
+	var gi: Node = _pickup_at(ref)
+	if gi == null:
+		if inventory and inventory.is_full():
 			_show_action_text("Inventory full!")
 		else:
 			_show_action_text("Nothing to pick up")
+		_update_health_bar()
+		return
+	var item: ItemResource = gi.get("item_resource")
+	if not item:
+		_update_health_bar()
+		return
+	# Ammo and consumables are used immediately, not stored.
+	if item.item_type == ItemResource.ItemType.AMMO or item.item_type == ItemResource.ItemType.CONSUMABLE:
+		var applied := false
+		if item.heal_amount > 0:
+			hp = min(hp + item.heal_amount, max_hp)
+			_show_action_text("+" + str(item.heal_amount) + " HP")
+			applied = true
+		if item.ammo_amount > 0:
+			if max_ammo <= 0:
+				max_ammo = 10
+			ammo = min(ammo + item.ammo_amount, max_ammo)
+			_show_action_text("+" + str(item.ammo_amount) + " arrows")
+			applied = true
+		if applied:
+			gi.queue_free()
+		_update_health_bar()
+		return
+	# Everything else goes into the inventory.
+	if inventory and inventory.has_method("add_item") and inventory.add_item(item):
+		_show_action_text("Picked up " + item.item_name)
+		gi.queue_free()
+	else:
+		_show_action_text("Inventory full!")
 	_update_health_bar()
 
 

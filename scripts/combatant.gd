@@ -24,7 +24,7 @@ const LAYER_ENEMY_AND_OBSTACLE := 6  ## enemy (2) + obstacle (4), for line-of-si
 
 ## Movement tunables (subclasses may override in _pre_setup / from stats).
 var move_speed: float = 6.0
-var move_range: int = 3
+var move_range: int = 4
 
 @export var initiative: int = 10
 @export var character_name: String = "Hero"
@@ -45,7 +45,7 @@ var move_range: int = 3
 @export var ranged_cost: int = 3
 @export var ammo: int = 0
 @export var max_ammo: int = 0
-@export var ranged_range: int = 7       ## max tiles for ranged
+@export var ranged_range: int = 10      ## max tiles for ranged
 @export var throw_skill: int = 3        ## used for thrown weapon attacks
 @export var throw_cost: int = 3
 @export var throw_range: int = 3        ## max tiles for thrown
@@ -58,6 +58,8 @@ var is_prone: bool = false
 
 var is_moving := false
 var target_position := Vector3.ZERO
+## Remaining waypoints for a routed move (set by _start_path_move); empty = single hop.
+var _move_path: Array = []
 
 var hp := 20
 var max_hp := 20
@@ -424,13 +426,13 @@ func _apply_offhand_mirror(node: Node3D, socket, item: ItemResource) -> void:
 	node.rotation_degrees = r
 
 
-func _is_path_blocked(target: Vector3) -> bool:
-	## True if a wall / obstacle lies on the straight line to `target`. Movement is a
-	## straight tween to target_position, so this ray matches the actual trajectory:
-	## blocks walking through walls, while the collision-free doorway lets moves pass.
+func _step_blocked_by_wall(from_tile: Vector3, to_tile: Vector3) -> bool:
+	## True if a wall (obstacle-layer collision) lies on the edge between two adjacent
+	## tiles. Used per-step by _find_path so routes can't cross walls but pass freely
+	## through the collision-free doorway. Combatants (layer 2) are ignored here.
 	var space_state := get_world_3d().direct_space_state
-	var from_pos := position + Vector3(0, 0.5, 0)
-	var to_pos := Vector3(target.x, position.y + 0.5, target.z)
+	var from_pos := Vector3(from_tile.x, position.y + 0.5, from_tile.z)
+	var to_pos := Vector3(to_tile.x, position.y + 0.5, to_tile.z)
 	var query := PhysicsRayQueryParameters3D.create(from_pos, to_pos)
 	query.collision_mask = LAYER_OBSTACLE
 	query.exclude = [get_rid()]
@@ -456,31 +458,63 @@ func _hostile_combatant_at(tile: Vector3) -> Node:
 	return null
 
 
-func _is_path_blocked_by_enemy(target: Vector3) -> bool:
-	## A unit tweens in a straight line to its destination, so a move is blocked when
-	## that line passes through a hostile combatant's cell. Allies are pass-through;
-	## the destination cell itself is guarded separately by _is_tile_occupied_by_others.
-	var a := Vector2(position.x, position.z)
-	var b := Vector2(target.x, target.z)
-	if a.distance_to(b) < 0.01:
-		return false
-	var ab := b - a
-	var ab_len2: float = ab.length_squared()
-	for c in get_tree().get_nodes_in_group("combatants"):
-		if c == self or not is_instance_valid(c):
+func _tile_key(tile: Vector3) -> String:
+	return str(int(round(tile.x))) + "," + str(int(round(tile.z)))
+
+
+func _find_path(from_tile: Vector3, to_tile: Vector3, max_steps: int = -1) -> Array:
+	## BFS on the grid returning the shortest cardinal path [from .. to], routing around
+	## walls, obstacles and HOSTILE combatants (allies are walk-through). The goal tile
+	## stays passable so an enemy can still path onto its target's cell (the caller stops
+	## short). Pass max_steps to bound search depth (players cap it at move_range).
+	var dirs := [
+		Vector3(GRID_SIZE, 0, 0), Vector3(-GRID_SIZE, 0, 0),
+		Vector3(0, 0, GRID_SIZE), Vector3(0, 0, -GRID_SIZE)
+	]
+	var queue: Array = [[from_tile]]
+	var visited: Dictionary = {}
+	visited[_tile_key(from_tile)] = true
+
+	while not queue.is_empty():
+		var path: Array = queue.pop_front()
+		var cur: Vector3 = path[path.size() - 1]
+		if cur.distance_to(to_tile) < 0.5:
+			return path
+		var steps: int = path.size() - 1
+		if max_steps >= 0 and steps >= max_steps:
 			continue
-		if "is_alive" in c and not c.is_alive:
+		if steps > 50:
 			continue
-		if not _is_hostile(c):
-			continue
-		var ct: Vector3 = c._snap_to_grid(c.position)
-		var p := Vector2(ct.x, ct.z)
-		if p.distance_to(b) < 0.5:  # sitting on our destination -> occupancy handles it
-			continue
-		var t: float = clamp((p - a).dot(ab) / ab_len2, 0.0, 1.0)
-		if p.distance_to(a + ab * t) < GRID_SIZE * 0.5:
-			return true
-	return false
+		for d in dirs:
+			var nxt: Vector3 = _snap_to_grid(cur + d)
+			var k: String = _tile_key(nxt)
+			if visited.has(k):
+				continue
+			if _is_obstacle_at(nxt):
+				continue
+			var is_goal: bool = nxt.distance_to(to_tile) < 0.5
+			if not is_goal and _hostile_combatant_at(nxt) != null:
+				continue
+			if _step_blocked_by_wall(cur, nxt):
+				continue
+			visited[k] = true
+			var new_path: Array = path.duplicate()
+			new_path.append(nxt)
+			queue.append(new_path)
+	return []
+
+
+func _start_path_move(target: Vector3) -> void:
+	## Begin a routed move to `target`: follow the BFS path waypoint-by-waypoint so the
+	## unit walks around walls / enemies instead of sliding straight through them.
+	var path: Array = _find_path(_snap_to_grid(position), target, move_range)
+	if path.size() <= 1:
+		target_position = _snap_to_grid(target)
+		_move_path = []
+	else:
+		_move_path = path.slice(1)
+		target_position = _move_path.pop_front()
+	is_moving = true
 
 
 func _has_line_of_sight(target: Node) -> bool:
@@ -802,9 +836,13 @@ func _physics_process(delta: float) -> void:
 	if dist < 0.12:
 		position = target_position
 		position.y = _ground_y()
-		is_moving = false
-		velocity = Vector3.ZERO
-		_on_move_complete()
+		if not _move_path.is_empty():
+			# More of the routed path to walk: head to the next waypoint.
+			target_position = _move_path.pop_front()
+		else:
+			is_moving = false
+			velocity = Vector3.ZERO
+			_on_move_complete()
 	else:
 		position += dir.normalized() * move_speed * delta
 		position.y = _ground_y()

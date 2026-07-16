@@ -10,5 +10,5 @@ handedness = 1
 attack_bonus = 2
 damage_bonus = 1
 durability = 12
-ranged_range = 20
+ranged_range = 23
 throw_range = 2

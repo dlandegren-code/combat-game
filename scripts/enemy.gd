@@ -312,7 +312,10 @@ func _retreat_from(_target: Node) -> bool:
 
 
 func _move_toward(target: Node) -> void:
-	## Move toward target using BFS pathfinding to route around obstacles
+	## Walk the BFS route toward `target`, up to move_range tiles, following it waypoint
+	## by waypoint so we route around walls/obstacles/heroes instead of cutting corners.
+	## Stop on the last unoccupied tile (the target's own cell / an ally is never a
+	## valid endpoint), so movement never ends on — or slices through — another unit.
 	var from_tile: Vector3 = _snap_to_grid(position)
 	var to_tile: Vector3 = _snap_to_grid(target.position)
 
@@ -320,10 +323,14 @@ func _move_toward(target: Node) -> void:
 	if path.size() <= 1:
 		return
 
-	var step_idx: int = min(move_range, path.size() - 1)
-	var dest: Vector3 = path[step_idx]
-	dest = _avoid_overlap(dest, self)
-	target_position = dest
+	var step_count: int = min(move_range, path.size() - 1)
+	while step_count >= 1 and _is_tile_occupied_by_others(path[step_count], self):
+		step_count -= 1
+	if step_count < 1:
+		return
+
+	_move_path = path.slice(1, step_count + 1)
+	target_position = _move_path.pop_front()
 
 
 func _find_nearest_player() -> Node:
@@ -361,64 +368,6 @@ func _do_adjacent_action(player: Node) -> void:
 		_play_attack_anim("attack-kick-right")
 		_try_trip(player)
 		_pending_cost = trip_cost
-
-
-func _tile_key(tile: Vector3) -> String:
-	return str(int(round(tile.x))) + "," + str(int(round(tile.z)))
-
-
-func _find_path(from_tile: Vector3, to_tile: Vector3) -> Array:
-	## BFS returning the shortest obstacle-free path; combatant tiles are passable
-	var dirs := [
-		Vector3(GRID_SIZE, 0, 0), Vector3(-GRID_SIZE, 0, 0),
-		Vector3(0, 0, GRID_SIZE), Vector3(0, 0, -GRID_SIZE)
-	]
-	var queue: Array = [[from_tile]]
-	var visited: Dictionary = {}
-	visited[_tile_key(from_tile)] = true
-
-	while not queue.is_empty():
-		var path: Array = queue.pop_front()
-		var cur: Vector3 = path[path.size() - 1]
-		if cur.distance_to(to_tile) < 0.5:
-			return path
-		if path.size() > 50:
-			continue
-		for d in dirs:
-			var nxt: Vector3 = _snap_to_grid(cur + d)
-			var k: String = _tile_key(nxt)
-			if visited.has(k):
-				continue
-			if _is_obstacle_at(nxt):
-				continue
-			# Route around hostiles (no walking through the heroes); allies stay
-			# passable. The goal tile (the target's own cell) is kept open so a path
-			# can still be found, then _move_toward stops short / _avoid_overlap shifts.
-			if nxt.distance_to(to_tile) >= 0.5 and _hostile_combatant_at(nxt) != null:
-				continue
-			visited[k] = true
-			var new_path: Array = path.duplicate()
-			new_path.append(nxt)
-			queue.append(new_path)
-	return []
-
-
-func _avoid_overlap(tile: Vector3, exclude: Node) -> Vector3:
-	if not _is_tile_occupied_by_others(tile, exclude):
-		return tile
-
-	var directions := [
-		Vector3(0, 0, 1), Vector3(0, 0, -1), Vector3(1, 0, 0), Vector3(-1, 0, 0),
-		Vector3(1, 0, 1), Vector3(1, 0, -1), Vector3(-1, 0, 1), Vector3(-1, 0, -1)
-	]
-	for radius in range(1, 5):
-		for d in directions:
-			var candidate: Vector3 = tile + d * radius * GRID_SIZE
-			candidate.x = clamp(candidate.x, ARENA_MIN, ARENA_MAX)
-			candidate.z = clamp(candidate.z, ARENA_MIN, ARENA_MAX)
-			if not _is_tile_occupied_by_others(candidate, exclude):
-				return candidate
-	return _snap_to_grid(position)
 
 
 func _on_move_complete() -> void:
