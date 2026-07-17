@@ -715,9 +715,16 @@ func _is_tile_occupied_by_others(tile: Vector3, exclude: Node = null) -> bool:
 	for c in get_tree().get_nodes_in_group("combatants"):
 		if not is_instance_valid(c) or c == exclude:
 			continue
-		var current_tile: Vector3 = c._snap_to_grid(c.position)
-		var target_tile: Vector3 = c._snap_to_grid(c.target_position)
-		if current_tile.distance_to(tile) < 0.5 or target_tile.distance_to(tile) < 0.5:
+		# Dead combatants linger in the group (invisible) until cleaned up; they must
+		# not keep blocking their tile, or units can't move where a corpse fell.
+		if "is_alive" in c and not c.is_alive:
+			continue
+		if c._snap_to_grid(c.position).distance_to(tile) < 0.5:
+			return true
+		# Reserve a MOVING unit's destination too (so two movers don't pick the same
+		# cell). A stationary unit only occupies the tile it actually stands on, so a
+		# stale target_position can't phantom-block an empty square.
+		if c.is_moving and c._snap_to_grid(c.target_position).distance_to(tile) < 0.5:
 			return true
 	return _is_obstacle_at(tile)
 
@@ -942,7 +949,16 @@ func _die() -> void:
 	if ap:
 		ap.play("die")
 		await ap.animation_finished
-	visible = false
+		# Freeze on the final laying-down frame so the corpse stays down instead of
+		# snapping back to a rest pose. The body is left visible (a corpse on the floor);
+		# dead units no longer block tiles (see _is_tile_occupied_by_others).
+		var die_anim := ap.get_animation("die")
+		if die_anim:
+			ap.seek(die_anim.length, true)
+		ap.pause()
+	# Drop the floating health bar so a "0/xx" label isn't hovering over the corpse.
+	if health_bar:
+		health_bar.visible = false
 	var combat_mgr := get_parent().get_node_or_null("CombatManager")
 	if combat_mgr:
 		combat_mgr.on_character_died(self)
