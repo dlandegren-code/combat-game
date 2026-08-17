@@ -45,19 +45,6 @@ func _build_abilities() -> void:
 	]
 
 
-# Player attacks apply equipped-weapon bonuses on top of the base stats.
-func get_attack_skill() -> int:
-	if inventory and inventory.has_method("get_equipped_attack_bonus"):
-		return attack_skill + inventory.get_equipped_attack_bonus()
-	return attack_skill
-
-
-func get_attack_damage() -> int:
-	if inventory and inventory.has_method("get_equipped_damage_bonus"):
-		return attack_dmg + inventory.get_equipped_damage_bonus()
-	return attack_dmg
-
-
 func enable_turn() -> void:
 	if not is_alive:
 		return
@@ -294,7 +281,7 @@ func _do_ranged_attack(target: Node) -> void:
 		return
 	ammo -= 1
 	_update_health_bar()
-	target.take_damage(attack_dmg, ranged_skill, true)
+	target.take_damage(get_attack_damage(), ranged_skill, true, self)
 	_show_action_text(str(ammo) + " arrows left")
 
 
@@ -312,7 +299,7 @@ func _do_throw_attack(target: Node) -> void:
 		throw_dir = Vector3.RIGHT
 	throw_dir = throw_dir.normalized()
 
-	var defended: bool = target.take_damage(attack_dmg, throw_skill, true)
+	var defended: bool = target.take_damage(get_attack_damage(), throw_skill, true, self)
 	# Remove the thrown weapon from the character's equipment
 	if inventory and inventory.has_method("unequip_slot"):
 		inventory.unequip_slot(ItemResource.EquipSlot.RIGHT_HAND)
@@ -357,8 +344,10 @@ func _avoid_overlap(tile: Vector3, exclude: Node) -> Vector3:
 	return tile
 
 
-## Manhattan reach (in tiles) for grabbing a ground item: 1 = adjacent square (or
-## the hero's own tile). Diagonals are 2 tiles of Manhattan distance, so excluded.
+## King-move reach (in tiles) for grabbing a ground item: 1 = any of the 8 surrounding
+## squares (or the hero's own tile). Uses Chebyshev distance to match _is_adjacent and
+## the 8-directional movement/melee model, so a diagonally-adjacent item is reachable
+## even when a pillar blocks the cardinal approach cell.
 const PICKUP_REACH_TILES := 1
 
 
@@ -374,7 +363,7 @@ func _pickup_at(tile: Vector3) -> Node:
 		var gi_node := gi as Node3D
 		if not gi_node:
 			continue
-		var reach: float = abs(gi_node.position.x - position.x) + abs(gi_node.position.z - position.z)
+		var reach: float = max(abs(gi_node.position.x - position.x), abs(gi_node.position.z - position.z))
 		if reach > PICKUP_REACH_TILES * GRID_SIZE:
 			continue
 		var d: float = abs(gi_node.position.x - tile.x) + abs(gi_node.position.z - tile.z)
@@ -430,14 +419,19 @@ func equip_weapon(slot_index: int) -> void:
 		return
 	if not inventory or not inventory.has_method("equip"):
 		return
+	# The item stays referenced in the bag slot; capture it so we can name what was actually
+	# equipped (equip() may route a 1H weapon to the off-hand when the main hand is full).
+	var equipped: ItemResource = inventory.items[slot_index] if slot_index < inventory.items.size() else null
 	inventory.equip(slot_index)
-	var new_item: ItemResource = null
-	if inventory.has_method("get_equipped_weapon"):
-		new_item = inventory.get_equipped_weapon()
 	var item_name := "nothing"
-	if new_item:
-		item_name = new_item.item_name
-	_show_action_text("Equipped " + item_name)
+	var hand := ""
+	if equipped:
+		item_name = equipped.item_name
+		if inventory.get("right_hand") == equipped:
+			hand = " (main hand)"
+		elif inventory.get("left_hand") == equipped:
+			hand = " (off-hand)"
+	_show_action_text("Equipped " + item_name + hand)
 	_update_health_bar()
 	_pending_cost = max(1, equip_cost)
 	_end_action_in_place()
@@ -450,7 +444,8 @@ func unequip_item(item: ItemResource) -> void:
 	if not inventory or not inventory.has_method("unequip_item"):
 		return
 	var was_equipped := false
-	if inventory.get("right_hand") == item or inventory.get("left_hand") == item or inventory.get("armor") == item:
+	if inventory.get("right_hand") == item or inventory.get("left_hand") == item \
+			or inventory.get("armor") == item or inventory.get("helmet") == item:
 		was_equipped = true
 	if not was_equipped:
 		return

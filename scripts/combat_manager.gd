@@ -3,6 +3,10 @@ extends Node
 
 signal turn_changed(combatant: Node)
 
+## Beat between an enemy's turn lighting up and it acting, so the player can register
+## whose turn it is instead of the AI moving the instant they finish their own action.
+const ENEMY_TURN_DELAY := 0.6
+
 var combatants: Array[Node] = []
 var current_combatant: Node = null
 var current_tick: int = 0
@@ -75,6 +79,7 @@ func _activate_next() -> void:
 
 	if not best:
 		game_over = true
+		_highlight_active(null)
 		if turn_label:
 			turn_label.text = "The battlefield is silent..."
 		return
@@ -84,12 +89,29 @@ func _activate_next() -> void:
 
 	_update_initiative_display()
 	_update_turn_label(best)
+	_highlight_active(best)
 
 	best.enable_turn()
 	turn_changed.emit(best)
 
 	if not best.is_player_controlled and best.has_method("take_turn"):
-		best.call_deferred("take_turn")
+		# Highlight now, act after a short beat — the player finishing their move no longer
+		# snaps straight into the enemy's action.
+		get_tree().create_timer(ENEMY_TURN_DELAY).timeout.connect(_begin_enemy_action.bind(best))
+
+
+func _begin_enemy_action(who: Node) -> void:
+	# Guard against the world changing during the delay (turn advanced, unit died, game over).
+	if game_over or current_combatant != who or not is_instance_valid(who) or not who.is_alive:
+		return
+	who.take_turn()
+
+
+func _highlight_active(active: Node) -> void:
+	## Light the ring under `active` and clear it from everyone else (null = clear all).
+	for c in combatants:
+		if is_instance_valid(c) and c.has_method("set_turn_active"):
+			c.set_turn_active(c == active and c.is_alive)
 
 
 func turn_done(cost: int) -> void:
@@ -185,10 +207,12 @@ func _spawn_ground_items() -> void:
 	## Spawn pickups on the battlefield at combat start (data-driven from .tres).
 	_spawn_item("res://resources/items/health_potion.tres", Vector3(-1, 0.2, 5))
 	_spawn_item("res://resources/items/arrow_bundle.tres", Vector3(3, 0.2, -3))
+	_spawn_item("res://resources/items/quiver.tres", Vector3(4, 0.2, -3))
 	_spawn_item("res://resources/items/warhammer.tres", Vector3(1, 0.2, -5))
 	_spawn_item("res://resources/items/dagger.tres", Vector3(-7, 0.2, -3))
 	_spawn_item("res://resources/items/wooden_shield.tres", Vector3(-3, 0.2, -7))
 	_spawn_item("res://resources/items/longbow.tres", Vector3(5, 0.2, 5))
+	_spawn_item("res://resources/items/knight_helmet.tres", Vector3(-5, 0.2, -5))
 
 
 func _spawn_item(path: String, at: Vector3) -> void:

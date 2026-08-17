@@ -6,3 +6,4 @@
 script = ExtResource("1_item")
 item_name = "Short Bow"
 item_type = 0
+handedness = 1

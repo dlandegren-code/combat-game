@@ -6,6 +6,10 @@ extends MeshInstance3D
 ## Enlarge dropped loot to sit right next to the scaled-up characters.
 const GROUND_SCALE := 1.6
 
+## Arrow graphic used to render an ammo bundle (one arrow per unit of ammo).
+const ARROW_MESH := "res://Assets/PolygonDungeon/Models/SM_Arrow_01.res"
+const SYNTY_MAT := "res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres"
+
 func _ready() -> void:
 	add_to_group("pickups")
 	_apply_visual()
@@ -24,6 +28,11 @@ func _apply_visual() -> void:
 			node.rotation_degrees = item_resource.model_ground_rotation
 			add_child(node)
 			_rest_on_ground(node)
+	elif item_resource.item_type == ItemResource.ItemType.AMMO and item_resource.ammo_amount > 0:
+		# Show one arrow graphic per unit of ammo, as a loose bundle. It stays a single
+		# pickup: one ground_item node carrying one item_resource.
+		mesh = null
+		_build_arrow_bundle(item_resource.ammo_amount)
 	else:
 		var model_path := _get_item_model_path()
 		if model_path != "":
@@ -81,6 +90,26 @@ func _apply_visual() -> void:
 	col_shape.shape.size = Vector3(1.2, 0.5, 1.2)
 	area.add_child(col_shape)
 	add_child(area)
+
+
+func _build_arrow_bundle(count: int) -> void:
+	## Lay `count` arrow meshes flat on the ground, fanned into a loose bundle.
+	var arrow_mesh: Mesh = load(ARROW_MESH)
+	if arrow_mesh == null:
+		return
+	var mat: Material = load(SYNTY_MAT)
+	var n: int = clampi(count, 1, 20)
+	for i in range(n):
+		var a := MeshInstance3D.new()
+		a.mesh = arrow_mesh
+		if mat:
+			a.material_override = mat
+		# Random position + heading (kept within the grid cell) so it reads as a spilled
+		# pile rather than a neat row. Small per-arrow y stagger avoids z-fighting.
+		a.rotation_degrees = Vector3(0, randf_range(0.0, 360.0), 0)
+		a.position = Vector3(randf_range(-0.55, 0.55), 0.02 + 0.01 * i, randf_range(-0.55, 0.55))
+		a.scale = Vector3.ONE * (GROUND_SCALE * 0.7)
+		add_child(a)
 
 
 func _set_color(c: Color) -> void:

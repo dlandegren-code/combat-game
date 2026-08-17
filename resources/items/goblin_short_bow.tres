@@ -6,6 +6,7 @@
 script = ExtResource("1_item")
 item_name = "Short Bow"
 item_type = 0
+handedness = 1
 equip_slot = 1
 attack_bonus = 1
 damage_bonus = 1

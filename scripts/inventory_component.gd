@@ -18,6 +18,7 @@ var items: Array  ## Array[ItemResource], null means empty slot
 var right_hand: ItemResource = null
 var left_hand: ItemResource = null
 var armor: ItemResource = null
+var helmet: ItemResource = null
 
 var character: CharacterBody3D  ## parent character, set on ready
 
@@ -42,6 +43,8 @@ func _add_starting_item(item: ItemResource) -> void:
 		_equip_to(ItemResource.EquipSlot.LEFT_HAND, item)
 	elif item.can_equip_in(ItemResource.EquipSlot.ARMOR):
 		_equip_to(ItemResource.EquipSlot.ARMOR, item)
+	elif item.can_equip_in(ItemResource.EquipSlot.HELMET):
+		_equip_to(ItemResource.EquipSlot.HELMET, item)
 
 
 func add_item(item: ItemResource) -> bool:
@@ -66,6 +69,8 @@ func remove_item(slot_index: int) -> ItemResource:
 		unequip_slot(ItemResource.EquipSlot.LEFT_HAND)
 	if armor == item:
 		unequip_slot(ItemResource.EquipSlot.ARMOR)
+	if helmet == item:
+		unequip_slot(ItemResource.EquipSlot.HELMET)
 	items[slot_index] = null
 	return item
 
@@ -89,6 +94,8 @@ func equip(slot_index: int) -> void:
 	var target_slot := ItemResource.EquipSlot.ANY_HAND
 	if item.item_type == ItemResource.ItemType.ARMOR:
 		target_slot = ItemResource.EquipSlot.ARMOR
+	elif item.item_type == ItemResource.ItemType.HELMET:
+		target_slot = ItemResource.EquipSlot.HELMET
 	elif item.equip_slot == ItemResource.EquipSlot.RIGHT_HAND:
 		target_slot = ItemResource.EquipSlot.RIGHT_HAND
 	elif item.equip_slot == ItemResource.EquipSlot.LEFT_HAND:
@@ -118,6 +125,9 @@ func unequip_slot(slot: int) -> void:
 		ItemResource.EquipSlot.ARMOR:
 			item = armor
 			armor = null
+		ItemResource.EquipSlot.HELMET:
+			item = helmet
+			helmet = null
 	if item and character:
 		_remove_item_bonuses(item)
 
@@ -132,6 +142,8 @@ func unequip_item(item: ItemResource) -> void:
 		unequip_slot(ItemResource.EquipSlot.LEFT_HAND)
 	elif armor == item:
 		unequip_slot(ItemResource.EquipSlot.ARMOR)
+	elif helmet == item:
+		unequip_slot(ItemResource.EquipSlot.HELMET)
 
 
 func _equip_to(slot: int, item: ItemResource) -> void:
@@ -172,6 +184,8 @@ func _equip_to(slot: int, item: ItemResource) -> void:
 			left_hand = item
 		ItemResource.EquipSlot.ARMOR:
 			armor = item
+		ItemResource.EquipSlot.HELMET:
+			helmet = item
 
 	_apply_item_bonuses(item)
 
@@ -193,26 +207,47 @@ func has_weapon_equipped() -> bool:
 	return weapon != null and (weapon.item_type == ItemResource.ItemType.WEAPON or weapon.item_type == ItemResource.ItemType.THROWABLE)
 
 
-func get_equipped_attack_bonus() -> int:
-	var total := 0
-	var main := get_equipped_weapon()
-	if main:
-		total += main.attack_bonus
-	var off := get_equipped_offhand()
-	if off and off.item_type == ItemResource.ItemType.WEAPON:
-		total += off.attack_bonus
-	return total
+func has_offhand_weapon() -> bool:
+	## True when BOTH hands hold a distinct melee weapon (dual-wielding), which grants the
+	## free off-hand attack. Excludes shields and 2H weapons (left_hand == right_hand).
+	if right_hand == null or left_hand == null or left_hand == right_hand:
+		return false
+	return right_hand.item_type == ItemResource.ItemType.WEAPON \
+		and left_hand.item_type == ItemResource.ItemType.WEAPON
 
 
-func get_equipped_damage_bonus() -> int:
-	var total := 0
-	var main := get_equipped_weapon()
-	if main:
-		total += main.damage_bonus
+func offhand_only() -> bool:
+	## True when the ONLY melee weapon is in the off-hand (main hand empty or non-weapon).
+	## Such a lone left-hand strike is resolved with off-hand stats + penalties.
+	var main_is_weapon: bool = right_hand != null and right_hand.item_type == ItemResource.ItemType.WEAPON
 	var off := get_equipped_offhand()
-	if off and off.item_type == ItemResource.ItemType.WEAPON:
-		total += off.damage_bonus
-	return total
+	return not main_is_weapon and off != null and off.item_type == ItemResource.ItemType.WEAPON
+
+
+## Per-hand weapon bonuses. Each attack applies only its own hand's weapon — holding a
+## second weapon does NOT passively buff the main hand (its payoff is the off-hand attack).
+func _weapon_bonus(item: ItemResource, attack: bool) -> int:
+	if item == null:
+		return 0
+	if item.item_type != ItemResource.ItemType.WEAPON and item.item_type != ItemResource.ItemType.THROWABLE:
+		return 0
+	return item.attack_bonus if attack else item.damage_bonus
+
+
+func main_hand_attack_bonus() -> int:
+	return _weapon_bonus(get_equipped_weapon(), true)
+
+
+func main_hand_damage_bonus() -> int:
+	return _weapon_bonus(get_equipped_weapon(), false)
+
+
+func offhand_attack_bonus() -> int:
+	return _weapon_bonus(get_equipped_offhand(), true)
+
+
+func offhand_damage_bonus() -> int:
+	return _weapon_bonus(get_equipped_offhand(), false)
 
 
 func is_shield_equipped() -> bool:
@@ -345,8 +380,8 @@ func slot_count() -> int:
 func _apply_item_bonuses(item: ItemResource) -> void:
 	if not character:
 		return
-	character.attack_skill += item.attack_bonus
-	character.attack_dmg += item.damage_bonus
+	# Weapon attack/damage bonuses are NOT baked into shared stats — they apply per hand at
+	# attack time (see Combatant.get_attack_* / get_offhand_*). Only armor is passive.
 	character.armor += item.armor_bonus
 	character.physical_resistance += item.resistance_bonus
 
@@ -354,7 +389,5 @@ func _apply_item_bonuses(item: ItemResource) -> void:
 func _remove_item_bonuses(item: ItemResource) -> void:
 	if not character:
 		return
-	character.attack_skill -= item.attack_bonus
-	character.attack_dmg -= item.damage_bonus
 	character.armor -= item.armor_bonus
 	character.physical_resistance -= item.resistance_bonus

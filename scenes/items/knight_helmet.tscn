@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://dts1w5ym0f2bf"]
+
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="1_mat"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_dome"]
+radius = 0.09
+height = 0.18
+radial_segments = 8
+rings = 4
+
+[sub_resource type="BoxMesh" id="BoxMesh_crest"]
+size = Vector3(0.02, 0.06, 0.12)
+
+[node name="Helmet" type="Node3D" unique_id=1575386634]
+
+[node name="Dome" type="MeshInstance3D" parent="." unique_id=1185376722]
+material_override = ExtResource("1_mat")
+mesh = SubResource("SphereMesh_dome")
+
+[node name="Crest" type="MeshInstance3D" parent="." unique_id=1953973582]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09, 0)
+material_override = ExtResource("1_mat")
+mesh = SubResource("BoxMesh_crest")

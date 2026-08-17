@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://bgqymljp5pp1h"]
+
+[ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="1_mat"]
+[ext_resource type="ArrayMesh" uid="uid://cc5jrj3tw1yc6" path="res://assets/PolygonDungeon/Models/SM_Arrow_01.res" id="2_arrow"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_body"]
+top_radius = 0.12
+bottom_radius = 0.08
+height = 0.3
+
+[node name="Quiver" type="Node3D" unique_id=381402440]
+
+[node name="Body" type="MeshInstance3D" parent="." unique_id=1953083720]
+material_override = ExtResource("1_mat")
+mesh = SubResource("CylinderMesh_body")
+
+[node name="Arrow1" type="MeshInstance3D" parent="." unique_id=394616707]
+transform = Transform3D(0.4698465, 0.168904, 0.0267515, 0, 0.078217, -0.493844, -0.171010, 0.4640615, 0.0734945, 0.003417, 0.113834, -0.026823)
+material_override = ExtResource("1_mat")
+mesh = ExtResource("2_arrow")
+
+[node name="Arrow2" type="MeshInstance3D" parent="." unique_id=1684542260]
+transform = Transform3D(-0.171010, -0.453835, -0.121605, 0, 0.1294095, -0.482963, 0.4698465, -0.1651825, -0.0442605, 0.032655, 0.109123, 0.011165)
+material_override = ExtResource("1_mat")
+mesh = ExtResource("2_arrow")
+
+[node name="Arrow3" type="MeshInstance3D" parent="." unique_id=117156012]
+transform = Transform3D(-0.383022, 0.3143715, 0.0668225, 0, 0.103956, -0.489074, -0.321394, -0.374650, -0.0796365, -0.016934, 0.111769, 0.019483)
+material_override = ExtResource("1_mat")
+mesh = ExtResource("2_arrow")

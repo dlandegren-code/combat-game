@@ -26,6 +26,7 @@ class_name CombatantStats
 @export var shove_cost: int = 2
 @export var trip_skill: int = 4
 @export var trip_cost: int = 2
+@export var dual_wield_skill: bool = false  ## trained off-hand: no -5 penalty on the free off-hand attack
 
 @export_group("Defense")
 @export var armor: int = 0

@@ -1,13 +1,14 @@
 extends Resource
 class_name ItemResource
 
-enum ItemType { WEAPON, THROWABLE, CONSUMABLE, AMMO, SHIELD, ARMOR }
+enum ItemType { WEAPON, THROWABLE, CONSUMABLE, AMMO, SHIELD, ARMOR, HELMET }
 
 enum EquipSlot {
 	ANY_HAND,   ## Can go in either hand (1-handed weapons)
 	RIGHT_HAND, ## Main hand only
 	LEFT_HAND,  ## Offhand only (shields, offhand weapons)
-	ARMOR       ## Armor slot, not hands
+	ARMOR,      ## Armor slot, not hands
+	HELMET      ## Helmet slot, head
 }
 
 enum Handedness { ONE_HANDED, TWO_HANDED }
@@ -129,6 +130,8 @@ func get_description() -> String:
 			desc += " (Shield)"
 		ItemType.ARMOR:
 			desc += " (Armor)"
+		ItemType.HELMET:
+			desc += " (Helmet)"
 
 	match handedness:
 		Handedness.TWO_HANDED:
@@ -176,4 +179,6 @@ func can_equip_in(slot: int) -> bool:
 			return is_hand_item() and equip_slot != EquipSlot.RIGHT_HAND and equip_slot != EquipSlot.ARMOR
 		EquipSlot.ARMOR:
 			return item_type == ItemType.ARMOR or equip_slot == EquipSlot.ARMOR
+		EquipSlot.HELMET:
+			return item_type == ItemType.HELMET or equip_slot == EquipSlot.HELMET
 	return false

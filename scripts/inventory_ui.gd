@@ -79,6 +79,7 @@ func refresh() -> void:
 	var main_hand: ItemResource = inv.get("right_hand") if inv.get("right_hand") else null
 	var off_hand: ItemResource = inv.get("left_hand") if inv.get("left_hand") else null
 	var armor_item: ItemResource = inv.get("armor") if inv.get("armor") else null
+	var helmet_item: ItemResource = inv.get("helmet") if inv.get("helmet") else null
 
 	for i in range(needed):
 		var row: HBoxContainer = slot_list.get_child(i)
@@ -93,6 +94,8 @@ func refresh() -> void:
 			if item.item_type == ItemResource.ItemType.WEAPON or item.item_type == ItemResource.ItemType.THROWABLE or item.item_type == ItemResource.ItemType.SHIELD:
 				desc += " (Dur:" + str(item.durability) + ")"
 			if item.item_type == ItemResource.ItemType.ARMOR:
+				desc += " (Armor:" + str(item.armor_bonus) + ")"
+			if item.item_type == ItemResource.ItemType.HELMET:
 				desc += " (Armor:" + str(item.armor_bonus) + ")"
 			if item.handedness == ItemResource.Handedness.TWO_HANDED:
 				desc += " 2H"
@@ -112,6 +115,8 @@ func refresh() -> void:
 				desc += " [LH]"
 			elif item == armor_item:
 				desc += " [Armor]"
+			elif item == helmet_item:
+				desc += " [Helmet]"
 
 			name_label.text = desc
 
@@ -124,9 +129,9 @@ func refresh() -> void:
 				use_btn.disabled = true
 
 			# Equip/unequip button for weapons, throwables, shields, and armor
-			if item.item_type == ItemResource.ItemType.WEAPON or item.item_type == ItemResource.ItemType.THROWABLE or item.item_type == ItemResource.ItemType.SHIELD or item.item_type == ItemResource.ItemType.ARMOR:
+			if item.item_type == ItemResource.ItemType.WEAPON or item.item_type == ItemResource.ItemType.THROWABLE or item.item_type == ItemResource.ItemType.SHIELD or item.item_type == ItemResource.ItemType.ARMOR or item.item_type == ItemResource.ItemType.HELMET:
 				equip_btn.visible = true
-				if item == main_hand or item == off_hand or item == armor_item:
+				if item == main_hand or item == off_hand or item == armor_item or item == helmet_item:
 					name_label.self_modulate = Color(1, 0.85, 0.3, 1)
 					equip_btn.text = "U"
 					equip_btn.disabled = false
@@ -192,7 +197,7 @@ func _on_equip(slot_index: int, _bound: Node) -> void:
 	if item == null:
 		return
 	var is_equipped := false
-	if item == inv.get("right_hand") or item == inv.get("left_hand") or item == inv.get("armor"):
+	if item == inv.get("right_hand") or item == inv.get("left_hand") or item == inv.get("armor") or item == inv.get("helmet"):
 		is_equipped = true
 	if is_equipped:
 		if active.has_method("unequip_item"):

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/item_resource.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+item_name = "Quiver"
+item_type = 3
+ammo_amount = 6
+model_path = "res://scenes/items/quiver.tscn"
+model_material_path = "res://assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres"
+model_scale = 0.3
+model_ground_rotation = Vector3(-90, 0, 0)

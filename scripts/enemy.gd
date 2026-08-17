@@ -116,8 +116,7 @@ func _take_turn_archer() -> void:
 			return
 		# Out of arrows: melee.
 		_action_used = Action.ATTACK
-		_play_attack_anim("attack-melee-right")
-		player.take_damage(attack_dmg, attack_skill, false)
+		_do_melee_attack(player)
 		_pending_cost = attack_cost
 		await get_tree().create_timer(0.3).timeout
 		end_my_turn(_pending_cost)
@@ -168,7 +167,7 @@ func _fire_arrow(player: Node) -> void:
 	ammo -= 1
 	_update_health_bar()
 	_play_attack_anim("holding-both-shoot")
-	player.take_damage(attack_dmg, ranged_skill, true)
+	player.take_damage(get_attack_damage(), ranged_skill, true, self)
 	_show_action_text("Arrow fired!")
 	_pending_cost = ranged_cost
 	await get_tree().create_timer(0.3).timeout
@@ -200,8 +199,7 @@ func _take_turn_boss() -> void:
 		elif roll <= 80:
 			# Attack
 			_action_used = Action.ATTACK
-			_play_attack_anim("attack-melee-right")
-			target.take_damage(attack_dmg, attack_skill, false)
+			_do_melee_attack(target)
 			_pending_cost = attack_cost
 		else:
 			# Trip
@@ -355,8 +353,7 @@ func _do_adjacent_action(player: Node) -> void:
 	var roll := randi_range(1, 100)
 	if roll <= 60:
 		_action_used = Action.ATTACK
-		_play_attack_anim("attack-melee-right")
-		player.take_damage(attack_dmg, attack_skill, false)
+		_do_melee_attack(player)
 		_pending_cost = attack_cost
 	elif roll <= 85:
 		_action_used = Action.SHOVE

@@ -15,6 +15,15 @@ const LAYER_ENEMY := 2
 const LAYER_OBSTACLE := 4
 const LAYER_ENEMY_AND_OBSTACLE := 6  ## enemy (2) + obstacle (4), for line-of-sight
 
+## Partial cover (ranged & thrown only): a short obstacle between shooter and target.
+const COVER_DEFENSE_BONUS := 3    ## added to an active dodge/parry roll when in cover
+const COVER_SAVE_CHANCE := 25     ## % chance the obstacle eats the shot when we can't actively defend
+const COVER_RAY_DROP := 0.6       ## metres below eye-line for the "does a short prop block us" ray
+
+## Dual-wield free off-hand attack (see _do_melee_attack).
+const OFFHAND_HIT_PENALTY := 5    ## to-hit penalty for the off-hand strike (0 with dual_wield_skill)
+const OFFHAND_DELAY := 0.3        ## beat between the main hit and the off-hand follow-up
+
 ## Optional data-driven stat block (a CombatantStats resource). When assigned,
 ## its values are copied onto this combatant at _ready (overriding the
 ## per-instance @export values below). Leave null to use scene / default values.
@@ -41,6 +50,7 @@ var move_range: int = 4
 @export var trip_skill: int = 4
 @export var shove_cost: int = 2
 @export var trip_cost: int = 2
+@export var dual_wield_skill: bool = false  ## trained off-hand: no -5 penalty on the free off-hand attack
 @export var ranged_skill: int = 3       ## used for bow/distance attacks
 @export var ranged_cost: int = 3
 @export var ammo: int = 0
@@ -60,6 +70,11 @@ var is_moving := false
 var target_position := Vector3.ZERO
 ## Remaining waypoints for a routed move (set by _start_path_move); empty = single hop.
 var _move_path: Array = []
+
+## Emitted whenever hp / max_hp / is_alive change, so HUD elements (the party
+## portraits) can refresh without polling. Fired from _update_health_bar(),
+## which every damage and heal path already funnels through.
+signal health_changed(hp: int, max_hp: int, is_alive: bool)
 
 var hp := 20
 var max_hp := 20
@@ -87,8 +102,14 @@ var _helmet_socket = null
 var _center_target := 0.0
 var _last_right_hand: ItemResource = null
 var _last_left_hand: ItemResource = null
+var _last_helmet: ItemResource = null
 var _anim_player = null
 var _is_attacking := false
+## Rest-position of CharacterModel, cached on the first shove so overlapping
+## knock-back slides always ease back to the same home instead of compounding.
+var _model_home_pos := Vector3.INF
+## Active cosmetic knock-back tween (see _animate_push_slide).
+var _push_tween: Tween = null
 
 ## Uniform scale applied to the CharacterModel (and its held weapons) so the
 ## ~1-unit Kenney models fill the 2-unit grid cells. Multiplies any per-type
@@ -161,6 +182,7 @@ func _apply_stats() -> void:
 	shove_cost = s.shove_cost
 	trip_skill = s.trip_skill
 	trip_cost = s.trip_cost
+	dual_wield_skill = s.dual_wield_skill
 	armor = s.armor
 	physical_resistance = s.physical_resistance
 	parry_skill = s.parry_skill
@@ -177,6 +199,17 @@ func _apply_stats() -> void:
 	strength = s.strength
 	weight = s.weight
 	equip_cost = s.equip_cost
+
+
+func _lay_prone() -> void:
+	## Get knocked down (tripped / shoved off balance): drop to the prone pose. Getting up
+	## is a separate action charged at the unit's next turn (_stand_up_if_prone).
+	if is_prone:
+		return
+	is_prone = true
+	_show_condition_text("PRONE!")
+	_update_health_bar()
+	_update_prone_anim()
 
 
 func _stand_up_if_prone() -> void:
@@ -278,15 +311,18 @@ func _update_equipment_visuals() -> void:
 		return
 	var main: ItemResource = inventory.get("right_hand")
 	var off: ItemResource = inventory.get("left_hand")
+	var helmet_item: ItemResource = inventory.get("helmet")
 	if DEBUG_EQUIPMENT:
-		print("[Combatant] %s: right_hand=%s left_hand=%s" % [character_name, main.item_name if main else "null", off.item_name if off else "null"])
-	if main == _last_right_hand and off == _last_left_hand:
+		print("[Combatant] %s: right_hand=%s left_hand=%s helmet=%s" % [character_name, main.item_name if main else "null", off.item_name if off else "null", helmet_item.item_name if helmet_item else "null"])
+	if main == _last_right_hand and off == _last_left_hand and helmet_item == _last_helmet:
 		return
 	_last_right_hand = main
 	_last_left_hand = off
+	_last_helmet = helmet_item
 	var two_handed: bool = main != null and main == off
 	_refresh_socket(_weapon_socket, main)
 	_refresh_socket(_shield_socket, null if two_handed else off)
+	_refresh_socket(_helmet_socket, helmet_item)
 
 
 func _refresh_socket(socket, item: ItemResource) -> void:
@@ -464,12 +500,18 @@ func _tile_key(tile: Vector3) -> String:
 
 func _find_path(from_tile: Vector3, to_tile: Vector3, max_steps: int = -1) -> Array:
 	## BFS on the grid returning the shortest cardinal path [from .. to], routing around
-	## walls, obstacles and HOSTILE combatants (allies are walk-through). The goal tile
+	## walls, obstacles and EVERY other living combatant (allies included). The goal tile
 	## stays passable so an enemy can still path onto its target's cell (the caller stops
 	## short). Pass max_steps to bound search depth (players cap it at move_range).
 	# 8-directional: cardinals + diagonals, so a unit can slip through a diagonal gap
 	# between two obstacles instead of being forced around. Walls still block via the
-	# per-step ray, and an obstacle/hostile ON the diagonal cell is still rejected.
+	# per-step ray, and an obstacle/unit ON the diagonal cell is still rejected.
+	#
+	# Allies block too (not just hostiles): a unit can't actually step onto a tile a
+	# squadmate occupies, so treating them as walk-through produced a path whose next
+	# step was blocked — the mover then trimmed it to nothing and froze in place instead
+	# of routing around. This bit hardest when a pillar funnelled several enemies into a
+	# single-file gap. Routing around allies makes them detour to a free approach tile.
 	var dirs := [
 		Vector3(GRID_SIZE, 0, 0), Vector3(-GRID_SIZE, 0, 0),
 		Vector3(0, 0, GRID_SIZE), Vector3(0, 0, -GRID_SIZE),
@@ -498,7 +540,7 @@ func _find_path(from_tile: Vector3, to_tile: Vector3, max_steps: int = -1) -> Ar
 			if _is_obstacle_at(nxt):
 				continue
 			var is_goal: bool = nxt.distance_to(to_tile) < 0.5
-			if not is_goal and _hostile_combatant_at(nxt) != null:
+			if not is_goal and _get_combatant_at(nxt, self) != null:
 				continue
 			if _step_blocked_by_wall(cur, nxt):
 				continue
@@ -538,11 +580,11 @@ func _has_line_of_sight(target: Node) -> bool:
 	return result.collider == target
 
 
-func take_damage(amount: int, attacker_skill: int = 0, is_ranged: bool = false) -> bool:
+func take_damage(amount: int, attacker_skill: int = 0, is_ranged: bool = false, attacker: Node = null) -> bool:
 	if not is_alive:
 		return false
 
-	var def_result: Dictionary = _attempt_defense(attacker_skill, is_ranged)
+	var def_result: Dictionary = _attempt_defense(attacker_skill, is_ranged, attacker)
 	if def_result.defended:
 		return true
 
@@ -559,33 +601,67 @@ func take_damage(amount: int, attacker_skill: int = 0, is_ranged: bool = false) 
 	return false
 
 
-func _attempt_defense(attacker_skill: int, is_ranged: bool = false) -> Dictionary:
+func _attempt_defense(attacker_skill: int, is_ranged: bool = false, attacker: Node = null) -> Dictionary:
 	var attack_roll := attacker_skill + randi_range(1, 5)
 	var effective_dodge: int = dodge_skill - (2 if is_prone else 0)
 	var result := { "defended": false, "attack_roll": attack_roll, "defense_roll": 0 }
 
+	# Partial cover: a short prop (pillar / vessel) on the line from the shooter hinders
+	# ranged & thrown attacks. It boosts an active dodge/parry, and — since even a
+	# defenceless target gains from ducking behind a pillar — grants a flat save when no
+	# active defence is possible. Melee (is_ranged == false) is point-blank, so cover is off.
+	var has_cover: bool = is_ranged and attacker != null and _has_partial_cover_from(attacker)
+	var cover_bonus: int = COVER_DEFENSE_BONUS if has_cover else 0
+
 	if defensive_option == 0:
 		if not (_has_usable_weapon() or _has_shield_equipped()):
-			return result
+			return _resolve_cover_only(has_cover, result)
 		if is_ranged and not _can_parry_ranged():
-			return result
-		result.defense_roll = parry_skill + randi_range(1, 5)
+			return _resolve_cover_only(has_cover, result)
+		result.defense_roll = parry_skill + randi_range(1, 5) + cover_bonus
 		if result.defense_roll >= attack_roll:
 			if inventory and inventory.has_method("degrade_equipped_weapon"):
 				inventory.degrade_equipped_weapon()
-			_show_defense_result("Parry!")
+			_show_defense_result("Cover parry!" if has_cover else "Parry!")
 			_update_health_bar()
 			_charge_defense_cost()
 			result.defended = true
 	else:
 		if is_ranged and not _can_dodge_ranged():
-			return result
-		result.defense_roll = effective_dodge + randi_range(1, 5)
+			return _resolve_cover_only(has_cover, result)
+		result.defense_roll = effective_dodge + randi_range(1, 5) + cover_bonus
 		if result.defense_roll >= attack_roll:
-			_show_defense_result("Dodge!")
+			_show_defense_result("Cover dodge!" if has_cover else "Dodge!")
 			_charge_defense_cost()
 			result.defended = true
 	return result
+
+
+func _resolve_cover_only(has_cover: bool, result: Dictionary) -> Dictionary:
+	## Reached when no active defence was possible. A target in partial cover still has a
+	## flat chance for the prop to swallow the shot ("Cover!"); this is passive, so unlike a
+	## dodge/parry it costs no time. Otherwise the hit lands.
+	if has_cover and randi_range(1, 100) <= COVER_SAVE_CHANCE:
+		_show_defense_result("Cover!")
+		result.defended = true
+	return result
+
+
+func _has_partial_cover_from(attacker: Node) -> bool:
+	## True when a SHORT obstacle (pillar / vessel) sits on the line between `attacker` and
+	## us: it blocks a waist-height ray but not the head-height LOS ray, so the shot is still
+	## possible, just hindered. Tall walls block both rays (they're full cover / no shot, and
+	## the shooter's own LOS check already stops those), so they don't register here.
+	var atk := attacker as Node3D
+	if atk == null:
+		return false
+	var space_state := get_world_3d().direct_space_state
+	var from_pos := Vector3(atk.position.x, atk.position.y - COVER_RAY_DROP, atk.position.z)
+	var to_pos := Vector3(position.x, position.y - COVER_RAY_DROP, position.z)
+	var query := PhysicsRayQueryParameters3D.create(from_pos, to_pos)
+	query.collision_mask = LAYER_OBSTACLE
+	query.exclude = [get_rid()]
+	return not space_state.intersect_ray(query).is_empty()
 
 
 func _calculate_damage(raw: int) -> int:
@@ -626,14 +702,19 @@ func _apply_push(push_dir: Vector3, force: int) -> void:
 	if dir == Vector3.ZERO:
 		dir.x = 1.0
 	var start: Vector3 = _snap_to_grid(position)
+	var landed := 0  # tiles actually travelled before hitting a wall / blocker / the end
 	for i in range(1, force + 1):
+		var prev: Vector3 = _snap_to_grid(start + dir * GRID_SIZE * (i - 1))
 		var next: Vector3 = _snap_to_grid(start + dir * GRID_SIZE * i)
 		if next.x < ARENA_MIN or next.x > ARENA_MAX or next.z < ARENA_MIN or next.z > ARENA_MAX:
 			_apply_impact_damage((force - i + 1) * 2)
-			return
-		if _is_obstacle_at(next):
+			break
+		# Same per-step obstacle-layer ray _find_path uses: stops a diagonal shove from
+		# cutting the corner across a prop that sits on a grid crossing (the vessel),
+		# whose collider blocks the edge even though no cell is reserved via _is_obstacle_at.
+		if _is_obstacle_at(next) or _step_blocked_by_wall(prev, next):
 			_apply_impact_damage((force - i + 1) * 2)
-			return
+			break
 		var blocker: Node = _get_combatant_at(next, self)
 		if blocker != null:
 			var remaining: int = force - i + 1
@@ -645,9 +726,61 @@ func _apply_push(push_dir: Vector3, force: int) -> void:
 				blocker._apply_push(dir, chain)
 			position = _snap_to_grid(start + dir * GRID_SIZE * (i - 1))
 			target_position = position
-			return
+			break
 		position = next
 		target_position = next
+		landed = i
+	# The grid position has already snapped to the destination (above), so occupancy
+	# and turn logic stay instant. Layer a purely cosmetic slide on top so the shove
+	# reads as a stagger across the floor rather than a teleport.
+	if landed > 0:
+		_animate_push_slide(start, position, landed)
+
+
+func _animate_push_slide(from_tile: Vector3, to_tile: Vector3, tiles: int) -> void:
+	## Cosmetic only. The logical grid position is already at `to_tile`; here we snap the
+	## visual CharacterModel back to `from_tile` and ease it home, flipping through random
+	## "tumble" clips so a shove looks like a staggering slide instead of a teleport.
+	var model := get_node_or_null("CharacterModel") as Node3D
+	if model == null:
+		return
+	# Cache the true rest-position the first time, so repeat shoves never compound.
+	if _model_home_pos == Vector3.INF:
+		_model_home_pos = model.position
+	# Cancel any in-flight slide before starting a new one (kills its coroutine's loop too).
+	if _push_tween and _push_tween.is_valid():
+		_push_tween.kill()
+
+	var offset := from_tile - to_tile
+	offset.y = 0.0
+	if offset.length() < 0.01:
+		model.position = _model_home_pos
+		return
+
+	# Keep whatever facing the character already had — a shove slides the body across
+	# the floor; it shouldn't turn to "walk" in the push direction.
+
+	# Jump the visual back to the origin tile, then ease it to the resting spot.
+	model.position = _model_home_pos + offset
+	var per_tile := 0.4  # seconds per tile — deliberately slow so the shove reads
+	var tween := create_tween()
+	_push_tween = tween
+	tween.tween_property(model, "position", _model_home_pos, per_tile * tiles) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+	# Cycle random tumble animations for as long as the slide is running.
+	var ap := _ensure_anim_player()
+	if ap:
+		var clips := ["crouch", "fall", "jump", "walk"]
+		while tween.is_valid() and tween.is_running():
+			var clip: String = clips[randi() % clips.size()]
+			if ap.has_animation(clip):
+				ap.play(clip)
+			await get_tree().create_timer(per_tile).timeout
+
+	# Settle back to the neutral pose, unless a newer slide took over or we were downed.
+	if _push_tween == tween and is_alive and not is_prone and not _is_attacking:
+		_play_rest_anim()
 
 
 func _try_shove(target: Node) -> int:
@@ -672,11 +805,7 @@ func _try_trip(target: Node) -> bool:
 	var def_result: Dictionary = target._attempt_defense(trip_skill)
 	if def_result.defended:
 		return false
-	target.is_prone = true
-	target._show_condition_text("PRONE!")
-	target._update_health_bar()
-	if target.has_method("_update_prone_anim"):
-		target._update_prone_anim()
+	target._lay_prone()
 	return true
 
 
@@ -766,34 +895,80 @@ func _can_dodge_ranged() -> bool:
 # --- Floating text helpers -------------------------------------------------
 
 func _spawn_floating_label(text: String, font_size: int, start_y: float, end_y: float,
-		color: Color, rise_time: float, fade_time: float) -> void:
+		color: Color, rise_time: float, hold_time: float, fade_time: float) -> void:
 	var label := Label3D.new()
 	label.text = text
 	label.font_size = font_size
+	# Dark outline keeps the lighter colours (white dodges especially) readable against
+	# the pale floor. It's a separate modulate, so fade it alongside the main text below.
+	label.outline_size = maxi(6, int(font_size * 0.25))
+	label.outline_modulate = Color(0, 0, 0, 1)
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.position = Vector3(0, start_y, 0)
 	label.modulate = color
 	add_child(label)
+	# Float up, hold at full opacity for hold_time so it lingers, then fade out and free.
 	var tween := create_tween()
 	tween.tween_property(label, "position:y", end_y, rise_time).set_ease(Tween.EASE_OUT)
-	tween.parallel().tween_property(label, "modulate:a", 0.0, fade_time)
+	tween.parallel().tween_property(label, "modulate:a", 0.0, fade_time).set_delay(hold_time)
+	tween.parallel().tween_property(label, "outline_modulate:a", 0.0, fade_time).set_delay(hold_time)
 	tween.tween_callback(label.queue_free)
 
 
 func _show_action_text(text: String) -> void:
-	_spawn_floating_label(text, 22, 3.0, 4.2, Color(1, 0.7, 0.3, 1), 0.6, 0.4)
+	_spawn_floating_label(text, 48, 3.0, 4.2, Color(1, 0.7, 0.3, 1), 0.6, 1.3, 0.6)
 
 
 func _show_condition_text(text: String) -> void:
-	_spawn_floating_label(text, 20, 1.8, 3.0, Color(0.9, 0.3, 0.3, 1), 0.7, 0.5)
+	_spawn_floating_label(text, 44, 1.8, 3.0, Color(0.9, 0.3, 0.3, 1), 0.7, 1.4, 0.7)
 
 
 func _show_defense_result(text: String) -> void:
-	_spawn_floating_label(text, 24, 2.5, 3.8, Color(0.6, 0.8, 0.6, 1), 0.7, 0.5)
+	# Parry / Dodge read white; anything cover-related (incl. "Cover parry!") reads orange.
+	var color := Color(1, 0.6, 0.1, 1) if "Cover" in text else Color(1, 1, 1, 1)
+	_spawn_floating_label(text, 52, 2.5, 3.8, color, 0.7, 1.5, 0.7)
 
 
 func _show_damage_number(amount: int) -> void:
-	_spawn_floating_label(str(amount), 28, 2.0, 3.5, Color(1, 0.2, 0.2, 1), 0.8, 0.6)
+	_spawn_floating_label(str(amount), 64, 2.0, 3.5, Color(1, 0.2, 0.2, 1), 0.8, 1.6, 0.8)
+
+
+# --- Active-turn highlight --------------------------------------------------
+
+var _turn_ring: MeshInstance3D = null
+
+
+func set_turn_active(active: bool) -> void:
+	## Toggle the glowing ring that marks whose turn it is. The combat manager lights the
+	## active unit and clears the rest, so the ring lingers under a unit for its whole turn.
+	if active:
+		_ensure_turn_ring()
+		_turn_ring.visible = true
+	elif _turn_ring != null:
+		_turn_ring.visible = false
+
+
+func _ensure_turn_ring() -> void:
+	if _turn_ring != null:
+		return
+	var ring := MeshInstance3D.new()
+	ring.name = "TurnRing"
+	var torus := TorusMesh.new()
+	torus.inner_radius = 0.85
+	torus.outer_radius = 1.05
+	ring.mesh = torus
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = Color(1.0, 0.85, 0.2, 0.45)  # alpha < 1 so the floor shows through
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.8, 0.15)
+	mat.emission_energy_multiplier = 1.4
+	ring.material_override = mat
+	# Rest it just above the floor regardless of the body's ground offset (feet ~world 0.18).
+	ring.position = Vector3(0, 0.18 - _ground_y(), 0)
+	add_child(ring)
+	_turn_ring = ring
 
 
 # --- Grid / movement -------------------------------------------------------
@@ -815,14 +990,61 @@ func _is_in_range(target: Vector3) -> bool:
 	return dist <= move_range * GRID_SIZE
 
 
-# --- Ability stat accessors (overridden by subclasses that add weapon bonuses) ---
+# --- Ability stat accessors -------------------------------------------------
+# Main-hand attack = base stat + the RIGHT-hand weapon's bonus only. The off-hand
+# variants use the LEFT-hand weapon. Holding two weapons never stacks onto one swing.
 
 func get_attack_skill() -> int:
-	return attack_skill
+	return attack_skill + _inv_bonus("main_hand_attack_bonus")
 
 
 func get_attack_damage() -> int:
-	return attack_dmg
+	return attack_dmg + _inv_bonus("main_hand_damage_bonus")
+
+
+func get_offhand_attack_skill() -> int:
+	return attack_skill + _inv_bonus("offhand_attack_bonus")
+
+
+func get_offhand_attack_damage() -> int:
+	return attack_dmg + _inv_bonus("offhand_damage_bonus")
+
+
+func _inv_bonus(method: String) -> int:
+	if inventory and inventory.has_method(method):
+		return inventory.call(method)
+	return 0
+
+
+func _do_melee_attack(target) -> void:
+	## Shared melee routine for players and AI: main-hand strike, plus a free off-hand
+	## follow-up when dual-wielding two melee weapons. Runs as a coroutine so the off-hand
+	## lands a beat after the main hit (right anim, then left anim) instead of overwriting it.
+	# Only an off-hand weapon held (main hand empty): the lone strike IS an off-hand attack.
+	if inventory and inventory.has_method("offhand_only") and inventory.offhand_only():
+		_offhand_attack(target)
+		return
+	_play_attack_anim("attack-melee-right")
+	target.take_damage(get_attack_damage(), get_attack_skill(), false, self)
+
+	if not (inventory and inventory.has_method("has_offhand_weapon") and inventory.has_offhand_weapon()):
+		return
+	if not (is_instance_valid(target) and target.is_alive):
+		return  # main hit finished the target — nothing left to follow up on
+	await get_tree().create_timer(OFFHAND_DELAY).timeout
+	if not (is_alive and is_instance_valid(target) and target.is_alive and _is_adjacent(target.position)):
+		return
+	_offhand_attack(target)
+
+
+func _offhand_attack(target) -> void:
+	## The free off-hand strike: left-hand anim, half damage, -5 to hit unless the character
+	## has the dual_wield_skill. Charges no time cost (called inside the main attack action).
+	_play_attack_anim("attack-melee-left")
+	var penalty: int = 0 if dual_wield_skill else OFFHAND_HIT_PENALTY
+	var dmg: int = maxi(1, int(get_offhand_attack_damage() / 2.0))
+	_show_action_text("Off-hand!")
+	target.take_damage(dmg, get_offhand_attack_skill() - penalty, false, self)
 
 
 func get_ranged_range() -> int:
@@ -899,7 +1121,36 @@ func _ensure_anim_player() -> AnimationPlayer:
 	return _anim_player as AnimationPlayer
 
 
+func _freeze_downed_pose(ap: AnimationPlayer) -> void:
+	## Snap to and hold the final lying-down frame of the "die" clip (our shared pose for
+	## both corpses and knocked-down units). Used to re-assert a downed pose WITHOUT
+	## replaying the fall, so a stale action coroutine resuming after a death/knockdown
+	## can't leave the body standing.
+	if ap.current_animation != "die":
+		ap.play("die")
+	var die_anim := ap.get_animation("die")
+	if die_anim:
+		ap.seek(die_anim.length, true)
+	ap.pause()
+
+
+func _play_rest_anim() -> void:
+	## The neutral pose a combatant returns to when no action is animating. Dead and prone
+	## units stay down; everyone else idles. Every action coroutine funnels its
+	## "back to neutral" through here, so a death or knockdown that lands mid-animation is
+	## never overwritten when the old `await animation_finished` finally resumes.
+	var ap := _ensure_anim_player()
+	if not ap:
+		return
+	if not is_alive or is_prone:
+		_freeze_downed_pose(ap)
+	elif ap.current_animation != "idle":
+		ap.play("idle")
+
+
 func _update_prone_anim() -> void:
+	## Deliberate pose transition: the fall into prone ("die") or the rise back to standing
+	## ("idle"). Held poses are re-asserted afterwards by _play_rest_anim.
 	var ap := _ensure_anim_player()
 	if not ap:
 		return
@@ -912,14 +1163,19 @@ func _play_idle_anim() -> void:
 		ap.play("idle")
 
 
-func _play_hit_anim() -> void:
-	if not _anim_player or _is_attacking:
+func _play_crouch_anim() -> void:
+	## Flinch/crouch hit-reaction, then settle back to the neutral pose. Skipped when the
+	## unit is already down (dead/prone) so a hit can't animate a corpse up into a crouch.
+	if not _anim_player or _is_attacking or is_prone or not is_alive:
 		return
 	var ap := _anim_player as AnimationPlayer
 	ap.play("crouch")
 	await ap.animation_finished
-	if is_alive and not is_prone:
-		ap.play("idle")
+	_play_rest_anim()
+
+
+func _play_hit_anim() -> void:
+	_play_crouch_anim()
 
 
 func _play_attack_anim(anim_name: String) -> void:
@@ -930,7 +1186,7 @@ func _play_attack_anim(anim_name: String) -> void:
 	ap.play(anim_name)
 	await ap.animation_finished
 	_is_attacking = false
-	ap.play("idle")
+	_play_rest_anim()
 
 
 func _face_target(target: Node3D) -> void:
@@ -945,6 +1201,11 @@ func _face_target(target: Node3D) -> void:
 
 func _die() -> void:
 	can_act = false
+	# Take the corpse off its physics layer so targeting/LOS raycasts pass straight
+	# through it. Dead units are already ignored by the tile/occupancy checks (which
+	# gate on is_alive), so a live combatant sharing this tile can no longer be
+	# shadowed by the body lying on it (e.g. shoving the corpse instead of the enemy).
+	collision_layer = 0
 	var ap := _ensure_anim_player()
 	if ap:
 		ap.play("die")
@@ -952,10 +1213,7 @@ func _die() -> void:
 		# Freeze on the final laying-down frame so the corpse stays down instead of
 		# snapping back to a rest pose. The body is left visible (a corpse on the floor);
 		# dead units no longer block tiles (see _is_tile_occupied_by_others).
-		var die_anim := ap.get_animation("die")
-		if die_anim:
-			ap.seek(die_anim.length, true)
-		ap.pause()
+		_freeze_downed_pose(ap)
 	# Drop the floating health bar so a "0/xx" label isn't hovering over the corpse.
 	if health_bar:
 		health_bar.visible = false
@@ -971,6 +1229,9 @@ var can_act := false
 
 func _update_health_bar() -> void:
 	_update_equipment_visuals()
+	# Emitted before the Label3D early-out so listeners fire even for combatants
+	# that have no floating health bar node.
+	health_changed.emit(hp, max_hp, is_alive)
 	if not health_bar:
 		return
 	var text := character_name + "\n" + str(hp) + "/" + str(max_hp)

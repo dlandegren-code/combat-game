@@ -1,5 +1,5 @@
 extends CanvasLayer
-## Displays the active character's equipped slots: Right Hand, Left Hand, Armor
+## Displays the active character's equipped slots: Right Hand, Left Hand, Armor, Helmet
 
 var slot_list: VBoxContainer
 var title_label: Label
@@ -34,13 +34,15 @@ func refresh() -> void:
 	var main: ItemResource = inv.get("right_hand")
 	var off: ItemResource = inv.get("left_hand")
 	var armor_item: ItemResource = inv.get("armor")
+	var helmet_item: ItemResource = inv.get("helmet")
 	var two_handed := main != null and main == off
 
-	_ensure_rows(3)
+	_ensure_rows(4)
 
 	_set_row(0, "Right Hand", _hand_desc(main, two_handed))
 	_set_row(1, "Left Hand", _hand_desc(off, two_handed, true))
 	_set_row(2, "Armor", _armor_desc(armor_item))
+	_set_row(3, "Helmet", _helmet_desc(helmet_item))
 
 
 func _ensure_rows(count: int) -> void:
@@ -113,6 +115,13 @@ func _armor_desc(item: ItemResource) -> Dictionary:
 	return { "name": item.item_name, "stat": stat }
 
 
+func _helmet_desc(item: ItemResource) -> Dictionary:
+	if item == null:
+		return { "name": "(empty)", "stat": "" }
+	var stat := "Armor+" + str(item.armor_bonus)
+	return { "name": item.item_name, "stat": stat }
+
+
 func _on_unequip(slot_index: int) -> void:
 	var combat_mgr := get_parent().get_node_or_null("CombatManager")
 	if not combat_mgr:
@@ -136,6 +145,10 @@ func _on_unequip(slot_index: int) -> void:
 				active.unequip_item(item)
 		2:  # Armor
 			item = inv.get("armor")
+			if item and active.has_method("unequip_item"):
+				active.unequip_item(item)
+		3:  # Helmet
+			item = inv.get("helmet")
 			if item and active.has_method("unequip_item"):
 				active.unequip_item(item)
 

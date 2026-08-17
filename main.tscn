@@ -30,6 +30,10 @@
 [ext_resource type="Resource" path="res://resources/items/ranger_dagger.tres" id="20_ok6jj"]
 [ext_resource type="Resource" path="res://resources/items/reinforced_leather_armor.tres" id="21_facbu"]
 [ext_resource type="Script" uid="uid://bp8qfogtdois4" path="res://scripts/room_builder.gd" id="30_kq58d"]
+[ext_resource type="PackedScene" path="res://scenes/party_panel.tscn" id="31_party"]
+[ext_resource type="PackedScene" path="res://scenes/characters/wizard_model.tscn" id="32_wizard_wrapper"]
+[ext_resource type="Resource" path="res://resources/items/gemstone_staff.tres" id="33_staff"]
+[ext_resource type="Resource" path="res://resources/items/quiver.tres" id="34_quiver"]
 
 [sub_resource type="StandardMaterial3D" id="mat_ground"]
 albedo_color = Color(0.35, 0.5, 0.25, 1)
@@ -291,8 +295,51 @@ script = ExtResource("6_inv")
 starting_item_1 = ExtResource("20_ok6jj")
 starting_item_2 = ExtResource("21_facbu")
 starting_item_3 = ExtResource("9_seu75")
+starting_item_4 = ExtResource("34_quiver")
 
 [node name="CharacterModel" parent="Player2" unique_id=2132221886 instance=ExtResource("13_maled_wrapper")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+show_quiver = true
+
+[node name="Wizard" type="CharacterBody3D" parent="." unique_id=1500279353]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0, 5)
+wall_min_slide_angle = 0.0
+floor_stop_on_slope = false
+floor_block_on_wall = false
+floor_snap_length = 0.0
+script = ExtResource("1_player")
+initiative = 8
+character_name = "Wizard"
+attack_skill = 4
+parry_skill = 2
+dodge_skill = 7
+defensive_option = 1
+shove_skill = 2
+trip_skill = 3
+ammo = 7
+max_ammo = 12
+
+[node name="Mesh" type="MeshInstance3D" parent="Wizard" unique_id=47098326]
+visible = false
+material_override = SubResource("mat_player")
+mesh = SubResource("mesh_player")
+
+[node name="Collision" type="CollisionShape3D" parent="Wizard" unique_id=376279000]
+shape = SubResource("shape_character")
+
+[node name="HealthBar" type="Label3D" parent="Wizard" unique_id=1682269751]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
+billboard = 2
+text = "20/20"
+font_size = 36
+
+[node name="Inventory" type="Node" parent="Wizard" unique_id=1739299797]
+script = ExtResource("6_inv")
+starting_item_1 = ExtResource("20_ok6jj")
+starting_item_2 = ExtResource("21_facbu")
+starting_item_3 = ExtResource("33_staff")
+
+[node name="CharacterModel" parent="Wizard" unique_id=897400905 instance=ExtResource("32_wizard_wrapper")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 
 [node name="CombatManager" type="Node" parent="." unique_id=1411475820]
@@ -563,3 +610,5 @@ shape = SubResource("CylinderShape3D_1u8w0")
 
 [node name="DungeonRoom" type="Node3D" parent="." unique_id=2131157186]
 script = ExtResource("30_kq58d")
+
+[node name="PartyPanel" parent="." unique_id=1774300112 instance=ExtResource("31_party")]

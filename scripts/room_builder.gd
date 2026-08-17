@@ -18,6 +18,12 @@ const WALL_MESH := "res://Assets/PolygonDungeon/Models/SM_Env_Wall_01_DoubleSide
 const DOOR_MESH := "res://Assets/PolygonDungeon/Models/SM_Env_Wall_DoorFrame_01.res"
 const WALL_MAT := "res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres"
 
+# Stone props (same atlas material as the walls). Throne/vessel are solid obstacles;
+# banners are flat wall decor (collision-free).
+const THRONE_MESH := "res://Assets/PolygonDungeon/Models/SM_Env_Stone_Throne_01.res"
+const VESSEL_MESH := "res://Assets/PolygonDungeon/Models/SM_Env_Stone_Vessel_01.res"
+const WALL_BANNER_MESH := "res://Assets/PolygonDungeon/Models/SM_Prop_Wall_Banner_01.res"
+
 const SCALE := 0.8                 # dial the whole environment's size here
 const TILE := 5.0 * SCALE          # world units per tile (= 4.0 at 0.8)
 const FLOOR_Y := 0.0
@@ -44,6 +50,7 @@ func _build() -> void:
 	_build_chamber()
 	_build_room()
 	_build_walls()
+	_build_props()
 
 
 func _build_chamber() -> void:
@@ -125,6 +132,70 @@ func _place_wall(mesh_path: String, x: float, z: float, rot_y_deg: float) -> voi
 		cs.position = aabb.get_center()
 		body.add_child(cs)
 		mi.add_child(body)
+
+
+func _build_props() -> void:
+	var half := CHAMBER_TILES / 2.0 * TILE                # 16
+	# Throne centered on the vessel's x = 0 axis, spanning the two cells straddling that
+	# line (x = -1 and x = 1), against the south wall, facing north. Placed WITHOUT a
+	# collider (solid = false): its two cells are reserved explicitly below, so exactly
+	# those squares block. A collider's footprint would spill into the neighbours.
+	_place_prop(THRONE_MESH, 0.0, -half + 1.0, 0.0, false, FLOOR_Y, false, 2.2)
+	_reserve_cell(-1.0, -half + 1.0)
+	_reserve_cell(1.0, -half + 1.0)
+	# Wall banners flanking the widened throne, hung high on the same wall (solid).
+	# Rotated 180 so the decorated face points into the room, not at the wall.
+	_place_prop(WALL_BANNER_MESH, -3.0, -half + 0.3, 180.0, true, 4.0)
+	_place_prop(WALL_BANNER_MESH, 3.0, -half + 0.3, 180.0, true, 4.0)
+	# Stone vessel on the circle's center crossing: block diagonal cuts through it (via
+	# the collider) but do NOT reserve a cell, so the four squares around it stay walkable.
+	_place_prop(VESSEL_MESH, 0.0, 0.0, 0.0, true, FLOOR_Y, false)
+
+
+func _reserve_cell(x: float, z: float) -> void:
+	## Invisible marker so _is_obstacle_at treats this grid cell as blocked. Used to
+	## reserve every cell a multi-cell prop (the throne) sits on.
+	var marker := Node3D.new()
+	marker.position = Vector3(x, FLOOR_Y, z)
+	marker.add_to_group("obstacles")
+	add_child(marker)
+
+
+func _place_prop(mesh_path: String, x: float, z: float, rot_y_deg: float, solid := true,
+		y := FLOOR_Y, reserve_cell := true, scale_mul := 1.0) -> void:
+	var m: Mesh = load(mesh_path)
+	if m == null:
+		return
+	var s := SCALE * scale_mul
+	var mi := MeshInstance3D.new()
+	mi.mesh = m
+	mi.material_override = load(WALL_MAT)
+	mi.position = Vector3(x, y, z)
+	mi.rotation_degrees = Vector3(0, rot_y_deg, 0)
+	mi.scale = Vector3(s, s, s)
+	add_child(mi)
+	if not solid:
+		return
+	# Cell reservation blocks moving ONTO the prop's tile (via the "obstacles" group,
+	# read by _is_obstacle_at). Props sitting on a grid crossing (the vessel) skip this
+	# so the four surrounding squares stay walkable; only diagonal cuts are blocked.
+	if reserve_cell:
+		mi.add_to_group("obstacles")
+	# Obstacle-layer collider for line-of-sight + diagonal path blocking. Anchored on the
+	# floor with a minimum height so short props (the vessel) still reach the ~1.6-high
+	# movement/LOS rays instead of sitting under them.
+	var aabb := m.get_aabb()
+	var local_h: float = max(aabb.size.y, 2.5 / s)
+	var body := StaticBody3D.new()
+	body.collision_layer = LAYER_OBSTACLE
+	body.collision_mask = 0
+	var cs := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(aabb.size.x, local_h, aabb.size.z)
+	cs.shape = box
+	cs.position = Vector3(aabb.get_center().x, aabb.position.y + local_h * 0.5, aabb.get_center().z)
+	body.add_child(cs)
+	mi.add_child(body)
 
 
 func _place_tile(prefab_file: String, x: float, z: float, rot_y_deg: float) -> void:
