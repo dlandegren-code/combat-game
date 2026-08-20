@@ -14,6 +14,12 @@ const TripAbilityScript := preload("res://scripts/abilities/trip_ability.gd")
 const RangedAbilityScript := preload("res://scripts/abilities/ranged_ability.gd")
 const ThrowAbilityScript := preload("res://scripts/abilities/throw_ability.gd")
 const PickupAbilityScript := preload("res://scripts/abilities/pickup_ability.gd")
+const GroundItemScript := preload("res://scripts/ground_item.gd")
+
+## How far from the square it was aimed at a thrown weapon may come to rest, in tiles.
+## Keeps a deflected or dropped weapon within a step or two of the fight rather than
+## skidding across the arena where nobody can reasonably go and fetch it.
+const THROW_SCATTER_TILES := 2
 
 var selected_action: int = Action.MOVE
 
@@ -310,24 +316,22 @@ func _do_throw_attack(target: Node) -> void:
 		inventory.remove_item(slot)
 	_update_health_bar()
 
+	# Either way the weapon comes to rest near the square it was aimed at — a deflected
+	# throw carries on past the target, a connecting one drops beside them.
+	var land_pos: Vector3
 	if defended:
 		_show_action_text("Throw missed!")
-		var land_pos: Vector3 = target._snap_to_grid(target.position + throw_dir * (randi_range(2, 4) * GRID_SIZE))
-		_spawn_ground_item(thrown_item, Vector3(land_pos.x, 0.2, land_pos.z))
+		land_pos = _throw_landing_tile(target, throw_dir, true)
 	else:
 		_show_action_text("Weapon thrown!")
-		var scatter_angle := randf_range(0, TAU)
-		var scatter_dist := randf_range(1.0, 3.0) * GRID_SIZE
-		var scatter_offset := Vector3(cos(scatter_angle), 0, sin(scatter_angle)) * scatter_dist
-		var land_pos: Vector3 = target._snap_to_grid(target.position + scatter_offset)
-		land_pos = _avoid_overlap(land_pos, target)
-		_spawn_ground_item(thrown_item, Vector3(land_pos.x, 0.2, land_pos.z))
+		land_pos = _throw_landing_tile(target, throw_dir, false)
+	_spawn_ground_item(thrown_item, Vector3(land_pos.x, GroundItemScript.DROP_Y, land_pos.z))
 
 
 func _spawn_ground_item(item: ItemResource, at: Vector3) -> void:
 	var gi := MeshInstance3D.new()
 	gi.name = "GroundItem"
-	gi.set_script(load("res://scripts/ground_item.gd"))
+	gi.set_script(GroundItemScript)
 	gi.position = at
 	gi.item_resource = item
 	get_parent().add_child(gi)
@@ -335,13 +339,39 @@ func _spawn_ground_item(item: ItemResource, at: Vector3) -> void:
 	gi.call_deferred("_apply_visual")
 
 
-func _avoid_overlap(tile: Vector3, exclude: Node) -> Vector3:
-	for c in get_tree().get_nodes_in_group("combatants"):
-		if c == exclude or not is_instance_valid(c):
-			continue
-		if c._snap_to_grid(c.position).distance_to(tile) < 0.5:
-			return c._snap_to_grid(c.position)
-	return tile
+func _throw_landing_tile(target: Node, throw_dir: Vector3, deflected: bool) -> Vector3:
+	## The square a thrown weapon comes to rest on: at most THROW_SCATTER_TILES from the
+	## target's own square. A deflected throw carries on along the flight path; one that
+	## connects drops in a random direction beside the target.
+	##
+	## The offset is built from whole grid steps rather than a free vector: _snap_to_grid
+	## floors, so a diagonal world-space offset of two tiles quietly lands one square short.
+	##
+	## The distance steps in until the square is somewhere the weapon could actually be
+	## retrieved from — a pillar's cell or anywhere outside the arena would strand it — and
+	## falls back to the target's own square, which is always reachable.
+	var home: Vector3 = target._snap_to_grid(target.position)
+	var step: Vector3 = _to_grid_step(throw_dir) if deflected else GRID_DIRS[randi() % GRID_DIRS.size()]
+	var tiles: int = randi_range(1, THROW_SCATTER_TILES)
+	while tiles >= 1:
+		var tile: Vector3 = _snap_to_grid(home + step * tiles)
+		if _is_in_arena(tile) and not _is_obstacle_at(tile):
+			return tile
+		tiles -= 1
+	return home
+
+
+func _to_grid_step(v: Vector3) -> Vector3:
+	## Quantise a free direction to one of the 8 grid steps. Same rule as _apply_push: a
+	## component past 0.4 of a normalised vector counts, so a diagonal keeps both axes.
+	var step := Vector3.ZERO
+	if abs(v.x) > 0.4:
+		step.x = sign(v.x) * GRID_SIZE
+	if abs(v.z) > 0.4:
+		step.z = sign(v.z) * GRID_SIZE
+	if step == Vector3.ZERO:
+		step.x = GRID_SIZE
+	return step
 
 
 ## King-move reach (in tiles) for grabbing a ground item: 1 = any of the 8 surrounding

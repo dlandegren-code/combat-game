@@ -1,6 +1,8 @@
 extends CanvasLayer
 ## Displays the active player-controlled character's inventory on the right side
 
+const GroundItemScript := preload("res://scripts/ground_item.gd")
+
 var slot_list: VBoxContainer
 var title_label: Label
 
@@ -223,8 +225,12 @@ func _on_drop(slot_index: int, _bound: Node) -> void:
 	if item == null:
 		return
 
-	# Spawn ground item near the character
-	var drop_pos: Vector3 = active.position + Vector3(randf_range(-1, 1), 0.2, randf_range(-1, 1))
+	# Spawn ground item near the character, but at the floor's absolute height —
+	# the character's own y is its elevated origin, not ground level.
+	var drop_pos := Vector3(
+		active.position.x + randf_range(-1, 1),
+		GroundItemScript.DROP_Y,
+		active.position.z + randf_range(-1, 1))
 	if active.has_method("_spawn_ground_item"):
 		active._spawn_ground_item(item, drop_pos)
 	if active.has_method("_update_health_bar"):

@@ -8,9 +8,9 @@ enum EnemyType { GOBLIN, ARCHER, BOSS }
 
 enum Action { MOVE, ATTACK, SHOVE, TRIP, RANGED, THROW }
 
-## Distance (in tiles) an archer tries to keep from its target before shooting.
-## It backs away when the target is closer than this and fires from here or
-## farther. Capped at the archer's actual ranged range. Raise to hang back more.
+## Distance (in tiles) an archer is happy to shoot from. At or beyond this it just looses
+## an arrow; closer than this it spends the turn repositioning to the furthest tile it can
+## still shoot from. Capped at the archer's actual ranged range. Raise to hang back more.
 const ARCHER_PREFERRED_DIST := 5
 
 
@@ -82,83 +82,143 @@ func _take_turn_goblin() -> void:
 		end_my_turn(1)
 		return
 
-	# Move one cell toward nearest player, avoiding occupied tiles
-	_action_used = Action.MOVE
-	_pending_cost = move_cost_per_tile
-	_move_toward(player)
-	is_moving = true
+	# Move toward the nearest player, avoiding occupied tiles
+	_begin_move_toward(player)
 
 
 func _take_turn_archer() -> void:
-	## Archer AI: stay at mid-range, fire arrows, retreat if threatened
+	## Archer AI: hold the tile that is FURTHEST from the heroes while still giving a clear
+	## shot, and fire from there. It only ever walks a real BFS route, so it rounds pillars
+	## and walls instead of sliding through them, and it only draws a blade when out of arrows.
 	var player := _find_nearest_player()
 	if not player or not player.is_alive:
 		end_my_turn(0)
 		return
 
-	var dist_to_player: float = abs(player.position.x - position.x) + abs(player.position.z - position.z)
-
 	if is_prone:
 		end_my_turn(1)
 		return
 
-	# Adjacent to a hero. With arrows we never melee: back off to shoot from range
-	# next turn, or loose a point-blank arrow if cornered (still beats weak melee).
-	# Only melee when out of arrows.
-	if _is_adjacent(player.position):
-		if ammo > 0:
-			if _retreat_from(player):
-				_action_used = Action.MOVE
-				_pending_cost = move_cost_per_tile
-				is_moving = true
-				return
-			await _fire_arrow(player)
+	# Out of ammo: kiting is pointless (arrows never come back), so close in and melee.
+	# This also walks a stranded archer back toward the fight.
+	if ammo <= 0:
+		if _is_adjacent(player.position):
+			_action_used = Action.ATTACK
+			_do_melee_attack(player)
+			_pending_cost = attack_cost
+			await get_tree().create_timer(0.3).timeout
+			end_my_turn(_pending_cost)
 			return
-		# Out of arrows: melee.
-		_action_used = Action.ATTACK
-		_do_melee_attack(player)
-		_pending_cost = attack_cost
-		await get_tree().create_timer(0.3).timeout
-		end_my_turn(_pending_cost)
+		_begin_move_toward(player)
 		return
 
 	# Effective max range (an equipped bow may extend the base stat).
-	var max_range: int = ranged_range
-	if inventory and inventory.has_method("get_equipped_ranged_range"):
-		var item_range: int = inventory.get_equipped_ranged_range()
-		if item_range > 0:
-			max_range = item_range
-
-	# Out of ammo: no point kiting (arrows never come back). Close in for melee
-	# instead, which also brings a stranded archer back toward the fight.
-	if ammo <= 0:
-		_move_toward(player)
-		_action_used = Action.MOVE
-		_pending_cost = move_cost_per_tile
-		is_moving = true
-		return
-
-	# Preferred standoff: hang back this far before shooting (capped at our range).
+	var max_range: int = get_ranged_range()
 	var preferred: float = min(ARCHER_PREFERRED_DIST, max_range) * GRID_SIZE
-	var in_range := dist_to_player <= max_range * GRID_SIZE and _has_line_of_sight(player)
 
-	# Out of range or no line of sight: close the gap to set up a shot.
-	if not in_range:
-		_move_toward(player)
-		_action_used = Action.MOVE
-		_pending_cost = move_cost_per_tile
-		is_moving = true
+	var cur: Vector3 = _snap_to_grid(position)
+	var can_fire_now: bool = _can_fire_from(cur, player, max_range)
+	var cur_dist: float = _min_player_dist(cur)
+
+	# Already standing far enough back with a clear line: just shoot. This is what stops
+	# the "maximise distance" search below from backing up forever and never firing.
+	if can_fire_now and cur_dist >= preferred:
+		await _fire_arrow(player)
 		return
 
-	# Closer than we'd like: back away to keep our distance (staying in the arena).
-	if dist_to_player < preferred and _retreat_from(player):
+	# Too close (or no shot from here): spend the turn walking to the best firing tile
+	# we can actually reach — furthest from the nearest hero, still inside bow range,
+	# still with line of sight.
+	var path: Array = _best_firing_path(player, max_range, cur_dist)
+	if not path.is_empty():
+		_follow_path(path)
 		_action_used = Action.MOVE
-		_pending_cost = move_cost_per_tile
-		is_moving = true
+		_pending_cost = get_move_cost()
 		return
 
-	# At a comfortable distance, or cornered and unable to retreat: take the shot.
-	await _fire_arrow(player)
+	# Nothing reachable improves on where we stand. Cornered archers still loose a
+	# point-blank arrow — it beats their dismal melee.
+	if can_fire_now:
+		await _fire_arrow(player)
+		return
+
+	# No shot from anywhere within a turn's walk (out of range, or fully blocked):
+	# close the gap to set one up.
+	_begin_move_toward(player)
+
+
+func _can_fire_from(tile: Vector3, target: Node, max_range: int) -> bool:
+	## Could we put an arrow into `target` while standing on `tile`? Same two conditions the
+	## shot itself needs: inside the bow's range, and a clear line to the target.
+	var dist: float = abs(target.position.x - tile.x) + abs(target.position.z - tile.z)
+	if dist > max_range * GRID_SIZE:
+		return false
+	return _has_line_of_sight_from(tile, target)
+
+
+func _best_firing_path(target: Node, max_range: int, cur_dist: float) -> Array:
+	## Of every tile we could walk to this turn, the one furthest from the NEAREST hero that
+	## still gives us a shot at `target` — "as far away as possible, but within range".
+	## Returns its BFS path, or [] when standing still is already as good. Distance is
+	## measured to the nearest hero (not just our target) so the archer never backs away
+	## from one and straight into another. Ties go to the shorter walk.
+	var best_path: Array = []
+	var best_dist: float = cur_dist
+	var best_steps: int = 0
+	for path in _reachable_paths(move_range):
+		var tile: Vector3 = path[path.size() - 1]
+		if not _can_fire_from(tile, target, max_range):
+			continue
+		var d: float = _min_player_dist(tile)
+		var steps: int = path.size() - 1
+		if d > best_dist + 0.01:
+			best_dist = d
+			best_path = path
+			best_steps = steps
+		elif not best_path.is_empty() and absf(d - best_dist) < 0.01 and steps < best_steps:
+			best_path = path
+			best_steps = steps
+	return best_path
+
+
+func _reachable_paths(max_steps: int) -> Array:
+	## Every tile we could end this turn on, each as its BFS path from where we stand.
+	## Uses the same rules as Combatant._find_path — obstacles, wall edges, other units and
+	## no diagonal corner-cutting — just flooded outward instead of aimed at one goal.
+	var start: Vector3 = _snap_to_grid(position)
+	var out: Array = []
+	var queue: Array = [[start]]
+	var visited: Dictionary = {}
+	visited[_tile_key(start)] = true
+
+	while not queue.is_empty():
+		var path: Array = queue.pop_front()
+		var cur: Vector3 = path[path.size() - 1]
+		if path.size() - 1 >= max_steps:
+			continue
+		for d in GRID_DIRS:
+			var nxt: Vector3 = _snap_to_grid(cur + d)
+			var k: String = _tile_key(nxt)
+			if visited.has(k):
+				continue
+			visited[k] = true
+			if not _is_in_arena(nxt) or _is_tile_occupied_by_others(nxt, self):
+				continue
+			if _step_blocked_by_wall(cur, nxt) or _is_corner_blocked(cur, nxt):
+				continue
+			var new_path: Array = path.duplicate()
+			new_path.append(nxt)
+			out.append(new_path)
+			queue.append(new_path)
+	return out
+
+
+func _begin_move_toward(target: Node) -> void:
+	## _move_toward queues the route first, so get_move_cost() can price it by distance.
+	_move_toward(target)
+	_action_used = Action.MOVE
+	_pending_cost = get_move_cost()
+	is_moving = true
 
 
 func _fire_arrow(player: Node) -> void:
@@ -212,10 +272,7 @@ func _take_turn_boss() -> void:
 		return
 
 	# Move toward target
-	_move_toward(target)
-	_action_used = Action.MOVE
-	_pending_cost = move_cost_per_tile
-	is_moving = true
+	_begin_move_toward(target)
 
 
 func _find_weakest_player() -> Node:
@@ -263,52 +320,6 @@ func _min_player_dist(tile: Vector3) -> float:
 	return best
 
 
-func _retreat_from(_target: Node) -> bool:
-	## Back away from ALL players, not just the nearest, so the archer never flees
-	## one hero straight into another. Picks the cardinal direction that most
-	## increases the distance to the closest player, then slides up to move_range
-	## tiles that way, stopping before any step brings a player closer again.
-	## Stays inside the arena and skips occupied tiles. Returns false when no move
-	## improves the situation (cornered) so the caller can fire instead of shuffling.
-	var cur: Vector3 = _snap_to_grid(position)
-	var cur_min: float = _min_player_dist(cur)
-
-	var dirs := [
-		Vector3(GRID_SIZE, 0, 0), Vector3(-GRID_SIZE, 0, 0),
-		Vector3(0, 0, GRID_SIZE), Vector3(0, 0, -GRID_SIZE)
-	]
-	var best_dir := Vector3.ZERO
-	var best_min := cur_min
-	for d in dirs:
-		var one: Vector3 = _snap_to_grid(cur + d)
-		if not _is_in_arena(one) or _is_tile_occupied_by_others(one, self):
-			continue
-		var m: float = _min_player_dist(one)
-		if m > best_min:
-			best_min = m
-			best_dir = d
-	if best_dir == Vector3.ZERO:
-		return false
-
-	# Slide along the chosen direction, keeping the farthest tile that never lets
-	# a player get closer than the previous step.
-	var dest := cur
-	var dest_min := cur_min
-	for i in range(1, move_range + 1):
-		var step: Vector3 = _snap_to_grid(cur + best_dir * GRID_SIZE * i)
-		if not _is_in_arena(step) or _is_tile_occupied_by_others(step, self):
-			break
-		var m: float = _min_player_dist(step)
-		if m < dest_min:
-			break
-		dest = step
-		dest_min = m
-	if dest.distance_to(cur) < 0.1:
-		return false
-	target_position = dest
-	return true
-
-
 func _move_toward(target: Node) -> void:
 	## Walk the BFS route toward `target`, up to move_range tiles, following it waypoint
 	## by waypoint so we route around walls/obstacles/heroes instead of cutting corners.
@@ -316,6 +327,11 @@ func _move_toward(target: Node) -> void:
 	## valid endpoint), so movement never ends on — or slices through — another unit.
 	var from_tile: Vector3 = _snap_to_grid(position)
 	var to_tile: Vector3 = _snap_to_grid(target.position)
+
+	# Cleared up front so a bail-out below can't leave the previous move's tile count
+	# behind for get_move_cost() to bill. A unit that goes nowhere still pays the floor
+	# of 1, which is what keeps a boxed-in enemy from taking free turns forever.
+	_move_tiles = 0
 
 	var path: Array = _find_path(from_tile, to_tile)
 	if path.size() <= 1:
@@ -327,8 +343,7 @@ func _move_toward(target: Node) -> void:
 	if step_count < 1:
 		return
 
-	_move_path = path.slice(1, step_count + 1)
-	target_position = _move_path.pop_front()
+	_follow_path(path.slice(0, step_count + 1))
 
 
 func _find_nearest_player() -> Node:

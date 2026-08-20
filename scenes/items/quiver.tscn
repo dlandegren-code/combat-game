@@ -1,18 +1,18 @@
-[gd_scene format=3 uid="uid://bgqymljp5pp1h"]
+[gd_scene load_steps=4 format=3 uid="uid://bgqymljp5pp1h"]
 
 [ext_resource type="Material" uid="uid://dqhxcvoo6n4sc" path="res://assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres" id="1_mat"]
 [ext_resource type="ArrayMesh" uid="uid://cc5jrj3tw1yc6" path="res://assets/PolygonDungeon/Models/SM_Arrow_01.res" id="2_arrow"]
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_body"]
-top_radius = 0.12
-bottom_radius = 0.08
-height = 0.3
+[ext_resource type="ArrayMesh" path="res://assets/PolygonDungeon/Models/quiver_body.res" id="3_body"]
 
 [node name="Quiver" type="Node3D" unique_id=381402440]
 
+; Baked by tools/build_quiver_body.gd. A plain CylinderMesh here spans the whole 0..1
+; UV square, which stretched the entire Synty ATLAS around the quiver and painted it in
+; unrelated blue/pink/orange/teal stripes running lengthwise. The baked mesh pins the
+; body to one leather cell with a darker rim band.
 [node name="Body" type="MeshInstance3D" parent="." unique_id=1953083720]
 material_override = ExtResource("1_mat")
-mesh = SubResource("CylinderMesh_body")
+mesh = ExtResource("3_body")
 
 [node name="Arrow1" type="MeshInstance3D" parent="." unique_id=394616707]
 transform = Transform3D(0.4698465, 0.168904, 0.0267515, 0, 0.078217, -0.493844, -0.171010, 0.4640615, 0.0734945, 0.003417, 0.113834, -0.026823)

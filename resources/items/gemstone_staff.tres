@@ -11,7 +11,6 @@ handedness = 1
 attack_bonus = 1
 damage_bonus = 2
 durability = 15
-ranged_range = 14
 model_path = "res://Assets/PolygonDungeon/Models/SM_Wep_Staff_Gem_01.res"
 model_material_path = "res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres"
 model_scale = 0.95

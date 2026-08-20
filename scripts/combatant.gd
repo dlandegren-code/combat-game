@@ -13,7 +13,24 @@ const ARENA_MAX := 14.0
 const LAYER_GROUND := 1
 const LAYER_ENEMY := 2
 const LAYER_OBSTACLE := 4
-const LAYER_ENEMY_AND_OBSTACLE := 6  ## enemy (2) + obstacle (4), for line-of-sight
+const LAYER_PLAYER := 8              ## player-controlled combatants (assigned in _ready)
+## Line-of-sight mask. MUST contain both combatant layers: _has_line_of_sight_from asks
+## "did the ray reach the target before anything else", so the target's own layer has to
+## be in the mask or the ray sails straight through it and the check can never pass.
+## Players used to sit on the default layer 1, which this mask omitted — so every AI
+## line-of-sight test against a hero returned false and the archer never took a shot.
+const LAYER_LOS_BLOCKERS := 14       ## enemy (2) + obstacle (4) + player (8)
+
+## Height above the body's origin that movement / line-of-sight rays are cast at.
+const EYE_HEIGHT := 0.5
+
+## The 8 grid steps (cardinals + diagonals) used by every path search.
+const GRID_DIRS := [
+	Vector3(GRID_SIZE, 0, 0), Vector3(-GRID_SIZE, 0, 0),
+	Vector3(0, 0, GRID_SIZE), Vector3(0, 0, -GRID_SIZE),
+	Vector3(GRID_SIZE, 0, GRID_SIZE), Vector3(GRID_SIZE, 0, -GRID_SIZE),
+	Vector3(-GRID_SIZE, 0, GRID_SIZE), Vector3(-GRID_SIZE, 0, -GRID_SIZE)
+]
 
 ## Partial cover (ranged & thrown only): a short obstacle between shooter and target.
 const COVER_DEFENSE_BONUS := 3    ## added to an active dodge/parry roll when in cover
@@ -38,6 +55,9 @@ var move_range: int = 4
 @export var initiative: int = 10
 @export var character_name: String = "Hero"
 @export var is_player_controlled: bool = true
+## Time units charged per PAIR of tiles walked (see get_move_cost). At the default 1 a
+## stride of 2-3 tiles costs one unit, 4-5 costs two, and so on — striding out is cheaper
+## per tile than shuffling. The name is kept for the saved stat blocks in resources/stats.
 @export var move_cost_per_tile: int = 1
 @export var attack_cost: int = 2
 @export var armor: int = 0
@@ -57,7 +77,10 @@ var move_range: int = 4
 @export var max_ammo: int = 0
 @export var ranged_range: int = 10      ## max tiles for ranged
 @export var throw_skill: int = 3        ## used for thrown weapon attacks
-@export var throw_cost: int = 3
+## One time unit — a throw is a single quick action, cheaper than a bow shot (which has to
+## be nocked and drawn) and cheaper than a melee exchange. Note you also give up the weapon,
+## so the real price is fetching it back off the floor.
+@export var throw_cost: int = 1
 @export var throw_range: int = 3        ## max tiles for thrown
 @export var equip_cost: int = 1         ## time cost to swap equipped weapon/shield
 @export var strength: int = 3
@@ -68,8 +91,11 @@ var is_prone: bool = false
 
 var is_moving := false
 var target_position := Vector3.ZERO
-## Remaining waypoints for a routed move (set by _start_path_move); empty = single hop.
+## Remaining waypoints for a routed move (set by _follow_path); empty = single hop.
 var _move_path: Array = []
+## Tiles the move in progress covers, recorded when the route is queued and read by
+## get_move_cost() to price the move by distance. Zero when nothing is moving.
+var _move_tiles: int = 0
 
 ## Emitted whenever hp / max_hp / is_alive change, so HUD elements (the party
 ## portraits) can refresh without polling. Fired from _update_health_bar(),
@@ -134,7 +160,14 @@ func _ready() -> void:
 	health_bar = get_node_or_null("HealthBar")
 	inventory = get_node_or_null("Inventory")
 	_apply_stats()
+	_readd_equipment_bonuses()
 	_pre_setup()
+	# Put each side on its own physics layer. main.tscn only ever set layer 2 on the
+	# enemies, leaving the heroes on the default layer 1 — the same layer as the floor,
+	# which both broke AI line-of-sight (see LAYER_LOS_BLOCKERS) and let a click on a
+	# party member register as a ground hit. _pre_setup is where enemies force
+	# is_player_controlled, so this has to run after it.
+	collision_layer = LAYER_PLAYER if is_player_controlled else LAYER_ENEMY
 	_apply_character_scale()
 	_setup_sockets()
 	_update_health_bar()
@@ -199,6 +232,34 @@ func _apply_stats() -> void:
 	strength = s.strength
 	weight = s.weight
 	equip_cost = s.equip_cost
+
+
+## Restore the armor/resistance bonuses of already-equipped gear after a stat block
+## has been applied.
+##
+## `Inventory` is a CHILD node, so InventoryComponent._ready() runs before ours: it
+## equips the starting items and folds their bonuses into us via `armor += ...`.
+## _apply_stats() then *assigns* armor and physical_resistance straight from the
+## stat block, silently discarding those bonuses — so equipped armour counted for
+## nothing on any combatant with a `stats` resource (i.e. every enemy).
+##
+## Only runs when a stat block was actually applied. With no stat block nothing was
+## overwritten and the bonuses are already in place; re-adding would double-count.
+func _readd_equipment_bonuses() -> void:
+	if stats == null or inventory == null:
+		return
+	var counted: Array = []
+	for slot in ["right_hand", "left_hand", "armor", "helmet"]:
+		var item: ItemResource = inventory.get(slot)
+		if item == null:
+			continue
+		# A two-handed weapon sits in BOTH hands as the same object, and
+		# InventoryComponent applies its bonus once — dedupe to match.
+		if counted.has(item):
+			continue
+		counted.append(item)
+		armor += item.armor_bonus
+		physical_resistance += item.resistance_bonus
 
 
 func _lay_prone() -> void:
@@ -467,12 +528,37 @@ func _step_blocked_by_wall(from_tile: Vector3, to_tile: Vector3) -> bool:
 	## tiles. Used per-step by _find_path so routes can't cross walls but pass freely
 	## through the collision-free doorway. Combatants (layer 2) are ignored here.
 	var space_state := get_world_3d().direct_space_state
-	var from_pos := Vector3(from_tile.x, position.y + 0.5, from_tile.z)
-	var to_pos := Vector3(to_tile.x, position.y + 0.5, to_tile.z)
+	var from_pos := Vector3(from_tile.x, position.y + EYE_HEIGHT, from_tile.z)
+	var to_pos := Vector3(to_tile.x, position.y + EYE_HEIGHT, to_tile.z)
 	var query := PhysicsRayQueryParameters3D.create(from_pos, to_pos)
 	query.collision_mask = LAYER_OBSTACLE
 	query.exclude = [get_rid()]
 	return not space_state.intersect_ray(query).is_empty()
+
+
+func _is_corner_blocked(from_tile: Vector3, to_tile: Vector3) -> bool:
+	## True when a DIAGONAL step would squeeze through the corner-to-corner gap between two
+	## solid cells — i.e. BOTH cells the diagonal passes between are blocked. Rounding a
+	## single obstacle's corner (one side free) stays legal, so units keep their diagonal
+	## mobility. Cardinal steps always return false.
+	##
+	## The per-step wall ray can't catch this on its own: it is cast at eye height, and the
+	## arena's pillars are deliberately short (they grant partial cover rather than blocking
+	## a shot — see _has_partial_cover_from), so the ray flies straight over them. Worse, the
+	## pillars sit in diagonally-touching PAIRS — (5,3)+(3,5) and its three mirrors — so a
+	## unit cutting that corner walked visibly between and through the pair. Testing the two
+	## orthogonal cells is height-independent and fixes it.
+	##
+	## Only static geometry counts here; units still slip diagonally past each other.
+	if abs(to_tile.x - from_tile.x) < 0.5 or abs(to_tile.z - from_tile.z) < 0.5:
+		return false
+	var side_a := Vector3(to_tile.x, from_tile.y, from_tile.z)
+	var side_b := Vector3(from_tile.x, from_tile.y, to_tile.z)
+	return _is_side_solid(from_tile, side_a) and _is_side_solid(from_tile, side_b)
+
+
+func _is_side_solid(from_tile: Vector3, side: Vector3) -> bool:
+	return _is_obstacle_at(side) or _step_blocked_by_wall(from_tile, side)
 
 
 func _is_hostile(other: Node) -> bool:
@@ -512,12 +598,6 @@ func _find_path(from_tile: Vector3, to_tile: Vector3, max_steps: int = -1) -> Ar
 	# step was blocked — the mover then trimmed it to nothing and froze in place instead
 	# of routing around. This bit hardest when a pillar funnelled several enemies into a
 	# single-file gap. Routing around allies makes them detour to a free approach tile.
-	var dirs := [
-		Vector3(GRID_SIZE, 0, 0), Vector3(-GRID_SIZE, 0, 0),
-		Vector3(0, 0, GRID_SIZE), Vector3(0, 0, -GRID_SIZE),
-		Vector3(GRID_SIZE, 0, GRID_SIZE), Vector3(GRID_SIZE, 0, -GRID_SIZE),
-		Vector3(-GRID_SIZE, 0, GRID_SIZE), Vector3(-GRID_SIZE, 0, -GRID_SIZE)
-	]
 	var queue: Array = [[from_tile]]
 	var visited: Dictionary = {}
 	visited[_tile_key(from_tile)] = true
@@ -532,7 +612,7 @@ func _find_path(from_tile: Vector3, to_tile: Vector3, max_steps: int = -1) -> Ar
 			continue
 		if steps > 50:
 			continue
-		for d in dirs:
+		for d in GRID_DIRS:
 			var nxt: Vector3 = _snap_to_grid(cur + d)
 			var k: String = _tile_key(nxt)
 			if visited.has(k):
@@ -542,7 +622,7 @@ func _find_path(from_tile: Vector3, to_tile: Vector3, max_steps: int = -1) -> Ar
 			var is_goal: bool = nxt.distance_to(to_tile) < 0.5
 			if not is_goal and _get_combatant_at(nxt, self) != null:
 				continue
-			if _step_blocked_by_wall(cur, nxt):
+			if _step_blocked_by_wall(cur, nxt) or _is_corner_blocked(cur, nxt):
 				continue
 			visited[k] = true
 			var new_path: Array = path.duplicate()
@@ -556,23 +636,59 @@ func _start_path_move(target: Vector3) -> void:
 	## unit walks around walls / enemies instead of sliding straight through them.
 	var path: Array = _find_path(_snap_to_grid(position), target, move_range)
 	if path.size() <= 1:
+		# No route found (MoveAbility.can_target already pathed here, so this is a
+		# belt-and-braces fallback). Slide straight over and charge it as one step.
 		target_position = _snap_to_grid(target)
 		_move_path = []
+		_move_tiles = 1
+		is_moving = true
 	else:
-		_move_path = path.slice(1)
-		target_position = _move_path.pop_front()
+		_follow_path(path)
+
+
+func _follow_path(path: Array) -> void:
+	## Queue a routed path as waypoints for _physics_process to walk one at a time, and
+	## record its length so the move can be priced by distance. `path` starts on our own
+	## tile, so it must hold at least two entries.
+	_move_tiles = max(1, path.size() - 1)
+	_move_path = path.slice(1)
+	target_position = _move_path.pop_front()
 	is_moving = true
 
 
+func get_move_cost(tiles: int = -1) -> int:
+	## Time-unit cost of walking `tiles` grid cells (defaults to the move in progress).
+	## Movement is charged per PAIR of tiles, rounded down, so covering ground in one long
+	## stride beats taking the same distance in dribs and drabs: 1-3 tiles cost one unit,
+	## 4-5 cost two, 6-7 three.
+	##
+	## The floor of 1 matters — it is not just rounding. A zero-cost action does not
+	## advance the tick, so the combat manager hands the same unit its turn straight back:
+	## the player could step one tile at a time forever for free, and an AI whose route
+	## comes back empty (fully boxed in) would spin on the spot without the clock ever
+	## moving.
+	if tiles < 0:
+		tiles = _move_tiles
+	@warning_ignore("integer_division")
+	return max(1, tiles / 2) * move_cost_per_tile
+
+
 func _has_line_of_sight(target: Node) -> bool:
+	return _has_line_of_sight_from(position, target)
+
+
+func _has_line_of_sight_from(from_tile: Vector3, target: Node) -> bool:
+	## Clear shot at `target` from `from_tile`? Taking the origin as a parameter lets the AI
+	## score firing positions it has not walked to yet; passing `position` is the plain
+	## "can I shoot from where I stand" check.
 	var target_node := target as Node3D
 	if not target_node:
 		return false
 	var space_state := get_world_3d().direct_space_state
-	var from_pos := position + Vector3(0, 0.5, 0)
-	var to_pos := target_node.position + Vector3(0, 0.5, 0)
+	var from_pos := Vector3(from_tile.x, position.y + EYE_HEIGHT, from_tile.z)
+	var to_pos := target_node.position + Vector3(0, EYE_HEIGHT, 0)
 	var query := PhysicsRayQueryParameters3D.create(from_pos, to_pos)
-	query.collision_mask = LAYER_ENEMY_AND_OBSTACLE
+	query.collision_mask = LAYER_LOS_BLOCKERS
 	query.exclude = [get_rid()]
 	var result := space_state.intersect_ray(query)
 	if result.is_empty():

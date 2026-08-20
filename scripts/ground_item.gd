@@ -6,9 +6,23 @@ extends MeshInstance3D
 ## Enlarge dropped loot to sit right next to the scaled-up characters.
 const GROUND_SCALE := 1.6
 
+## World-space Y that pickups rest at — the arena floor sits just below this, and
+## _rest_on_ground() settles each model's lowest point here.
+##
+## Always an ABSOLUTE height: never derive a drop position from a combatant's
+## `position`. Combatant origins sit at Combatant._ground_y() (1.11), high above
+## the floor because their CharacterModel is offset downwards to meet it, so
+## offsetting from one leaves the item floating about a metre up.
+const DROP_Y := 0.2
+
 ## Arrow graphic used to render an ammo bundle (one arrow per unit of ammo).
 const ARROW_MESH := "res://Assets/PolygonDungeon/Models/SM_Arrow_01.res"
 const SYNTY_MAT := "res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres"
+
+## Guards against building the visual twice. Both spawners (CombatManager._spawn_gi and
+## Player._spawn_ground_item) call _apply_visual deferred *and* _ready calls it, which
+## used to leave every pickup carrying two overlapping copies of its model.
+var _visual_built := false
 
 func _ready() -> void:
 	add_to_group("pickups")
@@ -16,8 +30,9 @@ func _ready() -> void:
 
 
 func _apply_visual() -> void:
-	if not item_resource:
+	if not item_resource or _visual_built:
 		return
+	_visual_built = true
 
 	if item_resource.has_model():
 		# Data-driven: the item builds its own model (material + scale handled there).
@@ -47,10 +62,22 @@ func _apply_visual() -> void:
 					mi.mesh = res
 					model_node = mi
 				if model_node and model_node is Node3D:
+					# Synty .res meshes ship without a resolved material; assign the shared
+					# atlas or they render untextured white.
+					if _weapon_kind() in ["axe", "hammer"]:
+						var atlas: Material = load(SYNTY_MAT)
+						if atlas:
+							var synty_meshes: Array = []
+							_collect_meshes(model_node, synty_meshes)
+							for m in synty_meshes:
+								(m as MeshInstance3D).material_override = atlas
 					_center_mesh_on_origin(model_node)
 					model_node.rotation_degrees = _get_item_model_rotation()
 					model_node.scale = _get_item_model_scale() * GROUND_SCALE
 					add_child(model_node)
+					# Centering alone lets a long model (the cleaver) hang below the
+					# floor, so settle it on the ground like the data-driven path does.
+					_rest_on_ground(model_node)
 		else:
 			match item_resource.item_type:
 				ItemResource.ItemType.WEAPON:
@@ -127,15 +154,44 @@ func _set_size(s: Vector3) -> void:
 
 
 # --- Legacy name-based lookup (fallback for items without a model_path) ---
+#
+# Matched by SUBSTRING, not exact name. The old exact-name table only knew
+# "Longbow", "Dagger" and "Wooden Shield", so every other weapon ("Rusty Sword",
+# "Short Bow", "Ranger Dagger", "Goblin Dagger", "Boss Cleaver") fell through to
+# the coloured placeholder box. These are the same name heuristics
+# Combatant._refresh_socket uses for the equipped visual, so a dropped weapon and
+# a held one resolve to the same model.
+
+func _weapon_kind() -> String:
+	## "bow" | "hammer" | "axe" | "shield" | "blade" | "" (no model known)
+	if item_resource.item_type == ItemResource.ItemType.SHIELD or item_resource.is_shield:
+		return "shield"
+	if item_resource.item_type != ItemResource.ItemType.WEAPON \
+			and item_resource.item_type != ItemResource.ItemType.THROWABLE:
+		return ""
+	var n := item_resource.item_name.to_lower()
+	if n.find("bow") >= 0:
+		return "bow"
+	if n.find("hammer") >= 0:
+		return "hammer"
+	if n.find("axe") >= 0 or n.find("cleaver") >= 0:
+		return "axe"
+	# Anything else edged (sword, dagger, ...) shares the one blade model.
+	return "blade"
+
 
 func _get_item_model_path() -> String:
-	match item_resource.item_name:
-		"Longbow":
+	match _weapon_kind():
+		"bow":
 			return "res://assets/weapons/bow.fbx"
-		"Dagger":
-			return "res://assets/models/kenney/mini-arena/weapon-sword.glb"
-		"Wooden Shield":
+		"hammer":
+			return "res://Assets/PolygonDungeon/Models/SM_Wep_Hammer_Small_01.res"
+		"axe":
+			return "res://Assets/PolygonDungeon/Models/SM_Wep_Goblin_Axe_Large_01.res"
+		"shield":
 			return "res://assets/weapons/Shield_1.obj"
+		"blade":
+			return "res://assets/models/kenney/mini-arena/weapon-sword.glb"
 	return ""
 
 
@@ -187,19 +243,29 @@ func _rest_on_ground(model_node: Node3D) -> void:
 
 
 func _get_item_model_rotation() -> Vector3:
-	match item_resource.item_name:
-		"Longbow":
-			return Vector3(0, 180, 0)  # same orientation as equipped
-		_:
-			return Vector3(-90, 0, 0)   # lay flat for sword/shield
+	match _weapon_kind():
+		"bow":
+			return Vector3(0, 180, 0)   # standing, same orientation as equipped
+		"axe", "hammer":
+			return Vector3(0, 0, 90)    # Synty hafts run along Y; tip them onto their side
+	return Vector3(-90, 0, 0)           # lay flat for blade / shield
 
 
 func _get_item_model_scale() -> Vector3:
-	match item_resource.item_name:
-		"Longbow":
-			return Vector3(0.6, 0.6, 0.6)
-		"Dagger":
-			return Vector3(0.7, 0.7, 0.7)
-		"Wooden Shield":
-			return Vector3(0.4, 0.4, 0.4)
-	return Vector3(1.0, 1.0, 1.0)
+	## Multiplies the model's NATIVE size (unlike ItemResource.model_scale, which is
+	## a normalized target). Tuned so each dropped weapon reads at roughly its
+	## real length without overflowing a 2.0 grid tile — see _weapon_kind().
+	var s := 1.0
+	match _weapon_kind():
+		"bow":
+			s = 0.6
+		"axe":
+			s = 0.5
+		"hammer":
+			s = 0.7
+		"shield":
+			s = 0.4
+		"blade":
+			# One model serves both; a dagger reads as a shortened sword.
+			s = 0.7 if item_resource.item_name.to_lower().find("dagger") >= 0 else 1.0
+	return Vector3(s, s, s)

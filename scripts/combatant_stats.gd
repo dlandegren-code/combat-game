@@ -44,7 +44,7 @@ class_name CombatantStats
 
 @export_group("Throw")
 @export var throw_skill: int = 3
-@export var throw_cost: int = 3
+@export var throw_cost: int = 1     ## a throw is one quick action (see Combatant.throw_cost)
 @export var throw_range: int = 5
 
 @export_group("Physical")

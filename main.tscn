@@ -157,7 +157,6 @@ script = ExtResource("6_inv")
 starting_item_1 = ExtResource("6_qsp4k")
 starting_item_2 = ExtResource("10_shield")
 starting_item_3 = ExtResource("8_kq58d")
-starting_item_4 = ExtResource("9_seu75")
 
 [node name="CharacterModel" parent="Player" unique_id=1087090325 instance=ExtResource("11_soldier_wrapper")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
@@ -316,8 +315,6 @@ dodge_skill = 7
 defensive_option = 1
 shove_skill = 2
 trip_skill = 3
-ammo = 7
-max_ammo = 12
 
 [node name="Mesh" type="MeshInstance3D" parent="Wizard" unique_id=47098326]
 visible = false

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tools/build_wizard_hair.gd" id="1_hair"]
+
+[node name="BuildWizardHair" type="Node3D"]
+script = ExtResource("1_hair")

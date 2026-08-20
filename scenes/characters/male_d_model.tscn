@@ -1,11 +1,20 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="PackedScene" uid="uid://dsjxvrpgqwixj" path="res://assets/models/kenney/mini-characters-1/character-male-d.glb" id="1_base"]
 [ext_resource type="Material" path="res://assets/materials/archer_body.tres" id="2_body"]
 [ext_resource type="Script" path="res://scripts/character_skin.gd" id="3_skin"]
+[ext_resource type="ArrayMesh" path="res://assets/models/kenney/mini-characters-1/archer_body_split.res" id="4_split"]
+[ext_resource type="Material" path="res://assets/materials/archer_legs.tres" id="5_legs"]
+[ext_resource type="Material" path="res://assets/materials/archer_boots.tres" id="6_boots"]
 
 [node name="CharacterModel" type="Node3D"]
 script = ExtResource("3_skin")
 body_material = ExtResource("2_body")
+legs_material = ExtResource("5_legs")
+boots_material = ExtResource("6_boots")
+show_outfit_trim = true
 
 [node name="character-male-d" parent="." instance=ExtResource("1_base")]
+
+[node name="body-mesh" parent="character-male-d/character-male-d/Skeleton3D" index="0"]
+mesh = ExtResource("4_split")

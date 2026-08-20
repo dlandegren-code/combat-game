@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "archer_legs"
+albedo_color = Color(0.16, 0.26, 0.16, 1)
+roughness = 0.9

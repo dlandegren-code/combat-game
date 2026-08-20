@@ -6,7 +6,9 @@ func _init() -> void:
 	target_kind = TargetKind.TILE
 
 func get_cost(actor) -> int:
-	return actor.move_cost_per_tile
+	## Cheapest a move can be. The real price depends on how far the route turns out to be,
+	## which isn't known until execute() has pathed — see execute / Combatant.get_move_cost.
+	return actor.get_move_cost(1)
 
 func get_range(actor) -> int:
 	return actor.move_range
@@ -23,3 +25,6 @@ func can_target(actor, target) -> bool:
 
 func execute(actor, target) -> void:
 	actor._start_path_move(target)
+	# Reprice now that the route length is known: _begin_action could only book the
+	# minimum, since the path hadn't been walked yet.
+	actor._pending_cost = actor.get_move_cost()
