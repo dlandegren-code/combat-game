@@ -9,7 +9,6 @@
 [ext_resource type="Script" uid="uid://cthubpsntwfxy" path="res://scripts/inventory_component.gd" id="6_inv"]
 [ext_resource type="Resource" uid="uid://6splfx088ds6" path="res://resources/items/rusty_sword.tres" id="6_qsp4k"]
 [ext_resource type="Script" uid="uid://bdvlysmli3u5i" path="res://scripts/inventory_ui.gd" id="7_inv_ui"]
-[ext_resource type="Script" uid="uid://danvl26xfdtrh" path="res://scripts/equipment_ui.gd" id="8_equip"]
 [ext_resource type="Resource" path="res://resources/items/leather_armor.tres" id="8_kq58d"]
 [ext_resource type="Script" uid="uid://beuvdl0vwtots" path="res://scripts/ground_item.gd" id="9_ground"]
 [ext_resource type="Resource" path="res://resources/items/short_bow.tres" id="9_seu75"]
@@ -438,9 +437,9 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -340.0
-offset_top = 210.0
+offset_top = 150.0
 offset_right = -10.0
-offset_bottom = 440.0
+offset_bottom = 510.0
 
 [node name="Title" type="Label" parent="InventoryPanel/Panel" unique_id=198958552]
 layout_mode = 0
@@ -451,46 +450,6 @@ offset_right = -10.0
 offset_bottom = 32.0
 text = "Inventory"
 horizontal_alignment = 1
-
-[node name="SlotList" type="VBoxContainer" parent="InventoryPanel/Panel" unique_id=1283029243]
-layout_mode = 0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 10.0
-offset_top = 38.0
-offset_right = -10.0
-offset_bottom = -10.0
-
-[node name="EquipmentPanel" type="CanvasLayer" parent="." unique_id=1727708809]
-script = ExtResource("8_equip")
-
-[node name="Panel" type="Panel" parent="EquipmentPanel" unique_id=1202592605]
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -340.0
-offset_top = 450.0
-offset_right = -10.0
-offset_bottom = 610.0
-
-[node name="Title" type="Label" parent="EquipmentPanel/Panel" unique_id=198958553]
-layout_mode = 0
-anchor_right = 1.0
-offset_left = 10.0
-offset_top = 8.0
-offset_right = -10.0
-offset_bottom = 32.0
-text = "Equipment"
-horizontal_alignment = 1
-
-[node name="SlotList" type="VBoxContainer" parent="EquipmentPanel/Panel" unique_id=1283029244]
-layout_mode = 0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 10.0
-offset_top = 38.0
-offset_right = -10.0
-offset_bottom = -10.0
 
 [node name="GroundShield" type="MeshInstance3D" parent="." unique_id=999999999]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.2, 4)

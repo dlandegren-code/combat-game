@@ -24,6 +24,7 @@ var right_hand: ItemResource = null
 var left_hand: ItemResource = null
 var armor: ItemResource = null
 var helmet: ItemResource = null
+var legs: ItemResource = null
 
 var character: CharacterBody3D  ## parent character, set on ready
 
@@ -50,6 +51,8 @@ func _add_starting_item(item: ItemResource) -> void:
 		_equip_to(ItemResource.EquipSlot.ARMOR, item)
 	elif item.can_equip_in(ItemResource.EquipSlot.HELMET):
 		_equip_to(ItemResource.EquipSlot.HELMET, item)
+	elif item.can_equip_in(ItemResource.EquipSlot.LEGS):
+		_equip_to(ItemResource.EquipSlot.LEGS, item)
 
 
 func add_item(item: ItemResource) -> bool:
@@ -76,6 +79,8 @@ func remove_item(slot_index: int) -> ItemResource:
 		unequip_slot(ItemResource.EquipSlot.ARMOR)
 	if helmet == item:
 		unequip_slot(ItemResource.EquipSlot.HELMET)
+	if legs == item:
+		unequip_slot(ItemResource.EquipSlot.LEGS)
 	items[slot_index] = null
 	return item
 
@@ -101,6 +106,8 @@ func equip(slot_index: int) -> void:
 		target_slot = ItemResource.EquipSlot.ARMOR
 	elif item.item_type == ItemResource.ItemType.HELMET:
 		target_slot = ItemResource.EquipSlot.HELMET
+	elif item.item_type == ItemResource.ItemType.LEGS:
+		target_slot = ItemResource.EquipSlot.LEGS
 	elif item.equip_slot == ItemResource.EquipSlot.RIGHT_HAND:
 		target_slot = ItemResource.EquipSlot.RIGHT_HAND
 	elif item.equip_slot == ItemResource.EquipSlot.LEFT_HAND:
@@ -133,6 +140,9 @@ func unequip_slot(slot: int) -> void:
 		ItemResource.EquipSlot.HELMET:
 			item = helmet
 			helmet = null
+		ItemResource.EquipSlot.LEGS:
+			item = legs
+			legs = null
 	if item and character:
 		_remove_item_bonuses(item)
 
@@ -149,6 +159,8 @@ func unequip_item(item: ItemResource) -> void:
 		unequip_slot(ItemResource.EquipSlot.ARMOR)
 	elif helmet == item:
 		unequip_slot(ItemResource.EquipSlot.HELMET)
+	elif legs == item:
+		unequip_slot(ItemResource.EquipSlot.LEGS)
 
 
 func _equip_to(slot: int, item: ItemResource) -> void:
@@ -191,6 +203,8 @@ func _equip_to(slot: int, item: ItemResource) -> void:
 			armor = item
 		ItemResource.EquipSlot.HELMET:
 			helmet = item
+		ItemResource.EquipSlot.LEGS:
+			legs = item
 
 	_apply_item_bonuses(item)
 

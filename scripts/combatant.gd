@@ -276,7 +276,7 @@ func _readd_equipment_bonuses() -> void:
 	if stats == null or inventory == null:
 		return
 	var counted: Array = []
-	for slot in ["right_hand", "left_hand", "armor", "helmet"]:
+	for slot in ["right_hand", "left_hand", "armor", "helmet", "legs"]:
 		var item: ItemResource = inventory.get(slot)
 		if item == null:
 			continue

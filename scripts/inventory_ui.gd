@@ -1,237 +1,311 @@
 extends CanvasLayer
-## Displays the active player-controlled character's inventory on the right side
+## The active character's gear, as an equipment doll over a backpack grid.
+##
+## Top half: a humanoid outline with five sockets — Headgear, Right Hand, Torso, Left Hand,
+## Legs — laid out where they sit on a body. The pack ships no paper-doll art, so the figure
+## is drawn from a handful of Polygon2D pieces rather than imported; it only has to read as a
+## silhouette behind the sockets.
+##
+## Bottom half: the un-equipped carry, one cell per InventoryComponent bag slot.
+##
+## Left-click moves an item between the two halves — a socket unequips, a bag cell equips
+## into wherever the item belongs. Right-click drops it on the floor.
+##
+## Equipping and unequipping go through Player.equip_weapon / Player.unequip_item, which
+## charge `equip_cost` and END THE TURN. That is pre-existing game rule, not something this
+## panel adds, but it does mean a click here is a committing move rather than idle fiddling.
+## Dropping is routed straight at the inventory instead, so it stays free.
 
-const GroundItemScript := preload("res://scripts/ground_item.gd")
+const ItemSlotScript := preload("res://scripts/item_slot.gd")
 
-var slot_list: VBoxContainer
-var title_label: Label
+const CELL := 54.0
+const GAP := 6.0
+const PAD := 14.0
+## Doll area, measured from the panel's top-left below the title.
+const DOLL_TOP := 34.0
+const DOLL_HEIGHT := 214.0
+const BAG_COLUMNS := 5
+
+## Socket layout as fractions of the doll area, so the figure and its sockets scale together.
+## Order is the draw/tab order: head, both hands flanking the torso, then legs.
+const SOCKETS: Array[Dictionary] = [
+	{"slot": ItemResource.EquipSlot.HELMET, "label": "Headgear", "at": Vector2(0.5, 0.04)},
+	{"slot": ItemResource.EquipSlot.RIGHT_HAND, "label": "Right Hand", "at": Vector2(0.15, 0.40)},
+	{"slot": ItemResource.EquipSlot.ARMOR, "label": "Torso", "at": Vector2(0.5, 0.40)},
+	{"slot": ItemResource.EquipSlot.LEFT_HAND, "label": "Left Hand", "at": Vector2(0.85, 0.40)},
+	{"slot": ItemResource.EquipSlot.LEGS, "label": "Legs", "at": Vector2(0.5, 0.76)},
+]
+
+const COLOR_FIGURE := Color(0.30, 0.36, 0.46, 0.55)
+const COLOR_LABEL := Color(0.72, 0.76, 0.84)
+
+var _panel: Panel
+var _title: Label
+var _doll: Control
+var _bag: Control
+var _sockets: Array = []      ## parallel to SOCKETS
+var _bag_slots: Array = []
+var _hint: Label
+
+var _active: Node = null
+var _built := false
+
 
 func _ready() -> void:
-	slot_list = get_node("Panel/SlotList")
-	title_label = get_node("Panel/Title")
+	layer = 2
+	_panel = get_node_or_null("Panel")
+	_title = get_node_or_null("Panel/Title")
+	# The old text rows are gone; drop whatever the scene still carries so the two cannot
+	# both render.
+	var stale := get_node_or_null("Panel/SlotList")
+	if stale:
+		stale.queue_free()
+	# Deferred so the Panel's anchors have resolved into a real size before the doll is laid
+	# out against its width.
+	_build.call_deferred()
 
+
+func _build() -> void:
+	if _panel == null:
+		return
+	_doll = Control.new()
+	_doll.name = "Doll"
+	_doll.position = Vector2(PAD, DOLL_TOP)
+	_doll.size = Vector2(_panel.size.x - PAD * 2.0, DOLL_HEIGHT)
+	_doll.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_panel.add_child(_doll)
+
+	_draw_figure(_doll.size)
+
+	for spec in SOCKETS:
+		var at: Vector2 = spec["at"]
+		var slot: ItemSlotScript = ItemSlotScript.new()
+		_doll.add_child(slot)
+		slot.build(CELL)
+		# `at` marks the centre of the socket, so the cell is offset by half its size.
+		slot.position = Vector2(
+			at.x * _doll.size.x - CELL * 0.5,
+			at.y * DOLL_HEIGHT)
+		slot.pressed.connect(_on_socket_pressed.bind(spec["slot"]))
+		slot.alt_pressed.connect(_on_socket_alt.bind(spec["slot"]))
+		_sockets.append(slot)
+
+		var cap := Label.new()
+		cap.text = spec["label"]
+		cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cap.position = slot.position + Vector2(-14, CELL - 2)
+		cap.size = Vector2(CELL + 28, 14)
+		cap.add_theme_font_size_override("font_size", 10)
+		cap.add_theme_color_override("font_color", COLOR_LABEL)
+		cap.add_theme_constant_override("outline_size", 4)
+		cap.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+		cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_doll.add_child(cap)
+
+	var bag_top := DOLL_TOP + DOLL_HEIGHT + 18.0
+
+	var bag_title := Label.new()
+	bag_title.text = "Carried"
+	bag_title.position = Vector2(PAD, bag_top - 18.0)
+	bag_title.add_theme_font_size_override("font_size", 12)
+	bag_title.add_theme_color_override("font_color", COLOR_LABEL)
+	_panel.add_child(bag_title)
+
+	_bag = Control.new()
+	_bag.name = "Bag"
+	_bag.position = Vector2(PAD, bag_top)
+	_bag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_panel.add_child(_bag)
+
+	# One cell per bag slot the component actually has, so the grid can never promise more
+	# room than the inventory has.
+	for i in InventoryComponentSlots():
+		var cell: ItemSlotScript = ItemSlotScript.new()
+		_bag.add_child(cell)
+		cell.build(CELL)
+		@warning_ignore("integer_division")
+		var row: int = i / BAG_COLUMNS
+		cell.position = Vector2(
+			(i % BAG_COLUMNS) * (CELL + GAP),
+			row * (CELL + GAP))
+		cell.pressed.connect(_on_bag_pressed.bind(i))
+		cell.alt_pressed.connect(_on_bag_alt.bind(i))
+		_bag_slots.append(cell)
+
+	_hint = Label.new()
+	_hint.text = "Click to equip / unequip     Right-click to drop"
+	_hint.position = Vector2(PAD, bag_top + CELL + GAP + 6.0)
+	_hint.add_theme_font_size_override("font_size", 10)
+	_hint.add_theme_color_override("font_color", Color(0.55, 0.59, 0.66))
+	_panel.add_child(_hint)
+	_built = true
+
+
+func InventoryComponentSlots() -> int:
+	## Read off the component rather than hard-coded, so raising MAX_SLOTS grows the grid.
+	return preload("res://scripts/inventory_component.gd").MAX_SLOTS
+
+
+func _draw_figure(area: Vector2) -> void:
+	## A plain humanoid silhouette: head, torso, two arms, two legs. Drawn as polygons so it
+	## needs no art and scales with the panel.
+	var cx := area.x * 0.5
+	var h := DOLL_HEIGHT
+	var pieces := [
+		# head
+		Rect2(cx - 20, h * 0.03, 40, 34),
+		# neck
+		Rect2(cx - 8, h * 0.19, 16, 12),
+		# torso
+		Rect2(cx - 34, h * 0.25, 68, 74),
+		# arms
+		Rect2(cx - 56, h * 0.27, 20, 66),
+		Rect2(cx + 36, h * 0.27, 20, 66),
+		# hips
+		Rect2(cx - 30, h * 0.62, 60, 18),
+		# legs
+		Rect2(cx - 27, h * 0.70, 22, 62),
+		Rect2(cx + 5, h * 0.70, 22, 62),
+	]
+	for r in pieces:
+		var poly := Polygon2D.new()
+		poly.polygon = PackedVector2Array([
+			r.position,
+			r.position + Vector2(r.size.x, 0),
+			r.position + r.size,
+			r.position + Vector2(0, r.size.y),
+		])
+		poly.color = COLOR_FIGURE
+		_doll.add_child(poly)
+
+
+# --- state ------------------------------------------------------------------
 
 func _process(_delta: float) -> void:
-	refresh()
-
-
-func refresh() -> void:
-	# Find the active player-controlled combatant
-	var combat_mgr := get_parent().get_node_or_null("CombatManager")
-	if not combat_mgr:
-		_clear()
+	if not visible or not _built:
 		return
-
-	var active: Node = combat_mgr.current_combatant
+	var cm := get_parent().get_node_or_null("CombatManager")
+	var active: Node = cm.current_combatant if cm else null
 	if not active or not is_instance_valid(active) or not active.get("is_player_controlled"):
+		_active = null
+		_title.text = "Inventory"
 		_clear()
 		return
+	_active = active
+	_title.text = active.character_name + " — Gear"
+	_refresh()
 
-	var inv: Node = active.get_node_or_null("Inventory")
-	if not inv or not inv.has_method("slot_count"):
+
+func _refresh() -> void:
+	var inv := _inv()
+	if inv == null:
 		_clear()
 		return
-
-	title_label.text = active.get("character_name") + " - Inventory"
-
-	# Rebuild slot display if slot count changed
-	var needed := 0
-	if inv.has_method("slot_count"):
-		needed = inv.get("MAX_SLOTS") if inv.get("MAX_SLOTS") else 4
-
-	if slot_list.get_child_count() != needed:
-		_clear()
-		for i in range(needed):
-			var row := HBoxContainer.new()
-			row.name = "Slot" + str(i)
-
-			var name_label := Label.new()
-			name_label.name = "Name"
-			name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			name_label.add_theme_font_size_override("font_size", 12)
-			row.add_child(name_label)
-
-			var use_btn := Button.new()
-			use_btn.name = "Use"
-			use_btn.text = "U"
-			use_btn.custom_minimum_size = Vector2(24, 0)
-			use_btn.set_meta("slot_index", i)
-			use_btn.pressed.connect(_on_use.bind(i, active))
-			row.add_child(use_btn)
-
-			var equip_btn := Button.new()
-			equip_btn.name = "Equip"
-			equip_btn.text = "E"
-			equip_btn.custom_minimum_size = Vector2(24, 0)
-			equip_btn.set_meta("slot_index", i)
-			equip_btn.pressed.connect(_on_equip.bind(i, active))
-			row.add_child(equip_btn)
-
-			var drop_btn := Button.new()
-			drop_btn.name = "Drop"
-			drop_btn.text = "D"
-			drop_btn.custom_minimum_size = Vector2(24, 0)
-			drop_btn.set_meta("slot_index", i)
-			drop_btn.pressed.connect(_on_drop.bind(i, active))
-			row.add_child(drop_btn)
-
-			slot_list.add_child(row)
-
-	var items: Array = inv.get("items") if inv.get("items") else []
-	var main_hand: ItemResource = inv.get("right_hand") if inv.get("right_hand") else null
-	var off_hand: ItemResource = inv.get("left_hand") if inv.get("left_hand") else null
-	var armor_item: ItemResource = inv.get("armor") if inv.get("armor") else null
-	var helmet_item: ItemResource = inv.get("helmet") if inv.get("helmet") else null
-
-	for i in range(needed):
-		var row: HBoxContainer = slot_list.get_child(i)
-		var name_label: Label = row.get_node("Name")
-		var use_btn: Button = row.get_node("Use")
-		var equip_btn: Button = row.get_node("Equip")
-		var drop_btn: Button = row.get_node("Drop")
-
-		if i < items.size() and items[i] != null:
-			var item: ItemResource = items[i]
-			var desc := item.item_name
-			if item.item_type == ItemResource.ItemType.WEAPON or item.item_type == ItemResource.ItemType.THROWABLE or item.item_type == ItemResource.ItemType.SHIELD:
-				desc += " (Dur:" + str(item.durability) + ")"
-			if item.item_type == ItemResource.ItemType.ARMOR:
-				desc += " (Armor:" + str(item.armor_bonus) + ")"
-			if item.item_type == ItemResource.ItemType.HELMET:
-				desc += " (Armor:" + str(item.armor_bonus) + ")"
-			if item.handedness == ItemResource.Handedness.TWO_HANDED:
-				desc += " 2H"
-			if item.is_shield:
-				desc += " [Shield]"
-			if item.parry_ranged:
-				desc += " [ParryRanged]"
-			if item.dodge_ranged:
-				desc += " [DodgeRanged]"
-
-			# Show which slot this item is equipped in
-			if item == main_hand and item == off_hand:
-				desc += " [2H]"
-			elif item == main_hand:
-				desc += " [RH]"
-			elif item == off_hand:
-				desc += " [LH]"
-			elif item == armor_item:
-				desc += " [Armor]"
-			elif item == helmet_item:
-				desc += " [Helmet]"
-
-			name_label.text = desc
-
-			# Use button only for consumables and ammo
-			if item.item_type == ItemResource.ItemType.CONSUMABLE or item.item_type == ItemResource.ItemType.AMMO:
-				use_btn.visible = true
-				use_btn.disabled = false
-			else:
-				use_btn.visible = false
-				use_btn.disabled = true
-
-			# Equip/unequip button for weapons, throwables, shields, and armor
-			if item.item_type == ItemResource.ItemType.WEAPON or item.item_type == ItemResource.ItemType.THROWABLE or item.item_type == ItemResource.ItemType.SHIELD or item.item_type == ItemResource.ItemType.ARMOR or item.item_type == ItemResource.ItemType.HELMET:
-				equip_btn.visible = true
-				if item == main_hand or item == off_hand or item == armor_item or item == helmet_item:
-					name_label.self_modulate = Color(1, 0.85, 0.3, 1)
-					equip_btn.text = "U"
-					equip_btn.disabled = false
-				else:
-					name_label.self_modulate = Color(1, 1, 1, 1)
-					equip_btn.text = "E"
-					equip_btn.disabled = false
-			else:
-				equip_btn.visible = false
-				equip_btn.disabled = true
-
-			drop_btn.disabled = false
-		else:
-			name_label.text = "(empty)"
-			name_label.self_modulate = Color(0.5, 0.5, 0.5, 1)
-			use_btn.visible = false
-			use_btn.disabled = true
-			equip_btn.visible = false
-			equip_btn.disabled = true
-			drop_btn.disabled = true
-			equip_btn.text = "E"
+	for i in SOCKETS.size():
+		var slot: int = SOCKETS[i]["slot"]
+		_sockets[i].set_item(_equipped_in(inv, slot), slot)
+	for i in _bag_slots.size():
+		var item: ItemResource = inv.items[i] if i < inv.items.size() else null
+		# An equipped item still occupies a bag slot; showing it in both places would read as
+		# two copies, so the grid only shows what is genuinely stowed.
+		if item != null and _is_equipped(inv, item):
+			item = null
+		_bag_slots[i].set_item(item)
 
 
 func _clear() -> void:
-	for child in slot_list.get_children():
-		child.queue_free()
-	title_label.text = "Inventory"
+	for i in _sockets.size():
+		_sockets[i].set_item(null, SOCKETS[i]["slot"])
+	for cell in _bag_slots:
+		cell.set_item(null)
 
 
-func _current_player() -> Node:
-	## The combatant the panel is currently showing. Button callbacks resolve this
-	## fresh instead of trusting the combatant bound when the rows were last built
-	## (which goes stale as turns advance without the slot count changing).
-	var combat_mgr := get_parent().get_node_or_null("CombatManager")
-	if not combat_mgr:
+func _inv() -> Node:
+	if _active == null or not is_instance_valid(_active):
 		return null
-	var cur: Node = combat_mgr.current_combatant
-	if not cur or not is_instance_valid(cur) or not cur.get("is_player_controlled"):
-		return null
-	return cur
+	return _active.get_node_or_null("Inventory")
 
 
-func _on_use(slot_index: int, _bound: Node) -> void:
-	var active := _current_player()
-	if not active:
+func _equipped_in(inv: Node, slot: int) -> ItemResource:
+	match slot:
+		ItemResource.EquipSlot.RIGHT_HAND:
+			return inv.right_hand
+		ItemResource.EquipSlot.LEFT_HAND:
+			# A two-hander fills both hands as one object; show it in the main hand only, or
+			# it looks like the character is holding two of them.
+			return null if inv.left_hand == inv.right_hand else inv.left_hand
+		ItemResource.EquipSlot.ARMOR:
+			return inv.armor
+		ItemResource.EquipSlot.HELMET:
+			return inv.helmet
+		ItemResource.EquipSlot.LEGS:
+			return inv.legs
+	return null
+
+
+func _is_equipped(inv: Node, item: ItemResource) -> bool:
+	return item == inv.right_hand or item == inv.left_hand or item == inv.armor \
+		or item == inv.helmet or item == inv.legs
+
+
+# --- interaction ------------------------------------------------------------
+
+func _on_socket_pressed(slot: int) -> void:
+	var inv := _inv()
+	if inv == null:
 		return
-	var inv: Node = active.get_node_or_null("Inventory")
-	if inv and inv.has_method("use_consumable"):
-		if inv.use_consumable(slot_index):
-			if active.has_method("_update_health_bar"):
-				active._update_health_bar()
-
-
-func _on_equip(slot_index: int, _bound: Node) -> void:
-	## Equipping/unequipping is a full combat action; it must be the active character's turn.
-	var active := _current_player()
-	if not active:
-		return
-	var inv: Node = active.get_node_or_null("Inventory")
-	if not inv or not inv.has_method("unequip_item"):
-		return
-	var item: ItemResource = inv.items[slot_index]
+	var item := _equipped_in(inv, slot)
 	if item == null:
 		return
-	var is_equipped := false
-	if item == inv.get("right_hand") or item == inv.get("left_hand") or item == inv.get("armor") or item == inv.get("helmet"):
-		is_equipped = true
-	if is_equipped:
-		if active.has_method("unequip_item"):
-			active.unequip_item(item)
-		elif active.has_method("_update_health_bar"):
-			active._update_health_bar()
+	# Stays in the bag — unequipping is putting it away, not throwing it out.
+	if _active.has_method("unequip_item"):
+		_active.unequip_item(item)
 	else:
-		if active.has_method("equip_weapon"):
-			active.equip_weapon(slot_index)
-		elif active.has_method("_update_health_bar"):
-			active._update_health_bar()
+		inv.unequip_item(item)
 
 
-func _on_drop(slot_index: int, _bound: Node) -> void:
-	var active := _current_player()
-	if not active:
+func _on_socket_alt(slot: int) -> void:
+	var inv := _inv()
+	if inv == null:
 		return
-	var inv: Node = active.get_node_or_null("Inventory")
-	if not inv or not inv.has_method("remove_item"):
-		return
+	_drop(_equipped_in(inv, slot))
 
-	var item: ItemResource = inv.remove_item(slot_index)
-	if item == null:
-		return
 
-	# Spawn ground item near the character, but at the floor's absolute height —
-	# the character's own y is its elevated origin, not ground level.
-	var drop_pos := Vector3(
-		active.position.x + randf_range(-1, 1),
-		GroundItemScript.DROP_Y,
-		active.position.z + randf_range(-1, 1))
-	if active.has_method("_spawn_ground_item"):
-		active._spawn_ground_item(item, drop_pos)
-	if active.has_method("_update_health_bar"):
-		active._update_health_bar()
+func _on_bag_pressed(index: int) -> void:
+	var inv := _inv()
+	if inv == null or index >= inv.items.size():
+		return
+	var item: ItemResource = inv.items[index]
+	if item == null or _is_equipped(inv, item):
+		return
+	# InventoryComponent.equip works out the destination socket from the item's type, so this
+	# is the one call for a weapon, a shield, armour, a helmet or greaves alike. Consumables
+	# and ammo never reach the bag (Player._do_pickup spends them on the spot), so anything
+	# non-equippable here simply declines to move.
+	if _active.has_method("equip_weapon"):
+		_active.equip_weapon(index)
+	else:
+		inv.equip(index)
+
+
+func _on_bag_alt(index: int) -> void:
+	var inv := _inv()
+	if inv == null or index >= inv.items.size():
+		return
+	_drop(inv.items[index])
+
+
+func _drop(item: ItemResource) -> void:
+	if item == null or _active == null:
+		return
+	var inv := _inv()
+	if inv == null:
+		return
+	var index: int = inv.get_item_slot(item)
+	if index < 0:
+		return
+	inv.remove_item(index)   # also unequips it
+	if _active.has_method("_drop_at_feet"):
+		_active._drop_at_feet(item)
+	if _active.has_method("_update_health_bar"):
+		_active._update_health_bar()

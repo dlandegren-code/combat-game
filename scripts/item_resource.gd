@@ -1,14 +1,16 @@
 extends Resource
 class_name ItemResource
 
-enum ItemType { WEAPON, THROWABLE, CONSUMABLE, AMMO, SHIELD, ARMOR, HELMET }
+## Appended, never renumbered: these ordinals are stored in every .tres in resources/items.
+enum ItemType { WEAPON, THROWABLE, CONSUMABLE, AMMO, SHIELD, ARMOR, HELMET, LEGS }
 
 enum EquipSlot {
 	ANY_HAND,   ## Can go in either hand (1-handed weapons)
 	RIGHT_HAND, ## Main hand only
 	LEFT_HAND,  ## Offhand only (shields, offhand weapons)
-	ARMOR,      ## Armor slot, not hands
-	HELMET      ## Helmet slot, head
+	ARMOR,      ## Torso slot, not hands
+	HELMET,     ## Headgear slot
+	LEGS        ## Legs slot (greaves, leggings)
 }
 
 enum Handedness { ONE_HANDED, TWO_HANDED }
@@ -58,6 +60,9 @@ const BROKEN_DAMAGE_PENALTY := 2
 ## (ground) visuals, replacing the old name/type-based lookups. Leave it "" to
 ## fall back to that legacy behaviour.
 @export_group("Display Model")
+## Inventory icon. Leave "" to let ItemIcons guess from the item's name and type, which is
+## what every existing item does; set it only to override that guess.
+@export var icon_path: String = ""
 @export var model_path: String = ""                ## PackedScene or Mesh to show; "" = auto by name/type
 @export var model_material_path: String = ""       ## atlas material for meshes shipped without one; "" = embedded
 @export var model_scale: float = 0.5               ## longest-dimension target size in tiles (<=0 = leave native scale)
@@ -209,4 +214,6 @@ func can_equip_in(slot: int) -> bool:
 			return item_type == ItemType.ARMOR or equip_slot == EquipSlot.ARMOR
 		EquipSlot.HELMET:
 			return item_type == ItemType.HELMET or equip_slot == EquipSlot.HELMET
+		EquipSlot.LEGS:
+			return item_type == ItemType.LEGS or equip_slot == EquipSlot.LEGS
 	return false
