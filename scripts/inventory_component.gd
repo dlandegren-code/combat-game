@@ -3,6 +3,11 @@ extends Node
 
 const MAX_SLOTS := 5
 
+## Prefix stamped onto a weapon's name when it breaks ("Rusty Sword" -> "Broken Rusty
+## Sword"). Safe to mutate: every runtime ItemResource is a per-character .duplicate(), so
+## renaming one never touches the shared .tres or another character's copy.
+const BROKEN_PREFIX := "Broken "
+
 enum EquipSlot { ANY_HAND, RIGHT_HAND, LEFT_HAND, ARMOR }
 
 ## Items this character starts with (ItemResource .tres, assigned in the inspector).
@@ -231,7 +236,10 @@ func _weapon_bonus(item: ItemResource, attack: bool) -> int:
 		return 0
 	if item.item_type != ItemResource.ItemType.WEAPON and item.item_type != ItemResource.ItemType.THROWABLE:
 		return 0
-	return item.attack_bonus if attack else item.damage_bonus
+	var bonus: int = item.attack_bonus if attack else item.damage_bonus
+	if item.broken:
+		bonus -= ItemResource.BROKEN_HIT_PENALTY if attack else ItemResource.BROKEN_DAMAGE_PENALTY
+	return bonus
 
 
 func main_hand_attack_bonus() -> int:
@@ -248,6 +256,24 @@ func offhand_attack_bonus() -> int:
 
 func offhand_damage_bonus() -> int:
 	return _weapon_bonus(get_equipped_offhand(), false)
+
+
+func parry_bonus() -> int:
+	## Combined parry bonus from BOTH hands, so a sword-and-board guard beats either piece on
+	## its own. Unlike the attack/damage bonuses this is not per-hand: a parry is made with
+	## whatever you are holding, not with one nominated weapon.
+	##
+	## A two-handed weapon counts once rather than twice: it occupies both slots as the same
+	## object, and get_equipped_offhand() already reports null in that case.
+	var total := 0
+	for it in [get_equipped_weapon(), get_equipped_offhand()]:
+		if it == null:
+			continue
+		total += it.parry_bonus
+		# A ruined guard turns blades no better than it cuts with them.
+		if it.broken:
+			total -= ItemResource.BROKEN_HIT_PENALTY
+	return total
 
 
 func is_shield_equipped() -> bool:
@@ -310,13 +336,45 @@ func degrade_equipped_weapon() -> void:
 		item = get_equipped_offhand()
 	if item == null:
 		return
+	# Already ruined: there is nothing left to wear down, and without this guard durability
+	# would run negative and re-announce the break on every further parry.
+	if item.broken:
+		return
 	item.durability -= 1
-	if item.durability <= 0:
-		if character.has_method("_show_action_text"):
-			character._show_action_text(item.item_name + " broke!")
-		var slot := get_item_slot(item)
-		if slot >= 0:
-			remove_item(slot)
+	if item.durability > 0:
+		return
+	_break_item(item)
+
+
+func _break_item(item: ItemResource) -> void:
+	## A weapon that has been parried to pieces. It is NOT destroyed — it is renamed and left
+	## in place, so it can still be seen, dropped and picked over. What happens next is the
+	## holder's business: Combatant._on_weapon_broke leaves it equipped, Enemy throws it down
+	## and draws a spare.
+	if character and character.has_method("_show_action_text"):
+		character._show_action_text(item.item_name + " broke!")
+	item.broken = true
+	if not item.item_name.begins_with(BROKEN_PREFIX):
+		item.item_name = BROKEN_PREFIX + item.item_name
+	if character and character.has_method("_on_weapon_broke"):
+		character._on_weapon_broke(item)
+
+
+func find_weapon_slot() -> int:
+	## First bag slot holding a serviceable weapon that is not already in a hand — what to
+	## draw when the one you were using breaks. Shields and armour are skipped; a throwable
+	## counts, since anything in the fist beats an empty one. Ruined weapons are skipped too,
+	## or a goblin would keep drawing junk it had just discarded.
+	for i in range(MAX_SLOTS):
+		var it: ItemResource = items[i]
+		if it == null or it == right_hand or it == left_hand:
+			continue
+		if it.item_type != ItemResource.ItemType.WEAPON and it.item_type != ItemResource.ItemType.THROWABLE:
+			continue
+		if it.broken:
+			continue
+		return i
+	return -1
 
 
 func use_consumable(slot_index: int) -> bool:

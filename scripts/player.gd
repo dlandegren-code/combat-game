@@ -14,7 +14,6 @@ const TripAbilityScript := preload("res://scripts/abilities/trip_ability.gd")
 const RangedAbilityScript := preload("res://scripts/abilities/ranged_ability.gd")
 const ThrowAbilityScript := preload("res://scripts/abilities/throw_ability.gd")
 const PickupAbilityScript := preload("res://scripts/abilities/pickup_ability.gd")
-const GroundItemScript := preload("res://scripts/ground_item.gd")
 
 ## How far from the square it was aimed at a thrown weapon may come to rest, in tiles.
 ## Keeps a deflected or dropped weapon within a step or two of the fight rather than
@@ -25,21 +24,16 @@ var selected_action: int = Action.MOVE
 
 var move_indicator: MeshInstance3D
 
-static var _bar_connected := false
-
 
 func _post_setup() -> void:
 	_build_abilities()
 	move_indicator = get_parent().get_node_or_null("MoveIndicator")
 	if move_indicator:
 		move_indicator.visible = false
-	if is_player_controlled and not _bar_connected:
-		_bar_connected = true
-		_connect_action_bar()
 
 
 func _build_abilities() -> void:
-	# Order must match the Action enum / action-bar buttons Btn1..Btn7.
+	# Order must match the Action enum. The toolbar's hotbar seeds itself from this order.
 	abilities = [
 		MoveAbilityScript.new(),
 		MeleeAttackAbilityScript.new(),
@@ -73,44 +67,27 @@ func _process(_delta: float) -> void:
 	_update_cursor()
 
 
+const HOTBAR_KEYS := 8
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not can_act or is_moving:
 		return
-	for i in range(abilities.size()):
-		if event.is_action_pressed("action_" + str(i + 1)):
-			select_action(i)
+	# The number keys drive hotbar SLOTS, not ability indices. The slots are reassignable, so
+	# "3" has to fire whatever the player dropped into the third cell.
+	for slot in range(HOTBAR_KEYS):
+		var action := "action_" + str(slot + 1)
+		if InputMap.has_action(action) and event.is_action_pressed(action):
+			_activate_hotbar_slot(slot)
 			return
 
 
-func _connect_action_bar() -> void:
-	var root := get_parent()
-	var ab := root.get_node_or_null("ActionBar")
-	if not ab:
+func _activate_hotbar_slot(slot: int) -> void:
+	for bar in get_tree().get_nodes_in_group("action_toolbar"):
+		var idx: int = bar.ability_in_slot(slot)
+		if idx >= 0 and idx < abilities.size():
+			select_action(idx)
 		return
-	for i in range(abilities.size()):
-		var btn: Button = ab.get_node_or_null("Panel/Bar/Btn" + str(i + 1))
-		if btn:
-			btn.toggled.connect(_on_action_btn_toggled.bind(i, btn))
-	# Defer initial sync so everyone is ready
-	call_deferred("_update_action_bar")
-
-
-func _on_action_btn_toggled(pressed: bool, index: int, btn: Button) -> void:
-	if pressed:
-		select_action(index)
-	else:
-		# Prevent deselecting all (must have one selected)
-		var any_on := false
-		var root := get_parent()
-		var ab := root.get_node_or_null("ActionBar")
-		if ab:
-			for j in range(abilities.size()):
-				var other: Button = ab.get_node_or_null("Panel/Bar/Btn" + str(j + 1))
-				if other and other.button_pressed:
-					any_on = true
-					break
-		if not any_on:
-			btn.set_pressed_no_signal(true)
 
 
 func select_action(index: int) -> void:
@@ -119,15 +96,10 @@ func select_action(index: int) -> void:
 
 
 func _update_action_bar() -> void:
-	var root := get_parent()
-	var ab := root.get_node_or_null("ActionBar")
-	if not ab:
-		return
-	for i in range(abilities.size()):
-		var btn: Button = ab.get_node_or_null("Panel/Bar/Btn" + str(i + 1))
-		if btn:
-			btn.set_pressed_no_signal(i == selected_action)
-			btn.disabled = not can_act
+	## Push our state to the bottom toolbar. Found by group rather than by path so the toolbar
+	## can be moved or re-parented in the scene without touching this.
+	for bar in get_tree().get_nodes_in_group("action_toolbar"):
+		bar.refresh()
 
 
 func _update_cursor() -> void:
@@ -287,7 +259,8 @@ func _do_ranged_attack(target: Node) -> void:
 		return
 	ammo -= 1
 	_update_health_bar()
-	target.take_damage(get_attack_damage(), ranged_skill, true, self)
+	target.take_damage(
+		get_attack_damage(), get_missile_skill(ranged_skill, target, get_ranged_range()), true, self)
 	_show_action_text(str(ammo) + " arrows left")
 
 
@@ -305,7 +278,8 @@ func _do_throw_attack(target: Node) -> void:
 		throw_dir = Vector3.RIGHT
 	throw_dir = throw_dir.normalized()
 
-	var defended: bool = target.take_damage(get_attack_damage(), throw_skill, true, self)
+	var defended: bool = target.take_damage(
+		get_attack_damage(), get_missile_skill(throw_skill, target, get_throw_range()), true, self)
 	# Remove the thrown weapon from the character's equipment
 	if inventory and inventory.has_method("unequip_slot"):
 		inventory.unequip_slot(ItemResource.EquipSlot.RIGHT_HAND)
@@ -326,17 +300,6 @@ func _do_throw_attack(target: Node) -> void:
 		_show_action_text("Weapon thrown!")
 		land_pos = _throw_landing_tile(target, throw_dir, false)
 	_spawn_ground_item(thrown_item, Vector3(land_pos.x, GroundItemScript.DROP_Y, land_pos.z))
-
-
-func _spawn_ground_item(item: ItemResource, at: Vector3) -> void:
-	var gi := MeshInstance3D.new()
-	gi.name = "GroundItem"
-	gi.set_script(GroundItemScript)
-	gi.position = at
-	gi.item_resource = item
-	get_parent().add_child(gi)
-	# Defer visual so the node is fully in the tree
-	gi.call_deferred("_apply_visual")
 
 
 func _throw_landing_tile(target: Node, throw_dir: Vector3, deflected: bool) -> Vector3:

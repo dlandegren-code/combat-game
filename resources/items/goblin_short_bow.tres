@@ -11,3 +11,6 @@ equip_slot = 1
 attack_bonus = 1
 damage_bonus = 1
 durability = 6
+ranged_range = 100
+use_two_handed_grip = false
+model_grip_roll = 180.0

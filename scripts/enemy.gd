@@ -8,10 +8,13 @@ enum EnemyType { GOBLIN, ARCHER, BOSS }
 
 enum Action { MOVE, ATTACK, SHOVE, TRIP, RANGED, THROW }
 
-## Distance (in tiles) an archer is happy to shoot from. At or beyond this it just looses
-## an arrow; closer than this it spends the turn repositioning to the furthest tile it can
-## still shoot from. Capped at the archer's actual ranged range. Raise to hang back more.
-const ARCHER_PREFERRED_DIST := 5
+## Distance (in tiles) an archer is happy to shoot from. At or beyond this it just looses an
+## arrow; closer than this it spends the turn repositioning. Capped at the archer's actual
+## ranged range.
+##
+## Tied to the penalty-free band deliberately: standing further back than this buys no safety
+## the bow can pay for, since every band beyond it costs to-hit (Combatant.RANGE_FREE_TILES).
+const ARCHER_PREFERRED_DIST := RANGE_FREE_TILES
 
 
 func _pre_setup() -> void:
@@ -157,21 +160,36 @@ func _can_fire_from(tile: Vector3, target: Node, max_range: int) -> bool:
 
 
 func _best_firing_path(target: Node, max_range: int, cur_dist: float) -> Array:
-	## Of every tile we could walk to this turn, the one furthest from the NEAREST hero that
-	## still gives us a shot at `target` — "as far away as possible, but within range".
-	## Returns its BFS path, or [] when standing still is already as good. Distance is
-	## measured to the nearest hero (not just our target) so the archer never backs away
-	## from one and straight into another. Ties go to the shorter walk.
+	## Of every tile we could walk to this turn, the best place to shoot from: ACCURACY first,
+	## then distance from the heroes. Returns its BFS path, or [] when standing still is
+	## already as good. Ties go to the shorter walk.
+	##
+	## Accuracy has to lead now that the bow outranges its own useful range. Scoring purely on
+	## distance — "as far away as possible, but within range" — would kite the archer out to
+	## 15 tiles and a -6 to hit, where it is safe and completely useless. Range penalties come
+	## in bands, so within a band it still backs off as far as it can for free.
+	##
+	## Distance is measured to the nearest hero (not just our target) so the archer never
+	## backs away from one and straight into another.
 	var best_path: Array = []
 	var best_dist: float = cur_dist
+	var best_penalty: int = _range_penalty(target, max_range, _snap_to_grid(position))
 	var best_steps: int = 0
 	for path in _reachable_paths(move_range):
 		var tile: Vector3 = path[path.size() - 1]
 		if not _can_fire_from(tile, target, max_range):
 			continue
 		var d: float = _min_player_dist(tile)
+		var pen: int = _range_penalty(target, max_range, tile)
 		var steps: int = path.size() - 1
-		if d > best_dist + 0.01:
+		if pen < best_penalty:
+			best_penalty = pen
+			best_dist = d
+			best_path = path
+			best_steps = steps
+		elif pen > best_penalty:
+			continue
+		elif d > best_dist + 0.01:
 			best_dist = d
 			best_path = path
 			best_steps = steps
@@ -227,7 +245,8 @@ func _fire_arrow(player: Node) -> void:
 	ammo -= 1
 	_update_health_bar()
 	_play_attack_anim("holding-both-shoot")
-	player.take_damage(get_attack_damage(), ranged_skill, true, self)
+	player.take_damage(
+		get_attack_damage(), get_missile_skill(ranged_skill, player, get_ranged_range()), true, self)
 	_show_action_text("Arrow fired!")
 	_pending_cost = ranged_cost
 	await get_tree().create_timer(0.3).timeout
@@ -273,6 +292,30 @@ func _take_turn_boss() -> void:
 
 	# Move toward target
 	_begin_move_toward(target)
+
+
+func _on_weapon_broke(item: ItemResource) -> void:
+	## Goblins do not fight on with a ruined weapon: they throw it down and draw whatever else
+	## they are carrying. Both are FREE — no _pending_cost is touched and end_my_turn is not
+	## called, so this costs no time and never interrupts the turn it happened during. It can
+	## fire on the defender's side of someone else's attack, which is exactly why it must not
+	## try to drive the turn machinery.
+	if inventory == null:
+		return
+	var slot: int = inventory.get_item_slot(item)
+	if slot >= 0:
+		inventory.remove_item(slot)  # also unequips it from whichever hand held it
+	else:
+		inventory.unequip_item(item)
+	_drop_at_feet(item)
+
+	var replacement: int = inventory.find_weapon_slot()
+	if replacement >= 0:
+		inventory.equip(replacement)
+		var drawn: ItemResource = inventory.get_equipped_weapon()
+		if drawn:
+			_show_action_text("Drew " + drawn.item_name)
+	_update_health_bar()
 
 
 func _find_weakest_player() -> Node:

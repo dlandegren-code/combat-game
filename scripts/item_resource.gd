@@ -18,9 +18,19 @@ enum Handedness { ONE_HANDED, TWO_HANDED }
 @export var equip_slot: int = EquipSlot.ANY_HAND
 @export var handedness: int = Handedness.ONE_HANDED
 
+## What a ruined weapon costs to use. Steep on purpose: with these a broken weapon is worse
+## than bare hands for hitting — but bare hands cannot parry at all, and a broken weapon can.
+## That trade is the point, and it is why dropping one is a decision rather than a formality.
+const BROKEN_HIT_PENALTY := 4
+const BROKEN_DAMAGE_PENALTY := 2
+
 @export var attack_bonus: int = 0
 @export var damage_bonus: int = 0
 @export var durability: int = 10
+## Set when this is parried to pieces (InventoryComponent._break_item, which also prefixes the
+## name with "Broken "). Not the same as `durability <= 0`, which several never-degrading item
+## types would satisfy by accident; this says the thing was actually ruined in play.
+@export var broken: bool = false
 @export var shove_bonus: int = 0
 @export var trip_bonus: int = 0
 @export var ranged_range: int = 0   ## max tiles when used as ranged weapon; 0 = use character stat
@@ -29,6 +39,10 @@ enum Handedness { ONE_HANDED, TWO_HANDED }
 ## Defense properties granted while this item is equipped
 @export var is_shield: bool = false    ## Allows parrying ranged attacks
 @export var parry_ranged: bool = false ## Skill/artifact that allows parrying ranged attacks
+## Added to the parry roll while this is held in either hand (Combatant.get_parry_skill).
+## Only the Parry stance reads it — a dodging character gets nothing from a shield, since the
+## dodge roll never consults equipment.
+@export var parry_bonus: int = 0
 @export var dodge_ranged: bool = false ## Skill/artifact that allows dodging ranged attacks
 
 ## Armor stats (only relevant for ARMOR type)
@@ -49,6 +63,18 @@ enum Handedness { ONE_HANDED, TWO_HANDED }
 @export var model_scale: float = 0.5               ## longest-dimension target size in tiles (<=0 = leave native scale)
 @export var model_hand_position: Vector3 = Vector3.ZERO       ## offset in the hand socket
 @export var model_hand_rotation: Vector3 = Vector3.ZERO       ## rotation in the hand socket (degrees)
+## Whether a TWO_HANDED weapon is held in the two-handed ready stance (both arms posed onto
+## it across the chest — see two_handed_grip.gd). Off means it hangs from the right fist and
+## the arms animate normally, exactly as a one-hander does.
+##
+## Bows are off: the stance is built for a shaft gripped at two points along its length, and
+## a bow is held by its riser with the other hand at the string, so it reads wrong.
+@export var use_two_handed_grip: bool = true
+## Spin about the weapon's own shaft when held in that stance, in degrees. The grip aligns a
+## weapon's longest axis to the line between the hands, which fixes its angle but says nothing
+## about which way it faces around that axis — that depends on how the model was authored.
+## Ignored unless use_two_handed_grip is on; one-handers use model_hand_rotation instead.
+@export var model_grip_roll: float = 0.0
 @export var model_ground_rotation: Vector3 = Vector3(-90, 0, 0)  ## rotation when dropped on the ground (degrees)
 
 
@@ -144,6 +170,8 @@ func get_description() -> String:
 		desc += " ATK+" + str(attack_bonus)
 	if damage_bonus != 0:
 		desc += " DMG+" + str(damage_bonus)
+	if parry_bonus != 0:
+		desc += " Parry+" + str(parry_bonus)
 	if armor_bonus != 0:
 		desc += " Armor+" + str(armor_bonus)
 	if resistance_bonus != 0:

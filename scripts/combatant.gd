@@ -41,6 +41,22 @@ const COVER_RAY_DROP := 0.6       ## metres below eye-line for the "does a short
 const OFFHAND_HIT_PENALTY := 5    ## to-hit penalty for the off-hand strike (0 with dual_wield_skill)
 const OFFHAND_DELAY := 0.3        ## beat between the main hit and the off-hand follow-up
 
+## Missile to-hit penalties, applied to bow shots AND thrown weapons alike by
+## get_missile_skill(). Distance uses the same Manhattan measure the range checks do.
+##
+## Three flat bands rather than a per-distance slope: clean inside the free range, one
+## penalty out to half the weapon's reach, a heavier one past that. The far band scales with
+## the weapon, so a longbow stays accurate further out than a shortbow without either
+## needing its own numbers.
+##
+## A square is one combatant's fighting space — reckon it at 1.5 m if you are converting a
+## real weapon's range (a 300 m longbow is 200 squares).
+const RANGE_FREE_TILES := 10       ## shots out to here are clean
+const RANGE_PENALTY_NEAR := 3      ## beyond the free range, out to half the weapon's range
+const RANGE_PENALTY_FAR := 6       ## beyond half the weapon's range
+## Shooting at someone already in melee with one of ours: you are picking a gap in a scrum.
+const ENGAGED_PENALTY := 5
+
 ## Optional data-driven stat block (a CombatantStats resource). When assigned,
 ## its values are copied onto this combatant at _ready (overriding the
 ## per-instance @export values below). Leave null to use scene / default values.
@@ -75,7 +91,7 @@ var move_range: int = 4
 @export var ranged_cost: int = 3
 @export var ammo: int = 0
 @export var max_ammo: int = 0
-@export var ranged_range: int = 10      ## max tiles for ranged
+@export var ranged_range: int = 15      ## max tiles for ranged (accurate only to RANGE_FREE_TILES)
 @export var throw_skill: int = 3        ## used for thrown weapon attacks
 ## One time unit — a throw is a single quick action, cheaper than a bow shot (which has to
 ## be nocked and drawn) and cheaper than a melee exchange. Note you also give up the weapon,
@@ -122,9 +138,20 @@ var _pending_cost: int = 0
 @warning_ignore("unused_private_class_variable")
 var _action_used: int = 0
 
+const TwoHandedGripScript := preload("res://scripts/two_handed_grip.gd")
+const GroundItemScript := preload("res://scripts/ground_item.gd")
+
 var _weapon_socket = null
 var _shield_socket = null
 var _helmet_socket = null
+## Torso-mounted socket a TWO-HANDED weapon hangs off, so its angle is fixed relative to the
+## chest and both arms can be posed onto it. Null when the rig has no torso bone, in which
+## case two-handers fall back to the one-handed right-fist placement.
+var _grip_socket: BoneAttachment3D = null
+var _grip: SkeletonModifier3D = null
+## Set while an attack animation plays: the grip is released and the weapon handed back to
+## the right fist so the swing actually animates (see _play_attack_anim).
+var _grip_suspended := false
 var _center_target := 0.0
 var _last_right_hand: ItemResource = null
 var _last_left_hand: ItemResource = null
@@ -365,6 +392,29 @@ func _setup_sockets() -> void:
 		_helmet_socket.name = "HelmetSocket"
 		_helmet_socket.bone_name = "head"
 		skeleton.add_child(_helmet_socket)
+	_setup_two_handed_grip(skeleton)
+
+
+func _setup_two_handed_grip(skeleton: Skeleton3D) -> void:
+	## The torso socket a two-hander hangs off, plus the modifier that poses the arms onto
+	## it. Both are skipped on a rig without a torso bone — the socket would otherwise sit at
+	## the skeleton origin and park the weapon at the character's feet.
+	if skeleton.find_bone(TwoHandedGripScript.TORSO_BONE) < 0:
+		return
+	_grip_socket = skeleton.find_child("GripSocket", false, false) as BoneAttachment3D
+	if not _grip_socket:
+		_grip_socket = BoneAttachment3D.new()
+		_grip_socket.name = "GripSocket"
+		_grip_socket.bone_name = TwoHandedGripScript.TORSO_BONE
+		skeleton.add_child(_grip_socket)
+	_grip = TwoHandedGripScript.new()
+	_grip.name = "TwoHandedGrip"
+	skeleton.add_child(_grip)
+	if not _grip.is_solved():
+		# Rig is missing an arm bone; drop back to one-handed placement entirely.
+		_grip.queue_free()
+		_grip = null
+		_grip_socket = null
 
 
 func _update_equipment_visuals() -> void:
@@ -380,10 +430,49 @@ func _update_equipment_visuals() -> void:
 	_last_right_hand = main
 	_last_left_hand = off
 	_last_helmet = helmet_item
+	# A two-handed weapon sits in BOTH hand slots as the same object.
 	var two_handed: bool = main != null and main == off
-	_refresh_socket(_weapon_socket, main)
+	# Held in two hands only when the weapon opts in (bows do not — see
+	# ItemResource.use_two_handed_grip), while we have a grip to hold it with, and outside an
+	# attack — mid-swing the weapon goes back to the right fist so it follows the arm.
+	var use_grip: bool = two_handed and main.use_two_handed_grip \
+		and _grip != null and not _grip_suspended
+	_refresh_grip_socket(main if use_grip else null)
+	_refresh_socket(_weapon_socket, null if use_grip else main)
 	_refresh_socket(_shield_socket, null if two_handed else off)
 	_refresh_socket(_helmet_socket, helmet_item)
+
+
+func _refresh_grip_socket(item: ItemResource) -> void:
+	## Hang a two-hander off the chest and switch the arm-posing modifier on.
+	##
+	## Building goes through _refresh_socket so every per-item model rule (data-driven model,
+	## legacy name lookup, Synty material, placeholder box) stays in exactly one place; only
+	## the placement is redone afterwards, since the hand offsets _refresh_socket applies are
+	## tuned for a fist and mean nothing on the torso.
+	if _grip_socket == null or _grip == null:
+		return
+	_refresh_socket(_grip_socket, item)
+	_grip.active = item != null
+	if item == null:
+		return
+	if _grip_socket.get_child_count() > 0:
+		_grip.place_weapon(_grip_socket.get_child(0) as Node3D, item.model_grip_roll)
+
+
+func _set_grip_suspended(suspended: bool) -> void:
+	## Release or retake the two-handed grip, rebuilding the equipment visuals so the weapon
+	## moves between the chest socket and the right fist. The cached-item early-out in
+	## _update_equipment_visuals would otherwise swallow the change, so clear the cache.
+	if _grip == null or _grip_suspended == suspended:
+		return
+	if suspended and not _grip.active:
+		return  # nothing is being held two-handed, so there is no grip to release
+	_grip_suspended = suspended
+	_last_right_hand = null
+	_last_left_hand = null
+	_last_helmet = null
+	_update_equipment_visuals()
 
 
 func _refresh_socket(socket, item: ItemResource) -> void:
@@ -734,7 +823,7 @@ func _attempt_defense(attacker_skill: int, is_ranged: bool = false, attacker: No
 			return _resolve_cover_only(has_cover, result)
 		if is_ranged and not _can_parry_ranged():
 			return _resolve_cover_only(has_cover, result)
-		result.defense_roll = parry_skill + randi_range(1, 5) + cover_bonus
+		result.defense_roll = get_parry_skill() + randi_range(1, 5) + cover_bonus
 		if result.defense_roll >= attack_roll:
 			if inventory and inventory.has_method("degrade_equipped_weapon"):
 				inventory.degrade_equipped_weapon()
@@ -923,6 +1012,37 @@ func _try_trip(target: Node) -> bool:
 		return false
 	target._lay_prone()
 	return true
+
+
+func _spawn_ground_item(item: ItemResource, at: Vector3) -> void:
+	## Put an item on the floor as a pickup. Lives on Combatant rather than Player because
+	## enemies drop things too (a goblin ditching a broken weapon).
+	var gi := MeshInstance3D.new()
+	gi.name = "GroundItem"
+	gi.set_script(GroundItemScript)
+	gi.position = at
+	gi.item_resource = item
+	get_parent().add_child(gi)
+	# Defer visual so the node is fully in the tree
+	gi.call_deferred("_apply_visual")
+
+
+func _drop_at_feet(item: ItemResource) -> void:
+	## Drop onto our own square, jittered so several drops do not stack into one mesh. The
+	## floor height is absolute: our own y is the elevated body origin, not ground level.
+	if item == null:
+		return
+	_spawn_ground_item(item, Vector3(
+		position.x + randf_range(-0.6, 0.6),
+		GroundItemScript.DROP_Y,
+		position.z + randf_range(-0.6, 0.6)))
+
+
+func _on_weapon_broke(_item: ItemResource) -> void:
+	## Hook: a held weapon just broke and has been renamed. The item is left equipped by
+	## default — a player decides for themselves what to do with a ruined blade. Enemy
+	## overrides this to throw it down and draw a spare.
+	pass
 
 
 func _charge_defense_cost() -> void:
@@ -1115,7 +1235,66 @@ func get_attack_skill() -> int:
 
 
 func get_attack_damage() -> int:
-	return attack_dmg + _inv_bonus("main_hand_damage_bonus")
+	## Floored at 1 so a broken weapon's damage penalty can never turn a hit into a no-op —
+	## armour still gets its say afterwards in _calculate_damage.
+	return maxi(1, attack_dmg + _inv_bonus("main_hand_damage_bonus"))
+
+
+func get_missile_skill(base_skill: int, target: Node, max_range: int,
+		from_tile: Vector3 = Vector3.INF) -> int:
+	## A bow or throw skill after the missile penalties. Both missile paths resolve through
+	## here so they cannot drift apart. `max_range` is the weapon's reach in tiles (its half
+	## sets where the far band starts); `from_tile` lets the AI price a shot from a square it
+	## has not walked to yet, and defaults to where we stand.
+	var penalty: int = _range_penalty(target, max_range, from_tile)
+	if _is_engaged(target):
+		penalty += ENGAGED_PENALTY
+	# A ruined bow shoots as badly as a ruined blade cuts. The melee paths get this through
+	# _weapon_bonus; missiles never consult it, so the penalty has to be applied here.
+	if inventory and inventory.has_method("get_equipped_weapon"):
+		var w: ItemResource = inventory.get_equipped_weapon()
+		if w and w.broken:
+			penalty += ItemResource.BROKEN_HIT_PENALTY
+	return base_skill - penalty
+
+
+func _range_penalty(target: Node, max_range: int, from_tile: Vector3 = Vector3.INF) -> int:
+	## Clean inside RANGE_FREE_TILES, RANGE_PENALTY_NEAR out to half the weapon's range, and
+	## RANGE_PENALTY_FAR past that.
+	var t := target as Node3D
+	if t == null:
+		return 0
+	if from_tile == Vector3.INF:
+		from_tile = position
+	var tiles: float = (abs(t.position.x - from_tile.x) + abs(t.position.z - from_tile.z)) / GRID_SIZE
+	if tiles <= RANGE_FREE_TILES:
+		return 0
+	return RANGE_PENALTY_NEAR if tiles <= max_range / 2.0 else RANGE_PENALTY_FAR
+
+
+func _is_engaged(target: Node) -> bool:
+	## True when the target stands in melee contact with someone hostile to IT other than us
+	## — that is, we would be shooting into a scrum one of our own side is standing in.
+	##
+	## We are excluded on purpose: this models the risk of hitting a friend, not the
+	## awkwardness of loosing a bow at someone in your own face. Drop the `c == self` skip to
+	## make point-blank shots suffer it too.
+	for c in get_tree().get_nodes_in_group("combatants"):
+		if c == self or c == target or not is_instance_valid(c):
+			continue
+		if "is_alive" in c and not c.is_alive:
+			continue
+		if not target._is_hostile(c):
+			continue
+		if _is_adjacent(c.position, target.position):
+			return true
+	return false
+
+
+func get_parry_skill() -> int:
+	## Parry skill including whatever is in our hands (a shield, or a weapon made for
+	## turning blades). Dodge has no equivalent: nothing worn or carried feeds that roll.
+	return parry_skill + _inv_bonus("parry_bonus")
 
 
 func get_offhand_attack_skill() -> int:
@@ -1123,7 +1302,7 @@ func get_offhand_attack_skill() -> int:
 
 
 func get_offhand_attack_damage() -> int:
-	return attack_dmg + _inv_bonus("offhand_damage_bonus")
+	return maxi(1, attack_dmg + _inv_bonus("offhand_damage_bonus"))
 
 
 func _inv_bonus(method: String) -> int:
@@ -1299,9 +1478,13 @@ func _play_attack_anim(anim_name: String) -> void:
 	if not ap:
 		return
 	_is_attacking = true
+	# Let go of the two-handed stance for the swing: the modifier pins both arms, so leaving
+	# it on would hold the ready pose and the attack would not animate at all.
+	_set_grip_suspended(true)
 	ap.play(anim_name)
 	await ap.animation_finished
 	_is_attacking = false
+	_set_grip_suspended(false)
 	_play_rest_anim()
 
 
@@ -1344,42 +1527,29 @@ var can_act := false
 
 
 func _update_health_bar() -> void:
+	## Refreshes the floating nameplate above the character (and, via health_changed, the
+	## party portraits). Deliberately does NOT show hp or the equipped item list: hp lives on
+	## the portrait bars, and the gear is on the character model and the equipment panel, so
+	## repeating either here just crowded the battlefield. What is left is the state you
+	## cannot read off the model at a glance.
 	_update_equipment_visuals()
 	# Emitted before the Label3D early-out so listeners fire even for combatants
-	# that have no floating health bar node.
+	# that have no floating nameplate node.
 	health_changed.emit(hp, max_hp, is_alive)
 	if not health_bar:
 		return
-	var text := character_name + "\n" + str(hp) + "/" + str(max_hp)
-	if armor > 0 or physical_resistance > 0:
-		text += "\n"
-		if armor > 0:
-			text += "Armor:" + str(armor) + " "
-		if physical_resistance > 0:
-			text += "Res:" + str(physical_resistance) + "%"
-	# Show equipped gear
-	var gear_lines := []
-	if inventory and inventory.has_method("get_equipped_weapon"):
-		var main: ItemResource = inventory.get_equipped_weapon()
-		if main:
-			gear_lines.append("RH:" + main.item_name + "(" + str(main.durability) + ")")
-	if inventory and inventory.has_method("get_equipped_offhand"):
-		var off: ItemResource = inventory.get_equipped_offhand()
-		if off:
-			gear_lines.append("LH:" + off.item_name + "(" + str(off.durability) + ")")
-	if inventory and inventory.get("armor"):
-		gear_lines.append("Armor:" + inventory.armor.item_name)
-	if not gear_lines.is_empty():
-		text += "\n" + " ".join(gear_lines)
-	if defensive_option == 0:
-		text += " Stance:Parry"
-	else:
-		text += " Stance:Dodge"
+	var lines: Array = [character_name]
+	# Defensive stats, not gear: these are the totals AFTER equipment bonuses are folded in.
+	var defense := ""
+	if armor > 0:
+		defense = "Armor:" + str(armor)
+	if physical_resistance > 0:
+		defense += (" " if defense != "" else "") + "Res:" + str(physical_resistance) + "%"
+	if defense != "":
+		lines.append(defense)
+	lines.append("Stance:Parry" if defensive_option == 0 else "Stance:Dodge")
 	if is_prone:
-		text += "\n[PRONE]"
+		lines.append("[PRONE]")
 	if max_ammo > 0:
-		if ammo > 0:
-			text += "\nAmmo:" + str(ammo)
-		else:
-			text += "\nAmmo:Empty"
-	health_bar.text = text
+		lines.append("Ammo:" + (str(ammo) if ammo > 0 else "Empty"))
+	health_bar.text = "\n".join(lines)

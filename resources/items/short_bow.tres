@@ -7,3 +7,6 @@ script = ExtResource("1_item")
 item_name = "Short Bow"
 item_type = 0
 handedness = 1
+ranged_range = 100
+use_two_handed_grip = false
+model_grip_roll = 180.0

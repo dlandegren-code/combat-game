@@ -25,7 +25,7 @@
 [ext_resource type="Resource" path="res://resources/items/boss_cleaver.tres" id="18_4k2k6"]
 [ext_resource type="Resource" path="res://resources/stats/goblin_stats.tres" id="18_goblin_stats"]
 [ext_resource type="Resource" path="res://resources/items/heavy_armor.tres" id="19_0rl1p"]
-[ext_resource type="Resource" path="res://resources/stats/archer_stats.tres" id="19_archer_stats"]
+[ext_resource type="Resource" uid="uid://ckt6pwwf2cpua" path="res://resources/stats/archer_stats.tres" id="19_archer_stats"]
 [ext_resource type="Resource" path="res://resources/stats/boss_stats.tres" id="20_boss_stats"]
 [ext_resource type="Resource" path="res://resources/items/ranger_dagger.tres" id="20_ok6jj"]
 [ext_resource type="Resource" path="res://resources/items/reinforced_leather_armor.tres" id="21_facbu"]
@@ -34,6 +34,9 @@
 [ext_resource type="PackedScene" path="res://scenes/characters/wizard_model.tscn" id="32_wizard_wrapper"]
 [ext_resource type="Resource" path="res://resources/items/gemstone_staff.tres" id="33_staff"]
 [ext_resource type="Resource" path="res://resources/items/quiver.tres" id="34_quiver"]
+[ext_resource type="Script" uid="uid://c0158ruvojo6t" path="res://scripts/action_toolbar.gd" id="35_toolbar"]
+[ext_resource type="Script" uid="uid://bimm2jro0lsmj" path="res://scripts/system_menu.gd" id="36_sysmenu"]
+[ext_resource type="Script" uid="uid://bbw8x7t016iaa" path="res://scripts/character_sheet_ui.gd" id="37_sheet"]
 
 [sub_resource type="StandardMaterial3D" id="mat_ground"]
 albedo_color = Color(0.35, 0.5, 0.25, 1)
@@ -188,6 +191,7 @@ font_size = 36
 [node name="Inventory" type="Node" parent="Enemy" unique_id=2002346694]
 script = ExtResource("6_inv")
 starting_item_1 = ExtResource("13_htxhm")
+starting_item_2 = ExtResource("13_htxhm")
 
 [node name="CharacterModel" parent="Enemy" unique_id=126384533 instance=ExtResource("12_orc_wrapper")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
@@ -219,7 +223,8 @@ font_size = 36
 
 [node name="Inventory" type="Node" parent="ArcherEnemy" unique_id=1010040196]
 script = ExtResource("6_inv")
-starting_item_1 = ExtResource("16_jq2sk")
+starting_item_1 = ExtResource("13_htxhm")
+starting_item_2 = ExtResource("16_jq2sk")
 
 [node name="CharacterModel" parent="ArcherEnemy" unique_id=942337605 instance=ExtResource("12_orc_wrapper")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
@@ -251,8 +256,9 @@ font_size = 36
 
 [node name="Inventory" type="Node" parent="BossEnemy" unique_id=100771442]
 script = ExtResource("6_inv")
-starting_item_1 = ExtResource("18_4k2k6")
+starting_item_1 = ExtResource("13_htxhm")
 starting_item_2 = ExtResource("19_0rl1p")
+starting_item_3 = ExtResource("18_4k2k6")
 
 [node name="CharacterModel" parent="BossEnemy" unique_id=1141627769 instance=ExtResource("12_orc_wrapper")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
@@ -311,7 +317,7 @@ initiative = 8
 character_name = "Wizard"
 attack_skill = 4
 parry_skill = 2
-dodge_skill = 7
+dodge_skill = 3
 defensive_option = 1
 shove_skill = 2
 trip_skill = 3
@@ -333,8 +339,7 @@ font_size = 36
 [node name="Inventory" type="Node" parent="Wizard" unique_id=1739299797]
 script = ExtResource("6_inv")
 starting_item_1 = ExtResource("20_ok6jj")
-starting_item_2 = ExtResource("21_facbu")
-starting_item_3 = ExtResource("33_staff")
+starting_item_2 = ExtResource("33_staff")
 
 [node name="CharacterModel" parent="Wizard" unique_id=897400905 instance=ExtResource("32_wizard_wrapper")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
@@ -387,76 +392,43 @@ horizontal_alignment = 1
 [node name="Grid" type="MeshInstance3D" parent="." unique_id=1678629236]
 script = ExtResource("4_1bvp3")
 
-[node name="ActionBar" type="CanvasLayer" parent="." unique_id=501745713]
+[node name="Toolbar" type="CanvasLayer" parent="." unique_id=501745713]
+script = ExtResource("35_toolbar")
 
-[node name="Panel" type="Panel" parent="ActionBar" unique_id=1481245891]
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -220.0
-offset_top = -50.0
-offset_right = 220.0
-offset_bottom = -10.0
+[node name="SystemMenu" type="CanvasLayer" parent="." unique_id=501745714]
+script = ExtResource("36_sysmenu")
 
-[node name="Bar" type="HBoxContainer" parent="ActionBar/Panel" unique_id=1040050374]
+[node name="CharacterSheetPanel" type="CanvasLayer" parent="." unique_id=501745715]
+script = ExtResource("37_sheet")
+
+[node name="Panel" type="Panel" parent="CharacterSheetPanel" unique_id=501745716]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -330.0
+offset_top = -190.0
+offset_right = -10.0
+offset_bottom = 200.0
+
+[node name="Title" type="Label" parent="CharacterSheetPanel/Panel" unique_id=501745717]
 layout_mode = 0
 anchor_right = 1.0
-offset_left = 8.0
-offset_top = 6.0
-offset_right = -8.0
-offset_bottom = -6.0
-theme_override_constants/separation = 6
+offset_left = 10.0
+offset_top = 8.0
+offset_right = -10.0
+offset_bottom = 32.0
+text = "Character"
+horizontal_alignment = 1
 
-[node name="Btn1" type="Button" parent="ActionBar/Panel/Bar" unique_id=882408011]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-toggle_mode = true
-text = "Move (1)"
-
-[node name="Btn2" type="Button" parent="ActionBar/Panel/Bar" unique_id=230933854]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-toggle_mode = true
-text = "Attack (2)"
-
-[node name="Btn3" type="Button" parent="ActionBar/Panel/Bar" unique_id=662632987]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-toggle_mode = true
-text = "Shove (3)"
-
-[node name="Btn4" type="Button" parent="ActionBar/Panel/Bar" unique_id=1383850769]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-toggle_mode = true
-text = "Trip (4)"
-
-[node name="Btn5" type="Button" parent="ActionBar/Panel/Bar" unique_id=1885349579]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-toggle_mode = true
-text = "Range (5)"
-
-[node name="Btn6" type="Button" parent="ActionBar/Panel/Bar" unique_id=934824872]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-toggle_mode = true
-text = "Throw (6)"
-
-[node name="Btn7" type="Button" parent="ActionBar/Panel/Bar" unique_id=2140506241]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-toggle_mode = true
-text = "Pick Up (7)"
+[node name="Rows" type="VBoxContainer" parent="CharacterSheetPanel/Panel" unique_id=501745718]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 38.0
+offset_right = -12.0
+offset_bottom = -10.0
+theme_override_constants/separation = 1
 
 [node name="InventoryPanel" type="CanvasLayer" parent="." unique_id=1727708808]
 script = ExtResource("7_inv_ui")

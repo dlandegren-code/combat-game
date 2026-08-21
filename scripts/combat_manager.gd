@@ -20,26 +20,11 @@ func _ready() -> void:
 	turn_label = get_parent().get_node("HUD/TurnLabel")
 	order_list = get_parent().get_node("InitiativePanel/Panel/OrderList")
 
-	# Wire action bar buttons
-	var ab := get_parent().get_node_or_null("ActionBar")
-	if ab:
-		for i in range(7):
-			var btn: Button = ab.get_node("Panel/Bar/Btn" + str(i + 1))
-			if btn:
-				btn.pressed.connect(_on_action_selected.bind(i))
-
 	_collect_combatants()
 	_spawn_ground_items()
 	if combatants.is_empty():
 		return
 	_start_combat()
-
-
-func _on_action_selected(index: int) -> void:
-	if not current_combatant or not current_combatant.is_player_controlled:
-		return
-	if current_combatant.has_method("select_action"):
-		current_combatant.select_action(index)
 
 
 func _collect_combatants() -> void:

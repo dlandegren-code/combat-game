@@ -11,3 +11,4 @@ handedness = 0
 durability = 15
 is_shield = true
 parry_ranged = true
+parry_bonus = 2
