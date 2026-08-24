@@ -24,10 +24,21 @@ const LAYER_LOS_BLOCKERS := 14       ## enemy (2) + obstacle (4) + player (8)
 ## Height above the body's origin that movement / line-of-sight rays are cast at.
 const EYE_HEIGHT := 0.5
 
-## Where a spell's projectile is spawned relative to the hand holding the staff: up towards
-## the staff head, then forward so the fire clears the caster's own model (see get_cast_origin).
-const CAST_ORIGIN_LIFT := 0.30
-const CAST_ORIGIN_REACH := 0.25
+## Where a projectile is spawned relative to the hand holding the weapon: up towards the staff
+## head or the nocking point, then forward so it clears the shooter's own model. Shared by the
+## Firebolt and the bow (see get_projectile_origin).
+const PROJECTILE_ORIGIN_LIFT := 0.30
+const PROJECTILE_ORIGIN_REACH := 0.25
+
+## Where a projectile is aimed on the target, above its body origin. That origin already sits
+## at about chest height, so this is a nudge onto the sternum rather than a real offset. Doubles
+## as where a wound bleeds from, since that is the same place.
+const PROJECTILE_IMPACT_HEIGHT := 0.12
+
+## Damage worth a full-strength blood splash. Everything scales off it, so a 2-point scratch
+## spatters and a 12-point crit really opens someone up. Set near a solid hit rather than near
+## the maximum: most blows should look like an ordinary wound, not a restrained one.
+const BLOOD_REFERENCE_DAMAGE := 7.0
 
 ## The 8 grid steps (cardinals + diagonals) used by every path search.
 const GRID_DIRS := [
@@ -193,6 +204,8 @@ var _action_used: int = 0
 
 const TwoHandedGripScript := preload("res://scripts/two_handed_grip.gd")
 const GroundItemScript := preload("res://scripts/ground_item.gd")
+const ArrowProjectileScript := preload("res://scripts/fx/arrow_projectile.gd")
+const BloodSplashScript := preload("res://scripts/fx/blood_splash.gd")
 
 var _weapon_socket = null
 var _shield_socket = null
@@ -874,6 +887,7 @@ func take_damage(amount: int, attacker_skill: int = 0, is_ranged: bool = false,
 	hp -= effective
 	if effective > 0:
 		_show_damage_number(effective)
+		_spill_blood(effective, attacker, damage_type)
 	_update_health_bar()
 	if hp <= 0:
 		is_alive = false
@@ -968,6 +982,9 @@ func _apply_impact_damage(amount: int) -> void:
 		return
 	hp -= effective
 	_show_damage_number(effective)
+	# Being shoved into a wall opens you up like anything else does. No attacker to spray away
+	# from here — the wall did it — so the splash picks its own heading.
+	_spill_blood(effective, null, DamageType.PHYSICAL)
 	_update_health_bar()
 	if hp <= 0:
 		hp = 0
@@ -1626,13 +1643,14 @@ func _face_target(target: Node3D) -> void:
 		model.rotation.y = atan2(dir.x, dir.z)
 
 
-func get_cast_origin(toward: Vector3) -> Vector3:
-	## Where a spell leaves this character — used to spawn the Firebolt's projectile FX.
+func get_projectile_origin(toward: Vector3) -> Vector3:
+	## Where a projectile leaves this character — the Firebolt's bolt, the bow's arrow.
 	##
-	## The weapon socket if the rig has one: a bolt that starts at the staff reads as cast,
-	## while one that starts at the body reads as fired out of the chest. During an attack the
-	## two-handed grip is suspended and the weapon is handed back to the right fist (see
-	## _play_attack_anim), so the socket is where the staff actually is while this is called.
+	## The weapon socket if the rig has one: a shot that starts at the staff or the bow reads
+	## as cast or loosed, while one that starts at the body reads as fired out of the chest.
+	## During an attack the two-handed grip is suspended and the weapon is handed back to the
+	## right fist (see _play_attack_anim), so the socket is where the weapon actually is while
+	## this is called.
 	##
 	## The lift and reach are deliberately in WORLD space rather than along the socket's own
 	## axes: the fist rolls with the animation, and an offset that rolled with it would swing
@@ -1640,19 +1658,66 @@ func get_cast_origin(toward: Vector3) -> Vector3:
 	var base := global_position + Vector3(0, EYE_HEIGHT * 0.4, 0)
 	if _weapon_socket is Node3D and (_weapon_socket as Node3D).is_inside_tree():
 		base = (_weapon_socket as Node3D).global_position
-	var origin := base + Vector3(0, CAST_ORIGIN_LIFT, 0)
+	var origin := base + Vector3(0, PROJECTILE_ORIGIN_LIFT, 0)
 	var dir := toward - origin
 	dir.y = 0
 	if dir.length() > 0.01:
-		origin += dir.normalized() * CAST_ORIGIN_REACH
+		origin += dir.normalized() * PROJECTILE_ORIGIN_REACH
 	return origin
 
 
 func get_feet_y() -> float:
 	## World height of the floor this character is standing on. `position.y` is the body's
 	## origin, which sits _ground_y() above the floor, so effects that belong on the ground
-	## (a scorch mark) subtract it rather than assuming the arena floor is at zero.
+	## (a scorch mark, a stain) subtract it rather than assuming the arena floor is at zero.
 	return global_position.y - _ground_y()
+
+
+func _spill_blood(effective: int, attacker: Node, damage_type: int) -> void:
+	## Blood for any wound that actually got through, from wherever — a blade, an arrow, a
+	## thrown axe, a wall. It lives here, off take_damage and _apply_impact_damage, rather than
+	## in each attack: one rule for the whole game, and anything added later bleeds without
+	## having to be taught to.
+	##
+	## FIRE is the one exception. A Firebolt already bursts into flame on whoever it hits (see
+	## player.gd::_do_firebolt), and a red splash underneath that only muddies it. Delete this
+	## guard if you would rather burns bled too.
+	if damage_type == DamageType.FIRE:
+		return
+	# Away from whoever landed the blow, which for an arrow is exactly the line it was flying.
+	# Left at zero when nobody did (a shove into a wall); BloodSplash picks a heading itself.
+	var away := Vector3.ZERO
+	var atk := attacker as Node3D
+	if atk:
+		away = global_position - atk.global_position
+	BloodSplashScript.burst(
+		get_parent(),
+		global_position + Vector3(0, PROJECTILE_IMPACT_HEIGHT, 0),
+		away,
+		get_feet_y(),
+		clampf(float(effective) / BLOOD_REFERENCE_DAMAGE, 0.5, 1.6))
+
+
+func _loose_arrow_at(target: Node) -> void:
+	## Fly an arrow to `target`, then resolve the shot where it lands: the roll, the damage and
+	## — on a hit — the blood all happen on impact, so they read as one event rather than as a
+	## number appearing half a second before the arrow that caused it.
+	##
+	## Lives here rather than in player.gd or enemy.gd because the hero's bow and the goblin
+	## archer's do exactly the same thing; both `await` it, so neither ends its turn while the
+	## arrow is still in the air. Ammo, animation and turn cost stay with the callers, which is
+	## where they differ.
+	var impact_point: Vector3 = target.global_position + Vector3(0, PROJECTILE_IMPACT_HEIGHT, 0)
+	var origin := get_projectile_origin(impact_point)
+	var arrow = ArrowProjectileScript.loose(get_parent(), origin, impact_point)
+	await arrow.impacted
+
+	if not is_instance_valid(target) or not target.is_alive:
+		return
+	# The blood is not spawned here: take_damage does it for every hit that gets through, and
+	# it works out the same spray direction from `self` that this function would have passed.
+	var to_hit: int = get_missile_skill(ranged_skill, target, get_ranged_range())
+	target.take_damage(get_attack_damage(), to_hit, true, self)
 
 
 func _die() -> void:

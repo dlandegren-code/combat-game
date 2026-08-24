@@ -25,4 +25,6 @@ func unavailable_reason(actor) -> String:
 
 func execute(actor, target) -> void:
 	actor._play_attack_anim("holding-both-shoot")
-	actor._do_ranged_attack(target)
+	# Awaited: the arrow has to fly and land before the shot is rolled, and player.gd waits on
+	# this call so the turn does not end while it is still in the air.
+	await actor._do_ranged_attack(target)

@@ -245,11 +245,12 @@ func _fire_arrow(player: Node) -> void:
 	ammo -= 1
 	_update_health_bar()
 	_play_attack_anim("holding-both-shoot")
-	player.take_damage(
-		get_attack_damage(), get_missile_skill(ranged_skill, player, get_ranged_range()), true, self)
 	_show_action_text("Arrow fired!")
 	_pending_cost = ranged_cost
-	await get_tree().create_timer(0.3).timeout
+	# The flight IS the beat between loosing and the turn passing, so the shot is awaited here
+	# and the old flat 0.3s pause is gone. _loose_arrow_at rolls the hit on impact and leaves
+	# the blood, so nothing about the shot resolves before the arrow gets there.
+	await _loose_arrow_at(player)
 	end_my_turn(_pending_cost)
 
 

@@ -8,6 +8,7 @@ class_name FireSplash
 ## and then decays, which is what separates an impact from a campfire. The node frees itself
 ## once the slowest layer (smoke) has faded.
 
+const ParticleKit := preload("res://scripts/fx/particle_kit.gd")
 const FireFx := preload("res://scripts/fx/fire_fx.gd")
 
 ## How long the node lives. Must clear the longest lifetime below, or a layer gets cut short.
@@ -56,7 +57,7 @@ func _ready() -> void:
 func _build_fireball() -> void:
 	## The body of the burst: soft blobs blown out in every direction and dragged to a stop,
 	## so the fire bulges out fast and then hangs where it stopped instead of drifting away.
-	var pm := FireFx.process_material(FireFx.fire_ramp(), FireFx.puff_curve())
+	var pm := ParticleKit.process_material(FireFx.fire_ramp(), ParticleKit.puff_curve())
 	pm.emission_sphere_radius = 0.18
 	pm.spread = 180.0
 	pm.initial_velocity_min = 2.0
@@ -64,14 +65,11 @@ func _build_fireball() -> void:
 	pm.gravity = Vector3(0, 1.2, 0)
 	pm.damping_min = 6.0
 	pm.damping_max = 11.0
-	pm.angle_min = -180.0
-	pm.angle_max = 180.0
-	pm.angular_velocity_min = -120.0
-	pm.angular_velocity_max = 120.0
+	ParticleKit.spin(pm, 120.0)
 	pm.scale_min = 0.7
 	pm.scale_max = 1.5
 
-	_add_burst("Fireball", FireFx.blob_quad(FireFx.TEX_BLOB, 0.7), pm, 34, 0.6)
+	_add_burst("Fireball", ParticleKit.blob_quad(ParticleKit.TEX_BLOB, 0.7), pm, 34, 0.6)
 
 
 func _build_flames() -> void:
@@ -79,7 +77,7 @@ func _build_flames() -> void:
 	## point along its own velocity, so the tongues splay out from the impact instead of all
 	## standing upright — this is the layer that makes the splash read as low-poly rather than
 	## as a generic soft-particle puff.
-	var pm := FireFx.process_material(FireFx.fire_ramp(), FireFx.puff_curve())
+	var pm := ParticleKit.process_material(FireFx.fire_ramp(), ParticleKit.puff_curve())
 	pm.emission_sphere_radius = 0.12
 	pm.direction = Vector3(0, 1, 0)
 	pm.spread = 85.0
@@ -90,16 +88,17 @@ func _build_flames() -> void:
 	pm.damping_max = 9.0
 	pm.particle_flag_align_y = true
 	# Read as "flames between 0.35 m and 0.8 m tall" — the mesh itself is ~20.8 units.
-	pm.scale_min = 0.35 * FireFx.FLAME_MESH_UNIT
-	pm.scale_max = 0.8 * FireFx.FLAME_MESH_UNIT
+	pm.scale_min = 0.35 * ParticleKit.FLAME_MESH_UNIT
+	pm.scale_max = 0.8 * ParticleKit.FLAME_MESH_UNIT
 
-	_add_burst("Flames", FireFx.flame_mesh(FireFx.FLAME, true), pm, 14, 0.5)
+	_add_burst("Flames",
+		ParticleKit.tinted_mesh(ParticleKit.MESH_FLAME, FireFx.FLAME, true, true), pm, 14, 0.5)
 
 
 func _build_chunks() -> void:
 	## A handful of the pack's faceted puffs, tumbling out slowly and swelling as they go.
 	## Fewer and bigger than the blobs — they are there for silhouette, not for coverage.
-	var pm := FireFx.process_material(FireFx.fire_ramp(), FireFx.puff_curve())
+	var pm := ParticleKit.process_material(FireFx.fire_ramp(), ParticleKit.puff_curve())
 	pm.emission_sphere_radius = 0.15
 	pm.spread = 180.0
 	pm.initial_velocity_min = 1.0
@@ -107,18 +106,18 @@ func _build_chunks() -> void:
 	pm.gravity = Vector3(0, 1.5, 0)
 	pm.damping_min = 4.0
 	pm.damping_max = 7.0
-	pm.angular_velocity_min = -160.0
-	pm.angular_velocity_max = 160.0
-	pm.scale_min = 0.5 * FireFx.PUFF_MESH_UNIT
-	pm.scale_max = 1.1 * FireFx.PUFF_MESH_UNIT
+	ParticleKit.spin(pm, 160.0)
+	pm.scale_min = 0.5 * ParticleKit.PUFF_MESH_UNIT
+	pm.scale_max = 1.1 * ParticleKit.PUFF_MESH_UNIT
 
-	_add_burst("Chunks", FireFx.puff_mesh(FireFx.DEEP), pm, 7, 0.55)
+	_add_burst("Chunks",
+		ParticleKit.tinted_mesh(ParticleKit.MESH_PUFF, FireFx.DEEP, true, true), pm, 7, 0.55)
 
 
 func _build_embers() -> void:
 	## Sparks thrown clear of the fire, falling under their own weight. They outlive the flame
 	## so the burst has a tail rather than stopping dead.
-	var pm := FireFx.process_material(FireFx.ember_ramp(), FireFx.shrink_curve())
+	var pm := ParticleKit.process_material(FireFx.ember_ramp(), ParticleKit.shrink_curve())
 	pm.emission_sphere_radius = 0.1
 	pm.spread = 180.0
 	pm.initial_velocity_min = 3.0
@@ -126,18 +125,15 @@ func _build_embers() -> void:
 	pm.gravity = Vector3(0, -9.0, 0)
 	pm.damping_min = 0.5
 	pm.damping_max = 2.0
-	pm.angle_min = -180.0
-	pm.angle_max = 180.0
-	pm.angular_velocity_min = -300.0
-	pm.angular_velocity_max = 300.0
+	ParticleKit.spin(pm, 300.0)
 	pm.scale_min = 0.35
 	pm.scale_max = 1.0
 
-	_add_burst("Embers", FireFx.blob_quad(FireFx.TEX_SPARK, 0.22), pm, 30, 0.9)
+	_add_burst("Embers", ParticleKit.blob_quad(ParticleKit.TEX_SPARK, 0.22), pm, 30, 0.9)
 
 
 func _build_smoke() -> void:
-	var pm := FireFx.process_material(FireFx.smoke_ramp(), FireFx.swell_curve())
+	var pm := ParticleKit.process_material(FireFx.smoke_ramp(), ParticleKit.swell_curve())
 	pm.emission_sphere_radius = 0.2
 	pm.direction = Vector3(0, 1, 0)
 	pm.spread = 60.0
@@ -146,32 +142,25 @@ func _build_smoke() -> void:
 	pm.gravity = Vector3(0, 0.8, 0)
 	pm.damping_min = 1.5
 	pm.damping_max = 3.0
-	pm.angle_min = -180.0
-	pm.angle_max = 180.0
-	pm.angular_velocity_min = -50.0
-	pm.angular_velocity_max = 50.0
+	ParticleKit.spin(pm, 50.0)
 	pm.scale_min = 0.8
 	pm.scale_max = 1.6
 
-	_add_burst("Smoke", FireFx.blob_quad(FireFx.TEX_SMOKE, 0.75, false), pm, 16, 1.2)
+	_add_burst("Smoke", ParticleKit.blob_quad(ParticleKit.TEX_SMOKE, 0.75, false), pm, 16, 1.2)
 
 
 func _add_burst(node_name: String, mesh: Mesh, pm: ParticleProcessMaterial,
 		amount: int, lifetime: float) -> void:
 	if mesh == null:
 		return   # a pack mesh that failed to import — that layer is simply left out
-	var p := FireFx.emitter(node_name, mesh, pm, amount, lifetime)
-	p.one_shot = true
-	p.explosiveness = 1.0   # the whole amount leaves on frame one
-	p.randomness = 0.5
-	add_child(p)
+	add_child(ParticleKit.one_shot(ParticleKit.emitter(node_name, mesh, pm, amount, lifetime)))
 
 
 func _build_ring() -> void:
 	## A flat scorch ring on the floor. Not particles: one quad whose scale and fade are driven
 	## by a tween, which is both cheaper and easier to time against the flash than a
 	## single-particle emitter would be.
-	var tex: Texture2D = load(FireFx.TEX_RING)
+	var tex: Texture2D = load(ParticleKit.TEX_RING)
 	if tex == null:
 		return
 	_ring_material = StandardMaterial3D.new()

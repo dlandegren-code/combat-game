@@ -11,6 +11,7 @@ class_name FireboltProjectile
 ## Launch it with `fire()` and forget it — it frees itself once the trail it left behind has
 ## burned out.
 
+const ParticleKit := preload("res://scripts/fx/particle_kit.gd")
 const FireFx := preload("res://scripts/fx/fire_fx.gd")
 
 ## Emitted when the bolt reaches its target. Nothing else about the spell resolves before it.
@@ -138,12 +139,12 @@ func _build_core() -> void:
 
 
 func _flame_instance(tint: Color, height: float, width_ratio: float) -> MeshInstance3D:
-	var mesh := FireFx.flame_mesh(tint)
+	var mesh := ParticleKit.tinted_mesh(ParticleKit.MESH_FLAME, tint)
 	if mesh == null:
 		return null
 	var mi := MeshInstance3D.new()
 	mi.mesh = mesh
-	var s: float = height * FireFx.FLAME_MESH_UNIT
+	var s: float = height * ParticleKit.FLAME_MESH_UNIT
 	mi.scale = Vector3(s * width_ratio, s, s * width_ratio)
 	# The mesh grows along +Y from its base; +90 degrees about X lays that down onto +Z.
 	mi.rotation_degrees = Vector3(90, 0, 0)
@@ -152,14 +153,8 @@ func _flame_instance(tint: Color, height: float, width_ratio: float) -> MeshInst
 
 
 func _build_trail() -> void:
-	var pm := FireFx.process_material(FireFx.fire_ramp(), FireFx.shrink_curve())
-	# A box stretched along the direction of travel rather than a point or a sphere, and this
-	# is the whole trick to the trail. Particles spawn in batches once per frame, so a
-	# point emitter on something moving 16 m/s lays them down in clumps a third of a metre
-	# apart — visibly a dotted line. Spawning each batch spread along the segment the bolt is
-	# about to cross fills those gaps in, at no extra particle cost.
-	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-	pm.emission_box_extents = Vector3(0.1, 0.1, 0.5)
+	var pm := ParticleKit.process_material(FireFx.fire_ramp(), ParticleKit.shrink_curve())
+	ParticleKit.trail_along_travel(pm, 0.5)
 	# Fire wants to climb, and puffs shed off the sides of the bolt rather than being pushed
 	# along by it. The bolt outruns them either way — that is what makes the trail.
 	pm.direction = Vector3(0, 1, 0)
@@ -169,62 +164,54 @@ func _build_trail() -> void:
 	pm.gravity = Vector3(0, 1.1, 0)
 	pm.damping_min = 1.0
 	pm.damping_max = 2.5
-	pm.angle_min = -180.0
-	pm.angle_max = 180.0
-	pm.angular_velocity_min = -90.0
-	pm.angular_velocity_max = 90.0
+	ParticleKit.spin(pm, 90.0)
 	pm.scale_min = 0.75
 	pm.scale_max = 1.15
 
 	# Dense, and big enough that neighbouring puffs overlap into a continuous ribbon of fire.
-	var p := FireFx.emitter("Trail", FireFx.blob_quad(FireFx.TEX_BLOB, 0.7), pm, 110, 0.5)
+	var p := ParticleKit.emitter(
+		"Trail", ParticleKit.blob_quad(ParticleKit.TEX_BLOB, 0.7), pm, 110, 0.5)
 	p.randomness = 0.35
 	add_child(p)
 	_emitters.append(p)
 
 
 func _build_embers() -> void:
-	var pm := FireFx.process_material(FireFx.ember_ramp(), FireFx.shrink_curve())
+	var pm := ParticleKit.process_material(FireFx.ember_ramp(), ParticleKit.shrink_curve())
 	pm.emission_sphere_radius = 0.05
 	pm.direction = Vector3(0, 0, 1)   # shed backwards, along the trail
 	pm.spread = 55.0
 	pm.initial_velocity_min = 0.8
 	pm.initial_velocity_max = 2.4
 	pm.gravity = Vector3(0, -2.2, 0)  # sparks are heavy enough to fall out of the trail
-	pm.angle_min = -180.0
-	pm.angle_max = 180.0
-	pm.angular_velocity_min = -240.0
-	pm.angular_velocity_max = 240.0
+	ParticleKit.spin(pm, 240.0)
 	pm.scale_min = 0.4
 	pm.scale_max = 1.0
 
-	var p := FireFx.emitter("Embers", FireFx.blob_quad(FireFx.TEX_SPARK, 0.18), pm, 40, 0.55)
+	var p := ParticleKit.emitter(
+		"Embers", ParticleKit.blob_quad(ParticleKit.TEX_SPARK, 0.18), pm, 40, 0.55)
 	p.randomness = 0.6
 	add_child(p)
 	_emitters.append(p)
 
 
 func _build_smoke() -> void:
-	var pm := FireFx.process_material(FireFx.smoke_ramp(), FireFx.swell_curve())
-	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-	pm.emission_box_extents = Vector3(0.08, 0.08, 0.5)
+	var pm := ParticleKit.process_material(FireFx.smoke_ramp(), ParticleKit.swell_curve())
+	ParticleKit.trail_along_travel(pm, 0.5, 0.08)
 	pm.direction = Vector3(0, 1, 0)
 	pm.spread = 25.0
 	pm.initial_velocity_min = 0.1
 	pm.initial_velocity_max = 0.5
 	pm.gravity = Vector3(0, 0.5, 0)
-	pm.angle_min = -180.0
-	pm.angle_max = 180.0
-	pm.angular_velocity_min = -40.0
-	pm.angular_velocity_max = 40.0
+	ParticleKit.spin(pm, 40.0)
 	pm.scale_min = 0.4
 	pm.scale_max = 0.9
 
 	# Smoke is the one layer that is NOT additive — additive smoke brightens whatever it
 	# drifts over, which is the opposite of what smoke does. Thin and sparse: it is here to
 	# dirty the wake, not to be seen in its own right (see FireFx.smoke_ramp).
-	var p := FireFx.emitter(
-		"Smoke", FireFx.blob_quad(FireFx.TEX_SMOKE, 0.45, false), pm, 12, TRAIL_FADE)
+	var p := ParticleKit.emitter(
+		"Smoke", ParticleKit.blob_quad(ParticleKit.TEX_SMOKE, 0.45, false), pm, 12, TRAIL_FADE)
 	p.randomness = 0.5
 	add_child(p)
 	_emitters.append(p)

@@ -24,10 +24,6 @@ const FireSplashScript := preload("res://scripts/fx/fire_splash.gd")
 ## skidding across the arena where nobody can reasonably go and fetch it.
 const THROW_SCATTER_TILES := 2
 
-## Where a Firebolt is aimed on the target, above the body's origin. The origin already sits
-## at about chest height, so this is a nudge up onto the sternum rather than a real offset.
-const BOLT_IMPACT_HEIGHT := 0.12
-
 var selected_action: int = Action.MOVE
 
 var move_indicator: MeshInstance3D
@@ -294,9 +290,9 @@ func _do_firebolt(target: Node) -> void:
 	# at the click. That is what keeps the damage number, the hit reaction and the splash on
 	# the same frame as the impact instead of half a second ahead of it. _handle_click awaits
 	# the whole ability for the same reason — the turn must not end while the bolt is in the air.
-	var impact_point: Vector3 = target.global_position + Vector3(0, BOLT_IMPACT_HEIGHT, 0)
+	var impact_point: Vector3 = target.global_position + Vector3(0, PROJECTILE_IMPACT_HEIGHT, 0)
 	var bolt = FireboltProjectileScript.fire(
-		get_parent(), get_cast_origin(impact_point), impact_point)
+		get_parent(), get_projectile_origin(impact_point), impact_point)
 	await bolt.impacted
 
 	if not is_instance_valid(target) or not target.is_alive:
@@ -321,9 +317,11 @@ func _do_ranged_attack(target: Node) -> void:
 		return
 	ammo -= 1
 	_update_health_bar()
-	target.take_damage(
-		get_attack_damage(), get_missile_skill(ranged_skill, target, get_ranged_range()), true, self)
 	_show_action_text(str(ammo) + " arrows left")
+	# Same arrangement as the Firebolt: the arrow is a real projectile, so the shot is rolled
+	# when it ARRIVES rather than at the click, and _handle_click awaits the whole ability so
+	# the turn cannot end while the arrow is still in the air.
+	await _loose_arrow_at(target)
 
 
 func _do_throw_attack(target: Node) -> void:
