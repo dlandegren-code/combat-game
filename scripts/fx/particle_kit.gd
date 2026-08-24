@@ -21,6 +21,10 @@ const TEX_DOT := "res://assets/PolygonParticles/Textures/PolygonParticles_Circle
 const TEX_SPARK := "res://assets/PolygonParticles/Textures/PolygonParticles_Sparkle.png"
 const TEX_SMOKE := "res://assets/PolygonParticles/Textures/PolygonParticles_Smoke_01.png"
 const TEX_RING := "res://assets/PolygonParticles/Textures/PolygonParticles_Ring_02.png"
+## A crescent band, thick at the centre and tapering to points at both ends — a sword slash.
+## 2:1, so anything drawing it wants a quad twice as wide as it is tall.
+const TEX_ARC := "res://assets/PolygonParticles/Textures/PolygonParticles_SemiCircle.png"
+const ARC_ASPECT := 2.0
 const MESH_FLAME := "res://assets/PolygonParticles/Models/SM_Flame_FX.obj"
 const MESH_PUFF := "res://assets/PolygonParticles/Models/FX_Sphere_Puff_01.obj"
 const MESH_CHUNK_SMALL := "res://assets/PolygonParticles/Models/SM_GoreChunk_02.obj"
@@ -101,9 +105,16 @@ static func _curve_tex(c: Curve) -> CurveTexture:
 # --- Meshes / materials ----------------------------------------------------
 
 static func blob_quad(texture_path: String, size: float, additive: bool = true) -> QuadMesh:
-	## A camera-facing quad for one of the pack's round particle textures. BILLBOARD_PARTICLES
-	## rather than plain BILLBOARD_ENABLED is what lets each particle carry its own spin, so a
-	## stream of these does not read as a row of identical stamps.
+	## A square camera-facing quad — the shape almost every emitter here wants.
+	return sprite_quad(texture_path, Vector2(size, size), additive)
+
+
+static func sprite_quad(texture_path: String, size: Vector2, additive: bool = true) -> QuadMesh:
+	## A camera-facing quad for one of the pack's particle textures. BILLBOARD_PARTICLES rather
+	## than plain BILLBOARD_ENABLED is what lets each particle carry its own spin, so a stream
+	## of these does not read as a row of identical stamps — and, for a single-particle effect
+	## like a sword arc, it is the only billboard mode that keeps the sprite's own roll at all
+	## (BILLBOARD_ENABLED replaces the whole basis with the camera's and throws the roll away).
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -121,7 +132,7 @@ static func blob_quad(texture_path: String, size: float, additive: bool = true) 
 	mat.albedo_texture = load(texture_path)
 
 	var quad := QuadMesh.new()
-	quad.size = Vector2(size, size)
+	quad.size = size
 	quad.material = mat
 	return quad
 

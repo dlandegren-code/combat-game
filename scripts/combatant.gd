@@ -40,6 +40,15 @@ const PROJECTILE_IMPACT_HEIGHT := 0.12
 ## the maximum: most blows should look like an ordinary wound, not a restrained one.
 const BLOOD_REFERENCE_DAMAGE := 7.0
 
+## Damage worth a full-size sword arc, and how long the attack animation winds up before the
+## blade is actually travelling. The delay is visual only — see _swing_arc.
+const SWING_REFERENCE_DAMAGE := 7.0
+const SWING_WINDUP := 0.14
+
+## Attacker skill worth a full-size shower of parry sparks. Skill rather than damage, because
+## a parried blow never rolls its damage — see _parry_sparks.
+const PARRY_REFERENCE_SKILL := 10.0
+
 ## The 8 grid steps (cardinals + diagonals) used by every path search.
 const GRID_DIRS := [
 	Vector3(GRID_SIZE, 0, 0), Vector3(-GRID_SIZE, 0, 0),
@@ -206,6 +215,8 @@ const TwoHandedGripScript := preload("res://scripts/two_handed_grip.gd")
 const GroundItemScript := preload("res://scripts/ground_item.gd")
 const ArrowProjectileScript := preload("res://scripts/fx/arrow_projectile.gd")
 const BloodSplashScript := preload("res://scripts/fx/blood_splash.gd")
+const SwordSwingScript := preload("res://scripts/fx/sword_swing.gd")
+const ParrySparksScript := preload("res://scripts/fx/parry_sparks.gd")
 
 var _weapon_socket = null
 var _shield_socket = null
@@ -919,6 +930,7 @@ func _attempt_defense(attacker_skill: int, is_ranged: bool = false, attacker: No
 			if inventory and inventory.has_method("degrade_equipped_weapon"):
 				inventory.degrade_equipped_weapon()
 			_show_defense_result("Cover parry!" if has_cover else "Parry!")
+			_parry_sparks(attacker, attacker_skill, is_ranged)
 			_update_health_bar()
 			_charge_defense_cost()
 			result.defended = true
@@ -1464,7 +1476,9 @@ func _do_melee_attack(target) -> void:
 		_offhand_attack(target)
 		return
 	_play_attack_anim("attack-melee-right")
-	target.take_damage(get_attack_damage(), get_attack_skill(), false, self)
+	var dmg: int = get_attack_damage()
+	_swing_arc(target, dmg)
+	target.take_damage(dmg, get_attack_skill(), false, self)
 
 	if not (inventory and inventory.has_method("has_offhand_weapon") and inventory.has_offhand_weapon()):
 		return
@@ -1483,6 +1497,8 @@ func _offhand_attack(target) -> void:
 	var penalty: int = 0 if dual_wield_skill else OFFHAND_HIT_PENALTY
 	var dmg: int = maxi(1, int(get_offhand_attack_damage() / 2.0))
 	_show_action_text("Off-hand!")
+	# Mirrored, so the follow-up visibly crosses the main-hand cut instead of repeating it.
+	_swing_arc(target, dmg, true)
 	target.take_damage(dmg, get_offhand_attack_skill() - penalty, false, self)
 
 
@@ -1671,6 +1687,78 @@ func get_feet_y() -> float:
 	## origin, which sits _ground_y() above the floor, so effects that belong on the ground
 	## (a scorch mark, a stain) subtract it rather than assuming the arena floor is at zero.
 	return global_position.y - _ground_y()
+
+
+func take_held_weapon_visual() -> Node3D:
+	## A detached copy of whatever model is currently in this character's hands, ready to be
+	## flown as a thrown projectile. Null if they are holding nothing with a model.
+	##
+	## Copying the live node rather than rebuilding from the ItemResource is deliberate. The
+	## rules for turning an item into a model — data-driven model_path first, then a name-based
+	## fallback table, then per-type scaling and the Synty atlas override — already live in
+	## _refresh_socket and again in ground_item.gd, and a third copy here would be the one that
+	## drifted. This also cannot disagree with what the player can see in the fist.
+	var socket: Node3D = null
+	if _weapon_socket is Node3D and (_weapon_socket as Node3D).get_child_count() > 0:
+		socket = _weapon_socket as Node3D
+	elif _grip_socket != null and _grip_socket.get_child_count() > 0:
+		# Two-handers hang off the chest instead. Mid-attack the grip is suspended and the
+		# weapon is back in the fist, so this branch is the belt-and-braces case.
+		socket = _grip_socket
+	if socket == null:
+		return null
+	var copy := socket.get_child(0).duplicate() as Node3D
+	return copy
+
+
+func _parry_sparks(attacker: Node, attacker_skill: int, is_ranged: bool) -> void:
+	## Steel on steel where a parry catches the blow. The mirror of _spill_blood: that one says
+	## the strike went in, this one says it was stopped, and between them every resolved attack
+	## now leaves something behind.
+	##
+	## Only real parries reach here — a dodge is avoidance, with nothing meeting, and the
+	## passive cover save is a pillar eating the shot rather than anyone catching it.
+	var atk := attacker as Node3D
+	if atk == null:
+		return
+	var attacker_at := atk.global_position
+	var defender_at := global_position
+	# A harder blow is a heavier thing to turn aside. Attacker skill is the only measure of the
+	# incoming strike available at this point — the damage is never rolled on a parry.
+	var force: float = clampf(float(attacker_skill) / PARRY_REFERENCE_SKILL, 0.6, 1.5)
+	if not is_ranged:
+		# Melee sparks wait out the same wind-up the attacker's arc does, so the blades meet
+		# rather than the parry flashing before the swing arrives. An arrow needs no such wait:
+		# take_damage already happens the moment it lands.
+		await get_tree().create_timer(SWING_WINDUP).timeout
+		if not is_inside_tree():
+			return
+	ParrySparksScript.clash(get_parent(), defender_at, attacker_at, force)
+
+
+func _swing_arc(target, damage: int, mirrored: bool = false) -> void:
+	## The blade's arc across the target. Fired for every melee strike whatever it lands —
+	## unlike the blood, which is only for wounds — because the swing happened either way, and
+	## a parry with nothing to parry reads as the defender flinching at air.
+	##
+	## Not awaited by the caller, and deliberately so: it runs a short delay of its own to let
+	## the attack animation wind up, so the arc arrives with the blade rather than with the
+	## button press. Melee is the one attack whose timing this does NOT change — the roll still
+	## resolves on the frame it always did.
+	var victim := target as Node3D
+	if victim == null:
+		return
+	var from := global_position
+	var to := victim.global_position
+	# Bigger weapons cut bigger arcs. Scaled off damage because that is the only size the game
+	# actually models — reach is a range rule, not a blade length.
+	# Named arc_scale, not strength: `strength` is a character stat on this class, and shadowing
+	# it here would read as the swing scaling off the attacker's muscle rather than the weapon.
+	var arc_scale: float = clampf(float(damage) / SWING_REFERENCE_DAMAGE, 0.6, 1.6)
+	await get_tree().create_timer(SWING_WINDUP).timeout
+	if not is_inside_tree():
+		return
+	SwordSwingScript.swing(get_parent(), from, to, arc_scale, mirrored)
 
 
 func _spill_blood(effective: int, attacker: Node, damage_type: int) -> void:

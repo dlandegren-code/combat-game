@@ -18,6 +18,7 @@ const FireboltAbilityScript := preload("res://scripts/abilities/firebolt_ability
 
 const FireboltProjectileScript := preload("res://scripts/fx/firebolt_projectile.gd")
 const FireSplashScript := preload("res://scripts/fx/fire_splash.gd")
+const ThrownWeaponScript := preload("res://scripts/fx/thrown_weapon.gd")
 
 ## How far from the square it was aimed at a thrown weapon may come to rest, in tiles.
 ## Keeps a deflected or dropped weapon within a step or two of the fight rather than
@@ -338,8 +339,18 @@ func _do_throw_attack(target: Node) -> void:
 		throw_dir = Vector3.RIGHT
 	throw_dir = throw_dir.normalized()
 
-	var defended: bool = target.take_damage(
-		get_attack_damage(), get_missile_skill(throw_skill, target, get_throw_range()), true, self)
+	# Copy the model out of the hand while it is still there — unequipping empties the socket
+	# and leaves nothing to fly.
+	var flying_visual := take_held_weapon_visual()
+	var impact_point: Vector3 = target.global_position + Vector3(0, PROJECTILE_IMPACT_HEIGHT, 0)
+	var origin := get_projectile_origin(impact_point)
+
+	# Wind up first, and only then let go: the weapon has to stay in the fist while the arm
+	# comes over, or the character throws an empty hand and the axe appears out of nowhere.
+	await get_tree().create_timer(SWING_WINDUP).timeout
+	if not is_inside_tree():
+		return
+
 	# Remove the thrown weapon from the character's equipment
 	if inventory and inventory.has_method("unequip_slot"):
 		inventory.unequip_slot(ItemResource.EquipSlot.RIGHT_HAND)
@@ -349,6 +360,27 @@ func _do_throw_attack(target: Node) -> void:
 	if slot >= 0 and inventory and inventory.has_method("remove_item"):
 		inventory.remove_item(slot)
 	_update_health_bar()
+
+	# Release: the arc of the arm, then the weapon itself. Only when it lands is the throw
+	# rolled — the same arrangement as the bow and the Firebolt. _handle_click awaits the whole
+	# ability, so the turn cannot end with the axe still in the air.
+	SwordSwingScript.hurl(get_parent(), global_position, impact_point,
+		clampf(float(get_attack_damage()) / SWING_REFERENCE_DAMAGE, 0.6, 1.6))
+	if flying_visual != null:
+		var weapon = ThrownWeaponScript.hurl(get_parent(), origin, impact_point, flying_visual)
+		await weapon.impacted
+
+	if not is_instance_valid(target):
+		# Target gone while the weapon was in the air. Nothing left to roll against, but the
+		# weapon still has to end up somewhere pickup-able, so it drops where it was aimed.
+		_spawn_ground_item(
+			thrown_item, Vector3(impact_point.x, GroundItemScript.DROP_Y, impact_point.z))
+		return
+	# A target that died mid-flight cannot defend, so the throw counts as landed and the weapon
+	# drops beside the body rather than skidding past as a miss would.
+	var defended: bool = target.is_alive and target.take_damage(
+		get_attack_damage(), get_missile_skill(throw_skill, target, get_throw_range()),
+		true, self)
 
 	# Either way the weapon comes to rest near the square it was aimed at — a deflected
 	# throw carries on past the target, a connecting one drops beside them.
