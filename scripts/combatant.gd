@@ -24,6 +24,11 @@ const LAYER_LOS_BLOCKERS := 14       ## enemy (2) + obstacle (4) + player (8)
 ## Height above the body's origin that movement / line-of-sight rays are cast at.
 const EYE_HEIGHT := 0.5
 
+## Where a spell's projectile is spawned relative to the hand holding the staff: up towards
+## the staff head, then forward so the fire clears the caster's own model (see get_cast_origin).
+const CAST_ORIGIN_LIFT := 0.30
+const CAST_ORIGIN_REACH := 0.25
+
 ## The 8 grid steps (cardinals + diagonals) used by every path search.
 const GRID_DIRS := [
 	Vector3(GRID_SIZE, 0, 0), Vector3(-GRID_SIZE, 0, 0),
@@ -40,6 +45,19 @@ const COVER_RAY_DROP := 0.6       ## metres below eye-line for the "does a short
 ## Dual-wield free off-hand attack (see _do_melee_attack).
 const OFFHAND_HIT_PENALTY := 5    ## to-hit penalty for the off-hand strike (0 with dual_wield_skill)
 const OFFHAND_DELAY := 0.3        ## beat between the main hit and the off-hand follow-up
+
+## What a hit is made of, which decides which defences apply to it (see _calculate_damage).
+## PHYSICAL is the default everywhere, so every existing blade, arrow and shove keeps behaving
+## exactly as it did; only something that explicitly asks for another type gets other rules.
+enum DamageType { PHYSICAL, FIRE }
+
+## Hit points per point of stamina. Set so the old hand-authored totals fall out of whole
+## stamina scores: 4 stamina = the 20 hp a hero used to be given outright, 6 = the boss's 30.
+const HP_PER_STAMINA := 5
+
+## Mana per point of willpower, matching HP_PER_STAMINA so the two pools read on one scale.
+## Only characters with `can_cast` get a pool at all; for everyone else it is 0.
+const MANA_PER_WILLPOWER := 5
 
 ## Missile to-hit penalties, applied to bow shots AND thrown weapons alike by
 ## get_missile_skill(). Distance uses the same Manhattan measure the range checks do.
@@ -80,7 +98,8 @@ var move_range: int = 4
 @export var physical_resistance: int = 0  ## percentage 0-100
 @export var attack_skill: int = 5       ## used in attack vs defense rolls
 @export var parry_skill: int = 4        ## parry defense skill
-@export var dodge_skill: int = 5        ## dodge defense skill
+## No dodge_skill: dodging is agility (see get_dodge_skill), so there is one number to tune
+## rather than two that can contradict each other.
 @export_enum("Parry", "Dodge") var defensive_option: int = 0  ## 0=Parry, 1=Dodge
 @export var shove_skill: int = 5
 @export var trip_skill: int = 4
@@ -91,15 +110,45 @@ var move_range: int = 4
 @export var ranged_cost: int = 3
 @export var ammo: int = 0
 @export var max_ammo: int = 0
-@export var ranged_range: int = 15      ## max tiles for ranged (accurate only to RANGE_FREE_TILES)
 @export var throw_skill: int = 3        ## used for thrown weapon attacks
 ## One time unit — a throw is a single quick action, cheaper than a bow shot (which has to
 ## be nocked and drawn) and cheaper than a melee exchange. Note you also give up the weapon,
 ## so the real price is fetching it back off the floor.
 @export var throw_cost: int = 1
-@export var throw_range: int = 3        ## max tiles for thrown
 @export var equip_cost: int = 1         ## time cost to swap equipped weapon/shield
+
+## Whether this character can cast at all. Off by default, so only a character explicitly
+## marked a caster gets a mana pool or any spell power — willpower is a universal attribute,
+## and gating on the capability rather than on the attribute is what keeps a stubborn goblin
+## stubborn without also making it a sorcerer. A non-caster reports 0 for both.
+@export var can_cast: bool = false
+## Time units a spell takes. Spells also cost mana, which is per-spell (see the ability), so
+## this is only the tempo half of the price.
+@export var spell_cost: int = 3
+
+## Core attributes. Reach is deliberately NOT here: how far a weapon throws or shoots is a
+## property of the weapon, so ranged_range / throw_range live on ItemResource and are read
+## through get_ranged_range() / get_throw_range().
+##
+## Each attribute that drives something drives it EXCLUSIVELY — there is no separate trained
+## value alongside it, so a nimble character cannot also be a poor dodger and a tough one
+## cannot be short of hit points. Anything derived is computed in _derive_stats() or a
+## get_*() accessor rather than stored twice.
+##
+## `intelligence` and `charisma` are the two that still drive nothing; they are carried and
+## shown so the sheet has a complete block.
+@export_group("Attributes")
+## Shove distance and knock-back resistance (_try_shove / _apply_push).
 @export var strength: int = 3
+## The dodge roll, one-for-one (get_dodge_skill).
+@export var agility: int = 3
+## Max hit points, HP_PER_STAMINA each (_derive_stats).
+@export var stamina: int = 3
+@export var intelligence: int = 3
+## Spell power (get_spell_power) and the mana pool, MANA_PER_WILLPOWER each (_derive_stats).
+@export var willpower: int = 3
+@export var charisma: int = 3
+## Body mass, used by shove and trip rather than shown as an attribute.
 @export var weight: int = 2
 
 var next_turn_at: int = 0
@@ -120,6 +169,10 @@ signal health_changed(hp: int, max_hp: int, is_alive: bool)
 
 var hp := 20
 var max_hp := 20
+## Spell resource, derived from willpower in _derive_stats() and 0 for anyone without
+## `can_cast`. Spend it through spend_mana() so nothing has to remember to clamp.
+var mana := 0
+var max_mana := 0
 var attack_dmg := 4
 var is_alive := true
 
@@ -189,6 +242,9 @@ func _ready() -> void:
 	_apply_stats()
 	_readd_equipment_bonuses()
 	_pre_setup()
+	# After both the stat block and the subclass hook have had their say, so it derives from
+	# the attributes this character actually ended up with.
+	_derive_stats()
 	# Put each side on its own physics layer. main.tscn only ever set layer 2 on the
 	# enemies, leaving the heroes on the default layer 1 — the same layer as the floor,
 	# which both broke AI line-of-sight (see LAYER_LOS_BLOCKERS) and let a click on a
@@ -230,8 +286,7 @@ func _apply_stats() -> void:
 	var s: Variant = stats
 	character_name = s.character_name
 	initiative = s.initiative
-	max_hp = s.max_hp
-	hp = s.max_hp
+	# No max_hp here — it is derived from stamina by _derive_stats().
 	attack_dmg = s.attack_dmg
 	move_speed = s.move_speed
 	move_range = s.move_range
@@ -246,19 +301,36 @@ func _apply_stats() -> void:
 	armor = s.armor
 	physical_resistance = s.physical_resistance
 	parry_skill = s.parry_skill
-	dodge_skill = s.dodge_skill
 	defensive_option = s.defensive_option
 	ranged_skill = s.ranged_skill
 	ranged_cost = s.ranged_cost
-	ranged_range = s.ranged_range
 	ammo = s.ammo
 	max_ammo = s.max_ammo
 	throw_skill = s.throw_skill
 	throw_cost = s.throw_cost
-	throw_range = s.throw_range
+	can_cast = s.can_cast
+	spell_cost = s.spell_cost
 	strength = s.strength
+	agility = s.agility
+	stamina = s.stamina
+	intelligence = s.intelligence
+	willpower = s.willpower
+	charisma = s.charisma
 	weight = s.weight
 	equip_cost = s.equip_cost
+
+
+func _derive_stats() -> void:
+	## Fill in the values that are computed from attributes rather than authored. Runs for
+	## everyone, stat block or not, so a scene-configured player and a .tres-configured enemy
+	## get the same treatment.
+	##
+	## Both pools are set to full here. That is fine at spawn but means this must NOT be called
+	## again mid-fight, or changing an attribute would heal and refill as a side effect.
+	max_hp = maxi(1, stamina * HP_PER_STAMINA)
+	hp = max_hp
+	max_mana = maxi(0, willpower * MANA_PER_WILLPOWER) if can_cast else 0
+	mana = max_mana
 
 
 ## Restore the armor/resistance bonuses of already-equipped gear after a stat block
@@ -785,7 +857,12 @@ func _has_line_of_sight_from(from_tile: Vector3, target: Node) -> bool:
 	return result.collider == target
 
 
-func take_damage(amount: int, attacker_skill: int = 0, is_ranged: bool = false, attacker: Node = null) -> bool:
+func take_damage(amount: int, attacker_skill: int = 0, is_ranged: bool = false,
+		attacker: Node = null, damage_type: int = DamageType.PHYSICAL) -> bool:
+	## `damage_type` is last and defaulted so every existing caller is unaffected.
+	## Note it is independent of `is_ranged`: that one decides whether the hit can be dodged,
+	## parried or blocked by cover, while damage_type only decides what soaks it afterwards.
+	## A firebolt is both a missile and fire.
 	if not is_alive:
 		return false
 
@@ -793,7 +870,7 @@ func take_damage(amount: int, attacker_skill: int = 0, is_ranged: bool = false, 
 	if def_result.defended:
 		return true
 
-	var effective: int = _calculate_damage(amount)
+	var effective: int = _calculate_damage(amount, damage_type)
 	hp -= effective
 	if effective > 0:
 		_show_damage_number(effective)
@@ -808,7 +885,7 @@ func take_damage(amount: int, attacker_skill: int = 0, is_ranged: bool = false, 
 
 func _attempt_defense(attacker_skill: int, is_ranged: bool = false, attacker: Node = null) -> Dictionary:
 	var attack_roll := attacker_skill + randi_range(1, 5)
-	var effective_dodge: int = dodge_skill - (2 if is_prone else 0)
+	var effective_dodge: int = get_dodge_skill() - (2 if is_prone else 0)
 	var result := { "defended": false, "attack_roll": attack_roll, "defense_roll": 0 }
 
 	# Partial cover: a short prop (pillar / vessel) on the line from the shooter hinders
@@ -869,8 +946,16 @@ func _has_partial_cover_from(attacker: Node) -> bool:
 	return not space_state.intersect_ray(query).is_empty()
 
 
-func _calculate_damage(raw: int) -> int:
-	var dmg := raw - armor
+func _calculate_damage(raw: int, damage_type: int = DamageType.PHYSICAL) -> int:
+	## Armour is plate, mail and boiled leather: it turns a blade or an arrow, and a bolt of
+	## fire goes straight past it. So FIRE skips the armour subtraction entirely.
+	##
+	## Resistance still applies to everything. It represents the body's own toughness rather
+	## than what is worn, which is why it is not bypassed — despite being named
+	## `physical_resistance`, it is now the general damage resistance and the name lags.
+	var dmg := raw
+	if damage_type == DamageType.PHYSICAL:
+		dmg -= armor
 	if dmg <= 0:
 		return 0
 	dmg = roundi(dmg * (1.0 - physical_resistance / 100.0))
@@ -1291,6 +1376,48 @@ func _is_engaged(target: Node) -> bool:
 	return false
 
 
+func get_spell_power() -> int:
+	## How hard a spell lands, the way attack_skill decides how hard a blade does. Willpower
+	## one-for-one for a caster, and 0 for everyone else — a fighter with a strong will is
+	## stubborn, not magical.
+	##
+	## Nothing casts yet, so this is currently only read by the character sheet. It exists as
+	## the single place a spell should ask, so that when spells arrive they cannot start
+	## inventing their own scaling.
+	return willpower if can_cast else 0
+
+
+func spend_mana(amount: int) -> bool:
+	## Pay for a spell. Returns false and spends nothing when the caster cannot cast or the
+	## pool is short, so a caller can use it as the affordability check and the payment in one:
+	##     if not spend_mana(cost): return
+	if not can_cast:
+		return false
+	if amount <= 0:
+		return true
+	if mana < amount:
+		return false
+	mana -= amount
+	_update_health_bar()
+	return true
+
+
+func restore_mana(amount: int) -> void:
+	if not can_cast or amount <= 0:
+		return
+	mana = mini(max_mana, mana + amount)
+	_update_health_bar()
+
+
+func get_dodge_skill() -> int:
+	## Dodging IS agility — there is no separate trained value, so a nimble character cannot be
+	## a poor dodger. Note the asymmetry with get_parry_skill(): parrying is done with a weapon
+	## or shield and so takes an equipment bonus, whereas dodging is done with the body alone
+	## and takes none. Adding a `dodge_bonus` to ItemResource (a cloak, light boots) would be
+	## the place to change that.
+	return agility
+
+
 func get_parry_skill() -> int:
 	## Parry skill including whatever is in our hands (a shield, or a weapon made for
 	## turning blades). Dodge has no equivalent: nothing worn or carried feeds that roll.
@@ -1343,19 +1470,20 @@ func _offhand_attack(target) -> void:
 
 
 func get_ranged_range() -> int:
+	## Reach comes entirely from the weapon — a character has no innate shooting range, so
+	## empty-handed or holding a sword this is 0 and the Ranged ability simply cannot target.
+	## There is deliberately no character-level fallback to paper over a missing bow.
 	if inventory and inventory.has_method("get_equipped_ranged_range"):
-		var r: int = inventory.get_equipped_ranged_range()
-		if r > 0:
-			return r
-	return ranged_range
+		return inventory.get_equipped_ranged_range()
+	return 0
 
 
 func get_throw_range() -> int:
+	## Also purely the weapon's (ItemResource.throw_range, which defaults to a short lob so an
+	## ordinary weapon can still be thrown).
 	if inventory and inventory.has_method("get_equipped_throw_range"):
-		var r: int = inventory.get_equipped_throw_range()
-		if r > 0:
-			return r
-	return throw_range
+		return inventory.get_equipped_throw_range()
+	return 0
 
 
 func _physics_process(delta: float) -> void:
@@ -1496,6 +1624,35 @@ func _face_target(target: Node3D) -> void:
 	dir.y = 0
 	if dir.length() > 0.01:
 		model.rotation.y = atan2(dir.x, dir.z)
+
+
+func get_cast_origin(toward: Vector3) -> Vector3:
+	## Where a spell leaves this character — used to spawn the Firebolt's projectile FX.
+	##
+	## The weapon socket if the rig has one: a bolt that starts at the staff reads as cast,
+	## while one that starts at the body reads as fired out of the chest. During an attack the
+	## two-handed grip is suspended and the weapon is handed back to the right fist (see
+	## _play_attack_anim), so the socket is where the staff actually is while this is called.
+	##
+	## The lift and reach are deliberately in WORLD space rather than along the socket's own
+	## axes: the fist rolls with the animation, and an offset that rolled with it would swing
+	## the spawn point around the character mid-cast.
+	var base := global_position + Vector3(0, EYE_HEIGHT * 0.4, 0)
+	if _weapon_socket is Node3D and (_weapon_socket as Node3D).is_inside_tree():
+		base = (_weapon_socket as Node3D).global_position
+	var origin := base + Vector3(0, CAST_ORIGIN_LIFT, 0)
+	var dir := toward - origin
+	dir.y = 0
+	if dir.length() > 0.01:
+		origin += dir.normalized() * CAST_ORIGIN_REACH
+	return origin
+
+
+func get_feet_y() -> float:
+	## World height of the floor this character is standing on. `position.y` is the body's
+	## origin, which sits _ground_y() above the floor, so effects that belong on the ground
+	## (a scorch mark) subtract it rather than assuming the arena floor is at zero.
+	return global_position.y - _ground_y()
 
 
 func _die() -> void:

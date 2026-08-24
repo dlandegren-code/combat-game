@@ -36,6 +36,7 @@
 [ext_resource type="Script" uid="uid://c0158ruvojo6t" path="res://scripts/action_toolbar.gd" id="35_toolbar"]
 [ext_resource type="Script" uid="uid://bimm2jro0lsmj" path="res://scripts/system_menu.gd" id="36_sysmenu"]
 [ext_resource type="Script" uid="uid://bbw8x7t016iaa" path="res://scripts/character_sheet_ui.gd" id="37_sheet"]
+[ext_resource type="Script" uid="uid://cdj327r1wgiem" path="res://scripts/spell_sheet_ui.gd" id="38_spells"]
 
 [sub_resource type="StandardMaterial3D" id="mat_ground"]
 albedo_color = Color(0.35, 0.5, 0.25, 1)
@@ -139,6 +140,8 @@ floor_stop_on_slope = false
 floor_block_on_wall = false
 floor_snap_length = 0.0
 script = ExtResource("1_player")
+agility = 5
+stamina = 4
 
 [node name="Mesh" type="MeshInstance3D" parent="Player" unique_id=1393056996]
 visible = false
@@ -273,12 +276,13 @@ initiative = 8
 character_name = "Archer"
 attack_skill = 4
 parry_skill = 2
-dodge_skill = 7
 defensive_option = 1
 shove_skill = 2
 trip_skill = 3
 ammo = 7
 max_ammo = 12
+agility = 7
+stamina = 4
 
 [node name="Mesh" type="MeshInstance3D" parent="Player2" unique_id=1720006444]
 visible = false
@@ -316,10 +320,12 @@ initiative = 8
 character_name = "Wizard"
 attack_skill = 4
 parry_skill = 2
-dodge_skill = 3
 defensive_option = 1
 shove_skill = 2
 trip_skill = 3
+can_cast = true
+intelligence = 5
+willpower = 5
 
 [node name="Mesh" type="MeshInstance3D" parent="Wizard" unique_id=47098326]
 visible = false
@@ -401,13 +407,15 @@ script = ExtResource("36_sysmenu")
 script = ExtResource("37_sheet")
 
 [node name="Panel" type="Panel" parent="CharacterSheetPanel" unique_id=501745716]
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -330.0
-offset_top = -190.0
-offset_right = -10.0
-offset_bottom = 200.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -195.0
+offset_right = 160.0
+offset_bottom = 195.0
 
 [node name="Title" type="Label" parent="CharacterSheetPanel/Panel" unique_id=501745717]
 layout_mode = 0
@@ -429,17 +437,43 @@ offset_right = -12.0
 offset_bottom = -10.0
 theme_override_constants/separation = 1
 
+[node name="SpellSheetPanel" type="CanvasLayer" parent="." unique_id=501745720]
+script = ExtResource("38_spells")
+
+[node name="Panel" type="Panel" parent="SpellSheetPanel" unique_id=501745721]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -190.0
+offset_top = -110.0
+offset_right = 190.0
+offset_bottom = 110.0
+
+[node name="Title" type="Label" parent="SpellSheetPanel/Panel" unique_id=501745722]
+layout_mode = 0
+anchor_right = 1.0
+offset_left = 10.0
+offset_top = 8.0
+offset_right = -10.0
+offset_bottom = 32.0
+text = "Spells"
+horizontal_alignment = 1
+
 [node name="InventoryPanel" type="CanvasLayer" parent="." unique_id=1727708808]
 script = ExtResource("7_inv_ui")
 
 [node name="Panel" type="Panel" parent="InventoryPanel" unique_id=1202592604]
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -340.0
-offset_top = 150.0
-offset_right = -10.0
-offset_bottom = 510.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -165.0
+offset_top = -180.0
+offset_right = 165.0
+offset_bottom = 180.0
 
 [node name="Title" type="Label" parent="InventoryPanel/Panel" unique_id=198958552]
 layout_mode = 0

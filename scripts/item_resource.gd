@@ -35,8 +35,14 @@ const BROKEN_DAMAGE_PENALTY := 2
 @export var broken: bool = false
 @export var shove_bonus: int = 0
 @export var trip_bonus: int = 0
-@export var ranged_range: int = 0   ## max tiles when used as ranged weapon; 0 = use character stat
-@export var throw_range: int = 0    ## max tiles when thrown; 0 = use character stat
+## Reach lives on the weapon, not the wielder — there is no character-level fallback for
+## either of these (see Combatant.get_ranged_range).
+## 0 means "cannot be shot with": only actual missile weapons set it.
+@export var ranged_range: int = 0
+## Every weapon can be lobbed a short way, so this defaults to a usable value rather than 0 —
+## otherwise removing the old character-level throw_range would have made most weapons
+## unthrowable. Purpose-built throwing weapons set it higher (the dagger reaches 7).
+@export var throw_range: int = 2
 
 ## Defense properties granted while this item is equipped
 @export var is_shield: bool = false    ## Allows parrying ranged attacks

@@ -39,7 +39,7 @@ const BACKPLATE := "res://assets/UI/SPR_FantasyWarrior_Box_Background_Shadowed.p
 ## than initials: Trip and Throw both start with T.
 const ABILITY_ABBREV := {
 	"Move": "Mv", "Attack": "At", "Shove": "Sh", "Trip": "Tr",
-	"Ranged": "Rn", "Throw": "Th", "Pick Up": "Pk",
+	"Ranged": "Rn", "Throw": "Th", "Pick Up": "Pk", "Firebolt": "Fb",
 }
 
 var _root: Control
@@ -48,6 +48,7 @@ var _root: Control
 var _row: Control
 var _sheet_slot: HudSlotScript
 var _bag_slot: HudSlotScript
+var _spell_slot: HudSlotScript
 var _stance_slot: HudSlotScript
 var _hotbar: Array = []
 
@@ -131,6 +132,12 @@ func _build() -> void:
 	_bag_slot.pressed.connect(_toggle_panel.bind("InventoryPanel"))
 	x += CELL_BIG + GAP
 
+	_spell_slot = _add_slot(x, 0.0, CELL_BIG, HudSlotScript.FRAME_ORNATE, true)
+	_spell_slot.set_caption("Spells")
+	_spell_slot.set_glyph("✳")
+	_spell_slot.pressed.connect(_toggle_panel.bind("SpellSheetPanel"))
+	x += CELL_BIG + GAP
+
 	_stance_slot = _add_slot(x, 0.0, CELL_BIG, HudSlotScript.FRAME_ORNATE, true)
 	_stance_slot.pressed.connect(_open_stance_popup)
 	x += CELL_BIG + GROUP_GAP
@@ -153,7 +160,7 @@ func _build() -> void:
 
 
 func _bar_width() -> float:
-	return CELL_BIG * 3.0 + GAP * 2.0 + GROUP_GAP + CELL * HOTBAR_SLOTS + GAP * (HOTBAR_SLOTS - 1)
+	return CELL_BIG * 4.0 + GAP * 3.0 + GROUP_GAP + CELL * HOTBAR_SLOTS + GAP * (HOTBAR_SLOTS - 1)
 
 
 func _add_slot(x: float, y: float, cell: float, frame: String, caption: bool) -> HudSlotScript:
@@ -220,6 +227,7 @@ func refresh() -> void:
 
 	_sheet_slot.set_enabled(true)
 	_bag_slot.set_enabled(true)
+	_spell_slot.set_enabled(true)
 
 	var assigned: Array = _assignments.get(_active, [])
 	for i in _hotbar.size():
@@ -272,10 +280,26 @@ func _on_hotbar_pressed(slot_index: int) -> void:
 	refresh()
 
 
+## Panels that both sit dead centre. They cannot share that spot, so opening one closes the
+## other instead of stacking two windows on the same pixels. Drop an entry from this list to
+## let it coexist with the rest.
+const CENTRED_PANELS := ["CharacterSheetPanel", "InventoryPanel", "SpellSheetPanel"]
+
+
 func _toggle_panel(node_name: String) -> void:
 	var panel := get_tree().current_scene.get_node_or_null(node_name)
-	if panel:
-		panel.visible = not panel.visible
+	if panel == null:
+		return
+	var opening: bool = not panel.visible
+	panel.visible = opening
+	if not opening or not CENTRED_PANELS.has(node_name):
+		return
+	for other in CENTRED_PANELS:
+		if other == node_name:
+			continue
+		var o := get_tree().current_scene.get_node_or_null(other)
+		if o:
+			o.visible = false
 
 
 # --- stance selector --------------------------------------------------------

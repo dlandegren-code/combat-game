@@ -1,7 +1,9 @@
 extends Node
 ## Per-character inventory: holds items, allows equip/drop/pickup
 
-const MAX_SLOTS := 5
+## Carry capacity. The inventory panel lays these out five to a row, so multiples of five
+## fill the grid tidily; anything else leaves a short bottom row.
+const MAX_SLOTS := 10
 
 ## Prefix stamped onto a weapon's name when it breaks ("Rusty Sword" -> "Broken Rusty
 ## Sword"). Safe to mutate: every runtime ItemResource is a per-character .duplicate(), so

@@ -5,7 +5,7 @@ extends "res://scripts/combatant.gd"
 ## new player skill is just adding an Ability to _build_abilities().
 
 # Slot order of the action bar / abilities list. Values are indices into `abilities`.
-enum Action { MOVE, ATTACK, SHOVE, TRIP, RANGED, THROW, PICKUP }
+enum Action { MOVE, ATTACK, SHOVE, TRIP, RANGED, THROW, PICKUP, FIREBOLT }
 
 const MoveAbilityScript := preload("res://scripts/abilities/move_ability.gd")
 const MeleeAttackAbilityScript := preload("res://scripts/abilities/melee_attack_ability.gd")
@@ -14,11 +14,19 @@ const TripAbilityScript := preload("res://scripts/abilities/trip_ability.gd")
 const RangedAbilityScript := preload("res://scripts/abilities/ranged_ability.gd")
 const ThrowAbilityScript := preload("res://scripts/abilities/throw_ability.gd")
 const PickupAbilityScript := preload("res://scripts/abilities/pickup_ability.gd")
+const FireboltAbilityScript := preload("res://scripts/abilities/firebolt_ability.gd")
+
+const FireboltProjectileScript := preload("res://scripts/fx/firebolt_projectile.gd")
+const FireSplashScript := preload("res://scripts/fx/fire_splash.gd")
 
 ## How far from the square it was aimed at a thrown weapon may come to rest, in tiles.
 ## Keeps a deflected or dropped weapon within a step or two of the fight rather than
 ## skidding across the arena where nobody can reasonably go and fetch it.
 const THROW_SCATTER_TILES := 2
+
+## Where a Firebolt is aimed on the target, above the body's origin. The origin already sits
+## at about chest height, so this is a nudge up onto the sternum rather than a real offset.
+const BOLT_IMPACT_HEIGHT := 0.12
 
 var selected_action: int = Action.MOVE
 
@@ -42,6 +50,10 @@ func _build_abilities() -> void:
 		RangedAbilityScript.new(),
 		ThrowAbilityScript.new(),
 		PickupAbilityScript.new(),
+		# Given to everyone rather than only to casters, so ability indices stay the same for
+		# every character (the hotbar stores them). A non-caster's can_use() is false, so the
+		# cell greys out exactly as Ranged does without a bow.
+		FireboltAbilityScript.new(),
 	]
 
 
@@ -81,6 +93,15 @@ func _unhandled_input(event: InputEvent) -> void:
 			_activate_hotbar_slot(slot)
 			return
 
+	# World clicks live here rather than in _input() because Godot runs _input() BEFORE any
+	# Control sees the event. Handling them there meant a click on an inventory slot ALSO
+	# ordered the character to the tile behind the panel — it moved instead of equipping.
+	# From _unhandled_input the GUI gets first refusal: a slot calls accept_event(), and the
+	# panel behind it stops mouse events by default, so neither reaches the battlefield.
+	if event is InputEventMouseButton and event.pressed \
+			and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+		_handle_click((event as InputEventMouseButton).position)
+
 
 func _activate_hotbar_slot(slot: int) -> void:
 	for bar in get_tree().get_nodes_in_group("action_toolbar"):
@@ -109,6 +130,13 @@ func _update_cursor() -> void:
 		return
 	var mouse_pos := viewport.get_mouse_position()
 	if viewport.gui_is_dragging():
+		Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+		_hide_indicator()
+		return
+	# Pointer is over a panel or a toolbar cell, so it is not aiming at the battlefield.
+	# Without this the move indicator still lit up on the tile UNDERNEATH an open window,
+	# advertising a move the click can no longer make.
+	if viewport.gui_get_hovered_control() != null:
 		Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 		_hide_indicator()
 		return
@@ -179,14 +207,6 @@ func _hide_indicator() -> void:
 		move_indicator.visible = false
 
 
-func _input(event: InputEvent) -> void:
-	if not can_act or is_moving:
-		return
-
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		_handle_click(event.position)
-
-
 func _handle_click(screen_pos: Vector2) -> void:
 	var camera := get_viewport().get_camera_3d()
 	var from := camera.project_ray_origin(screen_pos)
@@ -214,7 +234,15 @@ func _handle_click(screen_pos: Vector2) -> void:
 				_hide_indicator()
 				_face_target(collider)
 				_begin_action(selected_action)
-				ability.execute(self, collider)
+				# The turn is spent the moment the ability fires, so stop taking orders now
+				# rather than when it finishes: a Firebolt spends most of a second in the air,
+				# and without this the player could queue a second action mid-flight.
+				can_act = false
+				_update_action_bar()
+				# Awaited because an ability may have a projectile to land before it resolves
+				# (Firebolt), and the turn must not end under it. Awaiting a plain function
+				# returns straight away, so every other ability behaves exactly as before.
+				await ability.execute(self, collider)
 				_end_action_in_place()
 				return
 
@@ -251,6 +279,40 @@ func _end_action_in_place() -> void:
 	## Instant (non-move) actions play in place, then the turn ends on arrival.
 	is_moving = true
 	target_position = position
+
+
+func _do_firebolt(target: Node) -> void:
+	## Mana is spent through spend_mana, which is the affordability check and the payment in
+	## one — so the bolt cannot fire on an empty pool even if something bypassed can_use().
+	if not spend_mana(FireboltAbilityScript.MANA_COST):
+		_show_action_text("Not enough mana!")
+		return
+	_show_action_text("Firebolt!  %d mana left" % mana)
+	_update_health_bar()
+
+	# The bolt is a real projectile, so the attack is rolled when the fire ARRIVES rather than
+	# at the click. That is what keeps the damage number, the hit reaction and the splash on
+	# the same frame as the impact instead of half a second ahead of it. _handle_click awaits
+	# the whole ability for the same reason — the turn must not end while the bolt is in the air.
+	var impact_point: Vector3 = target.global_position + Vector3(0, BOLT_IMPACT_HEIGHT, 0)
+	var bolt = FireboltProjectileScript.fire(
+		get_parent(), get_cast_origin(impact_point), impact_point)
+	await bolt.impacted
+
+	if not is_instance_valid(target) or not target.is_alive:
+		return
+	# Resolved as a missile: same distance/engaged modifiers and the same defences as an arrow,
+	# rather than magic getting its own parallel rules.
+	var to_hit: int = get_missile_skill(
+		get_spell_power(), target, FireboltAbilityScript.RANGE_TILES)
+	var dmg: int = get_spell_power() + FireboltAbilityScript.DAMAGE_BONUS
+	# FIRE, so armour does not soak it — but resistance still does.
+	var defended: bool = target.take_damage(dmg, to_hit, true, self, DamageType.FIRE)
+	# Only a bolt that got through bursts. A parried or dodged one is snuffed out, and the
+	# defender's own "Parry!" / "Dodge!" text is the feedback for that — a splash there would
+	# say the fire landed when the whole point is that it did not.
+	if not defended:
+		FireSplashScript.burst(get_parent(), impact_point, target.get_feet_y())
 
 
 func _do_ranged_attack(target: Node) -> void:

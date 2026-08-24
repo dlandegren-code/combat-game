@@ -44,3 +44,33 @@ func unavailable_reason(_actor) -> String:
 ## Perform the ability. May await (animations). `target` matches target_kind.
 func execute(_actor, _target) -> void:
 	pass
+
+
+# --- Spell metadata ---------------------------------------------------------
+# Overridden by spells so the spell sheet can describe them without knowing any one of them.
+# Kept on the base class rather than type-checked at the call site, so adding a second spell
+# means writing the spell and nothing else.
+
+## True for anything that belongs on the spell sheet.
+func is_spell() -> bool:
+	return false
+
+
+## Mana this costs to cast, on top of the time cost from get_cost().
+func get_mana_cost(_actor) -> int:
+	return 0
+
+
+## Icon for the spell sheet; "" for no art.
+func get_icon_path() -> String:
+	return ""
+
+
+## One-line explanation shown under the name on the spell sheet.
+func get_description(_actor) -> String:
+	return ""
+
+
+## Damage this would deal right now, as text ("7 fire"). Empty when it deals none.
+func get_damage_text(_actor) -> String:
+	return ""

@@ -10,11 +10,17 @@ class_name PortraitSlot
 ## The copy's AnimationPlayer is re-synced whenever the source changes clip, so
 ## the portrait still reacts when its owner attacks, gets hit or goes down.
 
-const PORTRAIT_SIZE := Vector2i(112, 112)
-const BAR_HEIGHT := 20
-const LABEL_HEIGHT := 17
-const HP_FONT_SIZE := 15
-const NAME_FONT_SIZE := 15
+const UiScaleScript := preload("res://scripts/ui_scale.gd")
+
+## Authored sizes, at UiScale.REFERENCE_HEIGHT. Everything actually drawn uses the scaled
+## values below (_px, _bar_h, ...), computed once in setup() — a portrait owns a SubViewport
+## rendering a live 3D bust, so unlike the flat panels it is far too heavy to tear down and
+## rebuild on every window resize. The plate is sized for the window it was created in.
+const PORTRAIT_SIZE_BASE := Vector2i(112, 112)
+const BAR_HEIGHT_BASE := 20
+const LABEL_HEIGHT_BASE := 17
+const HP_FONT_SIZE_BASE := 15
+const NAME_FONT_SIZE_BASE := 15
 
 ## Allies and enemies get visually distinct plates. They differ in silhouette
 ## (square vs cut-corner octagon) as well as hue, so they stay tellable apart
@@ -76,6 +82,12 @@ const BUST_BONE := "head"
 
 var combatant: Node = null
 
+## Scaled sizes, filled in by setup() before anything is built.
+var _s := 1.0
+var _px := PORTRAIT_SIZE_BASE
+var _bar_h := BAR_HEIGHT_BASE
+var _label_h := LABEL_HEIGHT_BASE
+
 var _viewport: SubViewport
 var _stage: Node3D
 var _model: Node3D
@@ -101,7 +113,12 @@ func setup(who: Node, style: Style = Style.ALLY) -> void:
 	combatant = who
 	_style = FRAME_STYLES[style]
 
-	custom_minimum_size = Vector2(PORTRAIT_SIZE.x, PORTRAIT_SIZE.y + BAR_HEIGHT + LABEL_HEIGHT)
+	_s = UiScaleScript.of(get_viewport())
+	_px = Vector2i(roundi(PORTRAIT_SIZE_BASE.x * _s), roundi(PORTRAIT_SIZE_BASE.y * _s))
+	_bar_h = roundi(BAR_HEIGHT_BASE * _s)
+	_label_h = roundi(LABEL_HEIGHT_BASE * _s)
+
+	custom_minimum_size = Vector2(_px.x, _px.y + _bar_h + _label_h)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	_build_active_glow()
@@ -120,8 +137,8 @@ func _build_active_glow() -> void:
 	## Sits behind the portrait and lights up on this combatant's turn.
 	_active_glow = Panel.new()
 	_active_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_active_glow.position = Vector2(-6, -6)
-	_active_glow.size = Vector2(PORTRAIT_SIZE.x + 12, PORTRAIT_SIZE.y + 12)
+	_active_glow.position = Vector2(-6.0 * _s, -6.0 * _s)
+	_active_glow.size = Vector2(_px.x + 12.0 * _s, _px.y + 12.0 * _s)
 	_glow_style = StyleBoxFlat.new()
 	_glow_style.bg_color = Color(1.0, 0.84, 0.42, 0.0)
 	_glow_style.set_corner_radius_all(8)
@@ -130,8 +147,8 @@ func _build_active_glow() -> void:
 
 
 func _build_viewport() -> void:
-	var inset := int(round(PORTRAIT_SIZE.x * float(_style["inset"])))
-	var inner := Vector2i(PORTRAIT_SIZE.x - inset * 2, PORTRAIT_SIZE.y - inset * 2)
+	var inset := int(round(_px.x * float(_style["inset"])))
+	var inner := Vector2i(_px.x - inset * 2, _px.y - inset * 2)
 
 	var container := SubViewportContainer.new()
 	container.stretch = true
@@ -180,7 +197,7 @@ func _build_frame() -> void:
 	# size and the explicit size below is clamped straight back up to it.
 	_frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_frame.stretch_mode = TextureRect.STRETCH_SCALE
-	_frame.size = Vector2(PORTRAIT_SIZE)
+	_frame.size = Vector2(_px)
 	_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_frame)
 
@@ -196,8 +213,8 @@ func _build_bars() -> void:
 	_hp_bar.tint_under = COLOR_HP_EMPTY
 	_hp_bar.tint_progress = COLOR_HP_OK
 	_hp_bar.size = BAR_NATIVE
-	_hp_bar.scale = Vector2(PORTRAIT_SIZE.x / BAR_NATIVE.x, BAR_HEIGHT / BAR_NATIVE.y)
-	_hp_bar.position = Vector2(0, PORTRAIT_SIZE.y)
+	_hp_bar.scale = Vector2(_px.x / BAR_NATIVE.x, _bar_h / BAR_NATIVE.y)
+	_hp_bar.position = Vector2(0, _px.y)
 	_hp_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_hp_bar)
 
@@ -205,24 +222,24 @@ func _build_bars() -> void:
 	_hp_text = Label.new()
 	_hp_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hp_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_hp_text.add_theme_font_size_override("font_size", HP_FONT_SIZE)
+	_hp_text.add_theme_font_size_override("font_size", roundi(HP_FONT_SIZE_BASE * _s))
 	_hp_text.add_theme_color_override("font_color", Color(1, 1, 1))
 	_hp_text.add_theme_constant_override("outline_size", 3)
 	_hp_text.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
 	# Positioned against the bar's on-screen footprint, not its unscaled size.
-	_hp_text.position = Vector2(0, PORTRAIT_SIZE.y)
-	_hp_text.size = Vector2(PORTRAIT_SIZE.x, BAR_HEIGHT)
+	_hp_text.position = Vector2(0, _px.y)
+	_hp_text.size = Vector2(_px.x, _bar_h)
 	_hp_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_hp_text)
 
 	_name_label = Label.new()
 	_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_name_label.add_theme_font_size_override("font_size", NAME_FONT_SIZE)
+	_name_label.add_theme_font_size_override("font_size", roundi(NAME_FONT_SIZE_BASE * _s))
 	_name_label.add_theme_color_override("font_color", Color(1.0, 0.87, 0.60))
 	_name_label.add_theme_constant_override("outline_size", 3)
 	_name_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
-	_name_label.position = Vector2(0, PORTRAIT_SIZE.y + BAR_HEIGHT)
-	_name_label.size = Vector2(PORTRAIT_SIZE.x, LABEL_HEIGHT)
+	_name_label.position = Vector2(0, _px.y + _bar_h)
+	_name_label.size = Vector2(_px.x, _label_h)
 	_name_label.text = str(combatant.character_name)
 	_name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_name_label)

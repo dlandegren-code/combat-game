@@ -7,12 +7,17 @@ extends Control
 ## highlighted, off CombatManager.turn_changed.
 
 const PortraitSlotScript := preload("res://scripts/portrait_slot.gd")
+const UiScaleScript := preload("res://scripts/ui_scale.gd")
 
-const EDGE_MARGIN := 12
-const SLOT_SPACING := 10
+## Authored at UiScale.REFERENCE_HEIGHT, like the plates themselves, and scaled to match so
+## the gaps between portraits grow with the portraits rather than staying hairline-thin.
+const EDGE_MARGIN_BASE := 12.0
+const SLOT_SPACING_BASE := 10.0
 
 ## Enemy row sits below HUD/TurnLabel, which spans the full width at y 20-60.
-const TOP_ROW_Y := 68
+const TOP_ROW_Y_BASE := 68.0
+
+var _s := 1.0
 
 @export var show_players: bool = true
 @export var show_enemies: bool = true
@@ -28,6 +33,7 @@ func _ready() -> void:
 
 
 func _build() -> void:
+	_s = UiScaleScript.of(get_viewport())
 	if show_players:
 		_build_player_column(_members(true))
 	if show_enemies:
@@ -46,8 +52,8 @@ func _build() -> void:
 
 func _build_player_column(members: Array) -> void:
 	var column := VBoxContainer.new()
-	column.position = Vector2(EDGE_MARGIN, EDGE_MARGIN)
-	column.add_theme_constant_override("separation", SLOT_SPACING)
+	column.position = Vector2(EDGE_MARGIN_BASE * _s, EDGE_MARGIN_BASE * _s)
+	column.add_theme_constant_override("separation", roundi(SLOT_SPACING_BASE * _s))
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(column)
 	for who in members:
@@ -61,23 +67,24 @@ func _build_enemy_row(members: Array) -> void:
 	# how many enemies there are or how the window is resized.
 	var band := CenterContainer.new()
 	band.anchor_right = 1.0
-	band.offset_top = TOP_ROW_Y
-	band.offset_bottom = TOP_ROW_Y + _slot_height()
+	band.offset_top = TOP_ROW_Y_BASE * _s
+	band.offset_bottom = TOP_ROW_Y_BASE * _s + _slot_height()
 	band.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(band)
 
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", SLOT_SPACING)
+	row.add_theme_constant_override("separation", roundi(SLOT_SPACING_BASE * _s))
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	band.add_child(row)
 	for who in members:
 		_add_slot(row, who, PortraitSlotScript.Style.ENEMY)
 
 
-func _slot_height() -> int:
-	return PortraitSlotScript.PORTRAIT_SIZE.y \
-		+ PortraitSlotScript.BAR_HEIGHT \
-		+ PortraitSlotScript.LABEL_HEIGHT
+func _slot_height() -> float:
+	## Must match the minimum size PortraitSlot gives itself, at the same scale.
+	return (PortraitSlotScript.PORTRAIT_SIZE_BASE.y \
+		+ PortraitSlotScript.BAR_HEIGHT_BASE \
+		+ PortraitSlotScript.LABEL_HEIGHT_BASE) * _s
 
 
 func _add_slot(parent: Node, who: Node, style: int) -> void:
