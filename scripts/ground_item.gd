@@ -24,6 +24,27 @@ const SYNTY_MAT := "res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_ma
 ## used to leave every pickup carrying two overlapping copies of its model.
 var _visual_built := false
 
+
+static func drop(parent: Node, item: ItemResource, at: Vector3) -> Node:
+	## Put `item` on the floor at `at` and return the pickup.
+	##
+	## The one way anything enters the world as loot. CombatManager seeds the battlefield with
+	## it, a thrown weapon lands with it, and a searched barrel spills with it — three callers
+	## that used to each carry their own copy of these six lines, which is three places for the
+	## deferred-add dance below to be got subtly wrong.
+	##
+	## `at` is used as given: see DROP_Y for why an item's height must never be derived from a
+	## combatant's position.
+	var gi := MeshInstance3D.new()
+	gi.name = "GroundItem"
+	gi.set_script(load("res://scripts/ground_item.gd"))
+	gi.position = at
+	gi.item_resource = item
+	parent.add_child.call_deferred(gi)
+	gi.call_deferred("_apply_visual")
+	return gi
+
+
 func _ready() -> void:
 	add_to_group("pickups")
 	_apply_visual()

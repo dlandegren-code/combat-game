@@ -127,6 +127,68 @@ func equip(slot_index: int) -> void:
 	_equip_to(target_slot, item)
 
 
+func try_auto_equip_hand(item: ItemResource) -> bool:
+	## Arm an empty-handed character with a weapon or shield they just picked up. Returns true
+	## if it ended up in a hand.
+	##
+	## Four gates, each closing off a way this could make a decision the player would not have:
+	##
+	##   quick to equip     only things drawn in one motion. A shield is strapped on and a
+	##                      helmet buckled, so those stay deliberate actions with a real time
+	##                      cost — never a side effect of bending down (ItemResource.EQUIP_*).
+	##   two-handed         needs both hands, so it may only fill two empty ones. Otherwise
+	##                      _equip_to would quietly strip whatever else was held.
+	##   a free hand it fits  the hand has to be empty AND legal for this item, so a main-hand
+	##                      weapon does not displace anything just because the off-hand is open.
+	##   dual-wield         filling the last hand with a SECOND weapon starts a dual-wield, and
+	##                      the off-hand strike carries OFFHAND_HIT_PENALTY unless trained. Only
+	##                      do that unasked to someone with dual_wield_skill.
+	##
+	## Routed through equip() rather than _equip_to so hand choice, two-handed conflicts and the
+	## bonus/repaint bookkeeping all stay in the one place that already knows about them.
+	##
+	## Called from the pickup path only, never from add_item: starting inventories flow through
+	## add_item as well, and those are authored loadouts that must equip exactly as written
+	## (see _add_starting_item).
+	if item == null or not item.is_hand_item() or not item.is_quick_to_equip():
+		return false
+
+	if item.handedness == ItemResource.Handedness.TWO_HANDED:
+		if right_hand != null or left_hand != null:
+			return false
+	else:
+		var free_right: bool = right_hand == null and item.can_equip_in(ItemResource.EquipSlot.RIGHT_HAND)
+		var free_left: bool = left_hand == null and item.can_equip_in(ItemResource.EquipSlot.LEFT_HAND)
+		if not (free_right or free_left):
+			return false
+		if _would_start_dual_wield(item) and not _character_dual_wields():
+			return false
+
+	var slot: int = get_item_slot(item)
+	if slot < 0:
+		return false
+	equip(slot)
+	return right_hand == item or left_hand == item
+
+
+func _would_start_dual_wield(item: ItemResource) -> bool:
+	## True when putting `item` in the free hand would leave a weapon in BOTH hands. A shield in
+	## the other hand is not dual-wielding, and neither is a second shield.
+	if not _is_weaponlike(item):
+		return false
+	var held: ItemResource = right_hand if right_hand != null else left_hand
+	return held != null and _is_weaponlike(held)
+
+
+func _is_weaponlike(item: ItemResource) -> bool:
+	return item != null and (item.item_type == ItemResource.ItemType.WEAPON \
+		or item.item_type == ItemResource.ItemType.THROWABLE)
+
+
+func _character_dual_wields() -> bool:
+	return character != null and character.get("dual_wield_skill") == true
+
+
 func unequip_slot(slot: int) -> void:
 	var item: ItemResource = null
 	match slot:
@@ -319,6 +381,54 @@ func can_dodge_ranged() -> bool:
 	return false
 
 
+func forget(item: ItemResource) -> void:
+	## Take `item` out of this character's keeping entirely — bag slot and any equipment slot
+	## still pointing at it.
+	##
+	## For looting a corpse. Equipping never removed anything from `items` (see _equip_to), so
+	## a carried item can be in the bag AND in a hand at once, and a looter pulling a cleaver
+	## off a body has to clear both or the corpse goes on holding a weapon somebody else now
+	## owns.
+	if item == null:
+		return
+	for i in range(items.size()):
+		if items[i] == item:
+			items[i] = null
+	if right_hand == item:
+		right_hand = null
+	if left_hand == item:
+		left_hand = null
+	if armor == item:
+		armor = null
+	if helmet == item:
+		helmet = null
+	if legs == item:
+		legs = null
+
+
+func has_key(key_id: String) -> bool:
+	## Whether this character is carrying a key cut for `key_id`. Bag only — a key is not
+	## something you hold in your hand, so the equipment slots are not consulted.
+	if key_id == "":
+		return false
+	for item in items:
+		if item == null:
+			continue
+		if item.item_type == ItemResource.ItemType.KEY and item.key_id == key_id:
+			return true
+	return false
+
+
+func get_weapon_sound(offhand: bool) -> int:
+	## Which swing this hand makes (ItemResource.WeaponSound), or -1 for a hand holding no
+	## weapon — an empty fist and a raised shield both cut the air too quietly to be worth a
+	## clip, and weapon_sfx.swing() treats -1 as silence.
+	var item: ItemResource = get_equipped_offhand() if offhand else get_equipped_weapon()
+	if item == null or item.item_type != ItemResource.ItemType.WEAPON:
+		return -1
+	return item.weapon_sound
+
+
 func get_equipped_ranged_range() -> int:
 	var weapon := get_equipped_weapon()
 	if weapon:
@@ -416,6 +526,11 @@ func use_consumable(slot_index: int) -> bool:
 
 	# Ammo effect
 	if item.ammo_amount > 0 and character:
+		# A character with no quiver capacity yet gets one the moment they take up ammo.
+		# Without this, max_ammo 0 clamps the gain to nothing while `applied` still goes true
+		# below — the quiver would be consumed for no arrows at all.
+		if character.max_ammo <= 0:
+			character.max_ammo = 10
 		character.ammo = min(character.ammo + item.ammo_amount, character.max_ammo)
 		if character.has_method("_update_health_bar"):
 			character._update_health_bar()
@@ -458,6 +573,7 @@ func _apply_item_bonuses(item: ItemResource) -> void:
 	# attack time (see Combatant.get_attack_* / get_offhand_*). Only armor is passive.
 	character.armor += item.armor_bonus
 	character.physical_resistance += item.resistance_bonus
+	_notify_equipment_changed()
 
 
 func _remove_item_bonuses(item: ItemResource) -> void:
@@ -465,3 +581,18 @@ func _remove_item_bonuses(item: ItemResource) -> void:
 		return
 	character.armor -= item.armor_bonus
 	character.physical_resistance -= item.resistance_bonus
+	_notify_equipment_changed()
+
+
+func _notify_equipment_changed() -> void:
+	## Every equip and unequip funnels through the two functions above — _equip_to ends in one,
+	## unequip_slot in the other — so this is the one place that sees all of them, AI weapon
+	## draws and two-handed swaps included.
+	##
+	## It was missing entirely: the nameplate shows the armour and resistance totals these
+	## lines just changed, and nothing repainted it. Only the inventory PANEL happened to
+	## refresh, so equipping from the UI looked correct while every other path went stale. It
+	## matters more now that Protection is in — is_guarding() tests for a weapon or shield, so
+	## without this, dropping the shield left the guard-zone decal painted on the floor.
+	if character.has_method("_update_health_bar"):
+		character._update_health_bar()

@@ -3,6 +3,8 @@ extends Node
 
 signal turn_changed(combatant: Node)
 
+const GroundItemScript := preload("res://scripts/ground_item.gd")
+
 ## Beat between an enemy's turn lighting up and it acting, so the player can register
 ## whose turn it is instead of the AI moving the instant they finish their own action.
 const ENEMY_TURN_DELAY := 0.6
@@ -32,6 +34,7 @@ func _collect_combatants() -> void:
 	for c in all:
 		if is_instance_valid(c):
 			c.next_turn_at = 0
+			c.action_turn_at = 0
 			combatants.append(c)
 
 
@@ -107,6 +110,10 @@ func turn_done(cost: int) -> void:
 		current_combatant.disable_turn()
 
 	current_combatant.next_turn_at += cost
+	# Stamped so defense_debt() can tell the two things that push next_turn_at apart: this,
+	# the action just taken, and the +1 per successful defence in charge_defense_cost. Only
+	# the latter is debt — see Combatant.defense_debt.
+	current_combatant.action_turn_at = current_combatant.next_turn_at
 	current_combatant = null
 	_activate_next.call_deferred()
 
@@ -163,12 +170,27 @@ func _update_initiative_display() -> void:
 		var label := Label.new()
 		label.add_theme_font_size_override("font_size", 14)
 
+		# Defence debt: ticks of this character's next turn already spent reacting. Shown as
+		# "+N" because it is time owed on top of T, and it is the resource that decides
+		# whether they can still defend at all — see Combatant.defense_debt.
+		#
+		# The active combatant is never shown a debt: their next_turn_at IS current_tick by
+		# definition, so it always reads zero, which is also why the amber/red states below
+		# can never fight the yellow "it's your turn" highlight.
+		var debt: int = c.defense_debt() if c.has_method("defense_debt") else 0
 		var text: String = c.character_name + "  T" + str(c.next_turn_at)
+		if debt > 0:
+			text += "  +" + str(debt)
 		if not c.is_alive:
 			label.self_modulate = Color(0.5, 0.5, 0.5, 1)
 		elif c == current_combatant and not game_over:
 			text = "> " + text + " <"
 			label.self_modulate = Color(1, 1, 0.3, 1)
+		elif c.is_overwhelmed():
+			text += "!"
+			label.self_modulate = Color(1, 0.36, 0.30, 1)
+		elif c.is_defense_strained():
+			label.self_modulate = Color(1, 0.72, 0.26, 1)
 		else:
 			label.self_modulate = Color(1, 1, 1, 1)
 
@@ -179,8 +201,18 @@ func _update_initiative_display() -> void:
 
 func charge_defense_cost(defender: Node) -> void:
 	## Called when a defender successfully parries or dodges. Costs 1 time unit.
+	##
+	## The panel is repainted here, not just on turn changes: this is the only place debt
+	## grows, and a debt readout that only refreshed between turns would hide the very moment
+	## a defender is being ground down.
 	if is_instance_valid(defender):
 		defender.next_turn_at += 1
+		_update_initiative_display()
+		# This is the moment a defender can tip over into overwhelmed, mid-exchange and
+		# nowhere near a turn boundary. Their guard zone has to drop with it, or the floor
+		# keeps advertising a line they can no longer hold.
+		if defender.has_method("_refresh_guard_zone"):
+			defender._refresh_guard_zone()
 
 
 func _update_turn_label(combatant: Node) -> void:
@@ -208,11 +240,4 @@ func _spawn_item(path: String, at: Vector3) -> void:
 
 
 func _spawn_gi(item: ItemResource, at: Vector3) -> void:
-	var gi := MeshInstance3D.new()
-	gi.name = "GroundItem"
-	gi.set_script(load("res://scripts/ground_item.gd"))
-	gi.position = at
-	gi.item_resource = item
-	var _root := get_parent()
-	_root.add_child.call_deferred(gi)
-	gi.call_deferred("_apply_visual")
+	GroundItemScript.drop(get_parent(), item, at)

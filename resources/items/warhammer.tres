@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_item")
 item_name = "Warhammer"
+weapon_sound = 3
 item_type = 0
 attack_bonus = 1
 damage_bonus = 3

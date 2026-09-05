@@ -5,7 +5,7 @@ extends "res://scripts/combatant.gd"
 ## new player skill is just adding an Ability to _build_abilities().
 
 # Slot order of the action bar / abilities list. Values are indices into `abilities`.
-enum Action { MOVE, ATTACK, SHOVE, TRIP, RANGED, THROW, PICKUP, FIREBOLT }
+enum Action { MOVE, ATTACK, SHOVE, TRIP, RANGED, THROW, PICKUP, FIREBOLT, INTERACT, PRONE }
 
 const MoveAbilityScript := preload("res://scripts/abilities/move_ability.gd")
 const MeleeAttackAbilityScript := preload("res://scripts/abilities/melee_attack_ability.gd")
@@ -15,6 +15,9 @@ const RangedAbilityScript := preload("res://scripts/abilities/ranged_ability.gd"
 const ThrowAbilityScript := preload("res://scripts/abilities/throw_ability.gd")
 const PickupAbilityScript := preload("res://scripts/abilities/pickup_ability.gd")
 const FireboltAbilityScript := preload("res://scripts/abilities/firebolt_ability.gd")
+const InteractAbilityScript := preload("res://scripts/abilities/interact_ability.gd")
+const ProneAbilityScript := preload("res://scripts/abilities/prone_ability.gd")
+const ActionCursorsScript := preload("res://scripts/action_cursors.gd")
 
 const FireboltProjectileScript := preload("res://scripts/fx/firebolt_projectile.gd")
 const FireSplashScript := preload("res://scripts/fx/fire_splash.gd")
@@ -25,7 +28,24 @@ const ThrownWeaponScript := preload("res://scripts/fx/thrown_weapon.gd")
 ## skidding across the arena where nobody can reasonably go and fetch it.
 const THROW_SCATTER_TILES := 2
 
+## The action the player has PINNED, meaningful only while action_pinned is true. Left at its
+## last value when unpinned so re-pinning the same thing is one click.
 var selected_action: int = Action.MOVE
+
+## False means the action is worked out from whatever the mouse is over — see _resolve_at.
+## Clicking a hotbar slot pins that action; clicking the lit slot again lets go.
+var action_pinned: bool = false
+
+## Returned by the resolver when a click here would do nothing at all.
+const NO_ACTION := -1
+
+## The only actions ever inferred from a hover, in the order they win.
+##
+## Short on purpose. Everything left out — Shove, Trip, Ranged, Throw, Firebolt — either spends
+## something that cannot be got back (ammo, mana, the weapon in your hand) or is a deliberate
+## choice rather than the obvious thing to do to the square under the mouse. Those stay pinned
+## by hand, which is not friction: they are the interesting decisions.
+const INFERRED_TILE_ORDER := [Action.PICKUP, Action.INTERACT]
 
 var move_indicator: MeshInstance3D
 
@@ -51,21 +71,37 @@ func _build_abilities() -> void:
 		# every character (the hotbar stores them). A non-caster's can_use() is false, so the
 		# cell greys out exactly as Ranged does without a bow.
 		FireboltAbilityScript.new(),
+		# Everyone gets this for the same reason everyone gets Firebolt: ability indices are
+		# stored in the hotbar, so they have to mean the same thing on every character.
+		InteractAbilityScript.new(),
+		ProneAbilityScript.new(),
 	]
 
 
 func enable_turn() -> void:
 	if not is_alive:
 		return
-	_stand_up_if_prone()
+	# No automatic stand-up. A character who was knocked down starts their turn on the floor
+	# and decides for themselves whether getting up is worth the tick — see prone_ability.gd.
+	# The AI still stands by itself (Enemy.enable_turn); it has nobody to ask.
 	can_act = true
 	selected_action = Action.MOVE
+	# And the action goes back to being read off the mouse each turn, rather than carrying last
+	# turn's pin into this one.
+	action_pinned = false
 	_update_action_bar()
 
 
 func disable_turn() -> void:
 	can_act = false
-	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+	# A swing owed on arrival dies with the turn that ordered it — otherwise it would fire on
+	# the next move this character made, at whoever was still standing there.
+	_queued_attack = null
+	_queued_attack_slot = NO_ACTION
+	# Whatever happened, we are not looting any more. Left set, the next turn's first tile
+	# action would decline to end itself and the character would hang.
+	_looting = false
+	ActionCursorsScript.neutral()
 	_hide_indicator()
 	_update_action_bar()  # disables buttons in UI
 
@@ -76,7 +112,7 @@ func _process(_delta: float) -> void:
 	_update_cursor()
 
 
-const HOTBAR_KEYS := 8
+const HOTBAR_KEYS := 10
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -109,8 +145,166 @@ func _activate_hotbar_slot(slot: int) -> void:
 
 
 func select_action(index: int) -> void:
-	selected_action = index
+	## An action with nothing to aim at happens the moment it is chosen: arming it and then
+	## asking the player to click the battlefield would be asking where they want to stand up.
+	if index >= 0 and index < abilities.size() and abilities[index].targets_self():
+		_use_self_ability(index)
+		return
+	## Pin an action. Choosing the one already pinned lets go of it and hands the decision back
+	## to the mouse, which is the only way back to automatic without a second control.
+	if action_pinned and selected_action == index:
+		action_pinned = false
+	else:
+		selected_action = index
+		action_pinned = true
 	_update_action_bar()
+
+
+func _use_self_ability(index: int) -> void:
+	## Run a self-targeted action now.
+	##
+	## A FREE one leaves the turn running. That is the one place in the game a cost of zero is
+	## taken literally rather than floored to one: _begin_action and turn_done both round up,
+	## because a zero-cost action that ended the turn would not advance the clock and the combat
+	## manager would hand this character its turn straight back. Not ending the turn at all
+	## sidesteps that entirely — lying down is something you do AND THEN act.
+	if not can_act:
+		return
+	var ability = abilities[index]
+	if not ability.can_use(self):
+		return
+	var cost: int = ability.get_cost(self)
+	ability.execute(self, null)
+	if cost <= 0:
+		_update_action_bar()
+		return
+	_pending_cost = cost
+	can_act = false
+	_update_action_bar()
+	_end_action_in_place()
+
+
+func pinned_action() -> int:
+	## The slot the toolbar should light, or NO_ACTION for none — an unlit bar is what
+	## "whatever the mouse is over" looks like.
+	return selected_action if action_pinned else NO_ACTION
+
+
+# --- Working out what a click would do -------------------------------------
+
+func _resolve_at(screen_pos: Vector2) -> Dictionary:
+	## What a click at `screen_pos` would actually do, as {slot, target, tile, reason}.
+	##
+	## ONE answer, read by both the cursor and the click. They used to work it out separately
+	## and could disagree — a pinned Pick Up over an unreachable square showed the forbidden
+	## pointer while the click quietly moved you there instead. A pointer that promises one
+	## thing and a click that does another is worse than no pointer, so there is now exactly
+	## one place that decides.
+	##
+	## `slot` is NO_ACTION when nothing applies; `reason` then carries why, for the cursor.
+	var out := {"slot": NO_ACTION, "target": null, "tile": Vector3.INF, "reason": "",
+		"approach": Vector3.INF}
+	var viewport := get_viewport()
+	var camera := viewport.get_camera_3d() if viewport else null
+	if camera == null:
+		return out
+	var from := camera.project_ray_origin(screen_pos)
+	var to := from + camera.project_ray_normal(screen_pos) * 100.0
+	var space_state := get_world_3d().direct_space_state
+
+	# A pinned self-targeted action needs nothing under the mouse at all.
+	if action_pinned and abilities[selected_action].targets_self():
+		out.slot = selected_action
+		return out
+
+	# Enemies first: a body under the pointer is a stronger statement of intent than the floor
+	# it happens to be standing on.
+	var enemy_query := PhysicsRayQueryParameters3D.create(from, to)
+	enemy_query.collision_mask = LAYER_ENEMY
+	var enemy_result := space_state.intersect_ray(enemy_query)
+	if not enemy_result.is_empty() and enemy_result.collider.has_method("take_damage"):
+		var foe: Node = enemy_result.collider
+		out.target = foe
+		out.slot = _enemy_action_for(foe)
+		if out.slot == NO_ACTION:
+			# Out of reach for a swing, but perhaps not for a walk and then a swing.
+			var approach: Vector3 = _approach_tile_for(foe)
+			if approach != Vector3.INF:
+				out.slot = Action.ATTACK
+				out.approach = approach
+			else:
+				var refused = abilities[selected_action] if action_pinned else abilities[Action.ATTACK]
+				out.reason = refused.unavailable_reason(self)
+		return out
+
+	var ground_query := PhysicsRayQueryParameters3D.create(from, to)
+	ground_query.collision_mask = LAYER_GROUND
+	var ground_result := space_state.intersect_ray(ground_query)
+	if ground_result.is_empty():
+		return out
+	var clicked: Vector3 = ground_result.position
+	clicked.y = position.y
+	out.tile = _snap_to_grid(clicked)
+	out.slot = _tile_action_for(out.tile)
+	if out.slot == NO_ACTION:
+		out.reason = "range"
+	return out
+
+
+func _enemy_action_for(foe: Node) -> int:
+	## Which action a click on `foe` runs. Pinned: that one, if it will take him. Otherwise the
+	## plain melee attack when he is close enough to hit, and nothing at all when he is not.
+	##
+	## Nothing at all, rather than walking toward him: closing the distance and swinging is two
+	## actions and most of a turn, and inventing it here would spend a turn the player never
+	## agreed to. The forbidden pointer says so before the click.
+	if action_pinned:
+		var pinned = abilities[selected_action]
+		if pinned.targets_enemy() and pinned.can_target(self, foe):
+			return selected_action
+		return NO_ACTION
+	return Action.ATTACK if abilities[Action.ATTACK].can_target(self, foe) else NO_ACTION
+
+
+func _approach_tile_for(foe: Node) -> Vector3:
+	## The square to stand on to hit `foe`, when they are too far off to reach from here —
+	## INF when there is no getting to them this turn.
+	##
+	## Taken off the shortest route to their OWN square rather than searched for separately:
+	## _find_path leaves the goal square passable so a unit can path onto its target, which
+	## makes the step before it a nearest square you can actually stand on and swing from. One
+	## path search instead of one per neighbour, and it agrees with movement by construction.
+	##
+	## Melee only. A pinned bow or spell that is out of range stays refused: walking into range
+	## and then shooting is a different promise, and one the range rules should make, not this.
+	if action_pinned and selected_action != Action.ATTACK:
+		return Vector3.INF
+	if not _can_move() or not ("is_alive" in foe) or not foe.is_alive:
+		return Vector3.INF
+	var foe_tile: Vector3 = _snap_to_grid((foe as Node3D).position)
+	# One further than we can walk: the last step of this route lands ON the target, and that
+	# step is the one we do not take.
+	var route: Array = _find_path(_snap_to_grid(position), foe_tile, get_move_range() + 1)
+	if route.size() < 2:
+		return Vector3.INF
+	var stand_on: Vector3 = route[route.size() - 2]
+	# Already standing there means we were adjacent all along, which _enemy_action_for handles.
+	return Vector3.INF if stand_on.distance_to(_snap_to_grid(position)) < 0.5 else stand_on
+
+
+func _tile_action_for(tile: Vector3) -> int:
+	## Which action a click on `tile` runs. A pinned tile-action gets first refusal; failing
+	## that — and when nothing is pinned — the square is read for what is on it, and Move is
+	## the answer to everything else.
+	if action_pinned:
+		var pinned = abilities[selected_action]
+		if pinned.targets_tile() and selected_action != Action.MOVE and pinned.can_target(self, tile):
+			return selected_action
+	else:
+		for slot in INFERRED_TILE_ORDER:
+			if abilities[slot].can_target(self, tile):
+				return slot
+	return Action.MOVE if abilities[Action.MOVE].can_target(self, tile) else NO_ACTION
 
 
 func _update_action_bar() -> void:
@@ -127,69 +321,47 @@ func _update_cursor() -> void:
 		return
 	var mouse_pos := viewport.get_mouse_position()
 	if viewport.gui_is_dragging():
-		Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+		ActionCursorsScript.neutral()
 		_hide_indicator()
 		return
 	# Pointer is over a panel or a toolbar cell, so it is not aiming at the battlefield.
 	# Without this the move indicator still lit up on the tile UNDERNEATH an open window,
 	# advertising a move the click can no longer make.
 	if viewport.gui_get_hovered_control() != null:
-		Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+		ActionCursorsScript.neutral()
 		_hide_indicator()
 		return
 
-	var camera := viewport.get_camera_3d()
-	var from := camera.project_ray_origin(mouse_pos)
-	var to := from + camera.project_ray_normal(mouse_pos) * 100.0
-	var space_state := get_world_3d().direct_space_state
-
-	var ability = abilities[selected_action]
-
-	# Enemy-targeted abilities: check enemies first for aim feedback.
-	if ability.targets_enemy():
-		var enemy_query := PhysicsRayQueryParameters3D.create(from, to)
-		enemy_query.collision_mask = LAYER_ENEMY
-		var enemy_result := space_state.intersect_ray(enemy_query)
-		if not enemy_result.is_empty():
-			var collider: Node = enemy_result.collider
-			if collider.has_method("take_damage"):
-				if ability.can_target(self, collider):
-					Input.set_default_cursor_shape(Input.CURSOR_CROSS)
-					_hide_indicator()
-					return
-				# Distinguish "out of resources" from "out of range / blocked"
-				if ability.unavailable_reason(self) == "resource":
-					Input.set_default_cursor_shape(Input.CURSOR_HELP)
-				else:
-					Input.set_default_cursor_shape(Input.CURSOR_FORBIDDEN)
-				_hide_indicator()
-				return
-
-	# Ground = move (the fallback action, always available).
-	var ground_query := PhysicsRayQueryParameters3D.create(from, to)
-	ground_query.collision_mask = LAYER_GROUND
-	var result := space_state.intersect_ray(ground_query)
-	if not result.is_empty():
-		var clicked: Vector3 = result.position
-		clicked.y = position.y
-		var grid_pos := _snap_to_grid(clicked)
-		# Selected tile-ability other than Move (e.g. Pick Up): its own cursor feedback.
-		if ability.targets_tile() and selected_action != Action.MOVE:
-			if ability.can_target(self, grid_pos):
-				Input.set_default_cursor_shape(Input.CURSOR_CROSS)
-			else:
-				Input.set_default_cursor_shape(Input.CURSOR_FORBIDDEN)
-			_hide_indicator()
-			return
-		if abilities[Action.MOVE].can_target(self, grid_pos):
-			Input.set_default_cursor_shape(Input.CURSOR_POINTING_HAND)
-			_show_indicator(grid_pos)
+	var res := _resolve_at(mouse_pos)
+	if res.slot == NO_ACTION:
+		# Nothing doing here. "resource" gets the help cursor — the action fits this target but
+		# something is missing — and everything else the forbidden one.
+		if res.reason == "resource":
+			ActionCursorsScript.show_action(ActionCursorsScript.HELP)
+		elif res.target != null or res.tile != Vector3.INF:
+			ActionCursorsScript.forbidden()
 		else:
-			Input.set_default_cursor_shape(Input.CURSOR_FORBIDDEN)
-			_hide_indicator()
+			ActionCursorsScript.neutral()
+		_hide_indicator()
 		return
 
-	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+	if res.slot == Action.MOVE:
+		ActionCursorsScript.move()
+		_show_indicator(res.tile)
+		return
+
+	if res.approach != Vector3.INF:
+		# Walk-then-swing. The sword says what the click ends in, and the floor indicator on
+		# the approach square says where it ends UP — between them the player can see the whole
+		# move before committing to it.
+		ActionCursorsScript.show_action(abilities[res.slot].get_cursor_icon(self, res.target))
+		_show_indicator(res.approach)
+		return
+
+	# The resolved action's own pointer — a sword, a bow, a backpack — so the mouse says WHAT
+	# the click will do, not merely that it will do something.
+	var what = res.target if res.target != null else res.tile
+	ActionCursorsScript.show_action(abilities[res.slot].get_cursor_icon(self, what))
 	_hide_indicator()
 
 
@@ -205,66 +377,115 @@ func _hide_indicator() -> void:
 
 
 func _handle_click(screen_pos: Vector2) -> void:
-	var camera := get_viewport().get_camera_3d()
-	var from := camera.project_ray_origin(screen_pos)
-	var to := from + camera.project_ray_normal(screen_pos) * 100.0
-	var space_state := get_world_3d().direct_space_state
+	## Do the thing the cursor has been promising. See _resolve_at: the promise and the deed
+	## come from the same call, so they cannot come apart.
+	var res := _resolve_at(screen_pos)
+	if res.slot == NO_ACTION:
+		return
+	var ability = abilities[res.slot]
+	ActionCursorsScript.neutral()
+	_hide_indicator()
 
-	var ability = abilities[selected_action]
+	if res.slot == Action.MOVE:
+		_begin_action(Action.MOVE)
+		ability.execute(self, res.tile)   # sets target_position + is_moving
+		return
 
-	# Self-targeted abilities (pickup): fire immediately, ends the turn in place.
 	if ability.targets_self():
-		_begin_action(selected_action)
+		_begin_action(res.slot)
 		ability.execute(self, null)
 		_end_action_in_place()
 		return
 
-	# Enemy-targeted abilities: use it if we clicked a valid enemy target.
-	if ability.targets_enemy():
-		var enemy_query := PhysicsRayQueryParameters3D.create(from, to)
-		enemy_query.collision_mask = LAYER_ENEMY
-		var enemy_result := space_state.intersect_ray(enemy_query)
-		if not enemy_result.is_empty():
-			var collider: Node = enemy_result.collider
-			if collider.has_method("take_damage") and ability.can_target(self, collider):
-				Input.set_default_cursor_shape(Input.CURSOR_ARROW)
-				_hide_indicator()
-				_face_target(collider)
-				_begin_action(selected_action)
-				# The turn is spent the moment the ability fires, so stop taking orders now
-				# rather than when it finishes: a Firebolt spends most of a second in the air,
-				# and without this the player could queue a second action mid-flight.
-				can_act = false
-				_update_action_bar()
-				# Awaited because an ability may have a projectile to land before it resolves
-				# (Firebolt), and the turn must not end under it. Awaiting a plain function
-				# returns straight away, so every other ability behaves exactly as before.
-				await ability.execute(self, collider)
-				_end_action_in_place()
-				return
+	if res.approach != Vector3.INF:
+		# Crossing the floor first. The turn is NOT ended here: _on_move_complete picks the
+		# attack back up on arrival and bills the walk and the swing together.
+		_queued_attack = res.target
+		_queued_attack_slot = res.slot
+		can_act = false
+		_update_action_bar()
+		_face_target(res.target)
+		# Shout as the run STARTS. Without this a move-and-attack is silent for the whole walk
+		# and then fires four sounds inside a tenth of a second on arrival — which is what
+		# "the sound triggers too late" is: not one sound mistimed, but everything bunched at
+		# the far end of a second of running. The grunt and the blow still land on the swing;
+		# this fills the charge.
+		_charge_shout()
+		_start_path_move(res.approach, res.target)
+		return
 
-	# Ground click. A selected tile-ability other than Move (e.g. Pick Up) acts on the
-	# clicked tile if valid; otherwise fall back to Move (always available).
-	var ground_query := PhysicsRayQueryParameters3D.create(from, to)
-	ground_query.collision_mask = LAYER_GROUND
-	var result := space_state.intersect_ray(ground_query)
-	if not result.is_empty():
-		var clicked: Vector3 = result.position
-		clicked.y = position.y
-		var grid_pos := _snap_to_grid(clicked)
-		if ability.targets_tile() and selected_action != Action.MOVE and ability.can_target(self, grid_pos):
-			Input.set_default_cursor_shape(Input.CURSOR_ARROW)
-			_hide_indicator()
-			_begin_action(selected_action)
-			ability.execute(self, grid_pos)
-			_end_action_in_place()
-			return
-		var move_ability = abilities[Action.MOVE]
-		if move_ability.can_target(self, grid_pos):
-			Input.set_default_cursor_shape(Input.CURSOR_ARROW)
-			_hide_indicator()
-			_begin_action(Action.MOVE)
-			move_ability.execute(self, grid_pos)  # sets target_position + is_moving
+	if ability.targets_enemy():
+		_face_target(res.target)
+		_begin_action(res.slot)
+		# The turn is spent the moment the ability fires, so stop taking orders now rather than
+		# when it finishes: a Firebolt spends most of a second in the air, and without this the
+		# player could queue a second action mid-flight.
+		can_act = false
+		_update_action_bar()
+		# Awaited because an ability may have a projectile to land before it resolves
+		# (Firebolt), and the turn must not end under it. Awaiting a plain function returns
+		# straight away, so every other ability behaves exactly as before.
+		await ability.execute(self, res.target)
+		_end_action_in_place()
+		return
+
+	_begin_action(res.slot)
+	ability.execute(self, res.tile)
+	if _looting:
+		# The window has the turn now. Stop taking battlefield orders, but do NOT end it —
+		# finish_looting does that once the player is done taking things.
+		can_act = false
+		_update_action_bar()
+		return
+	_end_action_in_place()
+
+
+# --- Looting ----------------------------------------------------------------
+#
+# A loot window suspends the turn instead of ending it. Opening the container costs its own
+# tick, each item taken costs a Pick Up's worth, and the total is billed once when the window
+# closes. Anything else would mean either a turn per item — which is nobody's idea of opening a
+# box — or free loot.
+
+## Who to hit on arrival, and with what, when a click ordered a move-and-attack. Null the rest
+## of the time. See _run_queued_attack.
+var _queued_attack: Node = null
+var _queued_attack_slot: int = NO_ACTION
+
+## True from the moment a loot window opens until it closes. While set, _handle_click leaves
+## the turn running (see the tile branch) and can_act is false, so the battlefield ignores
+## clicks and only the window is live.
+var _looting := false
+
+
+func loot_take_cost() -> int:
+	## The time price of taking one item: whatever a Pick Up costs, asked of the ability rather
+	## than written down again here, so the two cannot drift apart.
+	return max(1, abilities[Action.PICKUP].get_cost(self))
+
+
+func take_loot(container, index: int) -> void:
+	## Take one item out of `container`, and pay for it only if it actually moved — a bag too
+	## full to hold it has cost the character nothing but the reach.
+	if container == null or not is_instance_valid(container):
+		return
+	if container.take(index, self):
+		_pending_cost += loot_take_cost()
+
+
+func finish_looting() -> void:
+	## The window has closed. Settle up: the turn has been waiting on this.
+	if not _looting:
+		return
+	_looting = false
+	_end_action_in_place()
+
+
+func _loot_window_open() -> bool:
+	for w in get_tree().get_nodes_in_group("loot_window"):
+		if w.visible:
+			return true
+	return false
 
 
 func _begin_action(slot: int) -> void:
@@ -435,6 +656,10 @@ func _to_grid_step(v: Vector3) -> Vector3:
 ## even when a pillar blocks the cardinal approach cell.
 const PICKUP_REACH_TILES := 1
 
+## How far you can reach to work a door or a chest, in tiles. Arm's length, like Pick Up:
+## you open a door by standing next to it, from either side.
+const INTERACT_REACH_TILES := 1
+
 
 func _pickup_at(tile: Vector3) -> Node:
 	## The ground item a click at `tile` should grab: the reachable pickup nearest the
@@ -451,11 +676,85 @@ func _pickup_at(tile: Vector3) -> Node:
 		var reach: float = max(abs(gi_node.position.x - position.x), abs(gi_node.position.z - position.z))
 		if reach > PICKUP_REACH_TILES * GRID_SIZE:
 			continue
+		# The item has to be ON the square that was clicked, not merely the nearest one to it.
+		#
+		# This used to accept any pickup within reach and let the clicked tile choose between
+		# them, which was friendly to a sloppy click and fatal to inferring the action from the
+		# hover: standing next to a dagger made "Pick Up" a legal reading of EVERY square,
+		# including the one you meant to walk to. Now the two readings cannot both apply.
+		if not _on_tile(gi_node, tile):
+			continue
 		var d: float = abs(gi_node.position.x - tile.x) + abs(gi_node.position.z - tile.z)
 		if d < best_d:
 			best_d = d
 			best = gi
 	return best
+
+
+func _on_tile(node: Node3D, tile: Vector3) -> bool:
+	## Whether `node` stands on the grid square `tile`. Snapped rather than compared directly,
+	## because a dropped item lands wherever it lands and a door sits on the line between two
+	## squares — see Combatant._is_obstacle_at, which snaps for the same reason.
+	var cell: Vector3 = _snap_to_grid(node.global_position)
+	return absf(cell.x - tile.x) < 0.5 and absf(cell.z - tile.z) < 0.5
+
+
+func _interactable_at(tile: Vector3) -> Node:
+	## The door/chest/lever a click at `tile` should work: whatever is in the "interactables"
+	## group, is willing to be worked right now, lies within reach of US, and is nearest the
+	## square that was actually CLICKED. Two doors side by side therefore open the one pointed
+	## at rather than the one that happens to be closest to the character.
+	##
+	## Reach is measured to the thing's own position rather than to its grid cell. A door
+	## stands in a doorway, which is a hole in a wall on the boundary BETWEEN two squares, so
+	## snapping it to a cell first would put it a whole cell further away than it looks.
+	var best: Node = null
+	var best_d := INF
+	for it in get_tree().get_nodes_in_group("interactables"):
+		if not is_instance_valid(it):
+			continue
+		var node := it as Node3D
+		if node == null:
+			continue
+		if it.has_method("can_interact") and not it.can_interact(self):
+			continue
+		var reach: float = max(
+			abs(node.global_position.x - position.x), abs(node.global_position.z - position.z))
+		if reach > INTERACT_REACH_TILES * GRID_SIZE:
+			continue
+		# On the clicked square, for the same reason Pick Up now insists on it — see _on_tile.
+		# For a door that square is the doorway itself, not the square you stand on to work it.
+		if not _on_tile(node, tile):
+			continue
+		var d: float = abs(node.global_position.x - tile.x) + abs(node.global_position.z - tile.z)
+		if d < best_d:
+			best_d = d
+			best = it
+	return best
+
+
+func _do_interact(target_tile: Vector3 = Vector3.INF) -> void:
+	## Work the thing on the clicked tile. The verb is read off the target rather than decided
+	## here, so "Open" and "Close" are the same action and the floating text still says which
+	## of the two just happened.
+	var ref: Vector3 = target_tile if target_tile != Vector3.INF else position
+	var thing: Node = _interactable_at(ref)
+	if thing == null:
+		_show_action_text("Nothing to open")
+		return
+	var verb: String = thing.interact_verb() if thing.has_method("interact_verb") else "Use"
+	_face_target(thing as Node3D)
+	thing.interact(self)
+	# Ask what it wants NOW, after being worked: a chest that was locked a moment ago may have
+	# just been opened, and a corpse was lootable all along. Whoever says yes gets the window,
+	# and the turn stays open while the player decides what to take — finish_looting ends it.
+	_looting = false
+	if thing.has_method("wants_loot_window") and thing.wants_loot_window():
+		for w in get_tree().get_nodes_in_group("loot_window"):
+			w.show_for(thing, self)
+		_looting = _loot_window_open()
+	if not _looting:
+		_show_action_text(verb + "!")
 
 
 func _do_pickup(target_tile: Vector3 = Vector3.INF) -> void:
@@ -472,26 +771,18 @@ func _do_pickup(target_tile: Vector3 = Vector3.INF) -> void:
 	if not item:
 		_update_health_bar()
 		return
-	# Ammo and consumables are used immediately, not stored.
-	if item.item_type == ItemResource.ItemType.AMMO or item.item_type == ItemResource.ItemType.CONSUMABLE:
-		var applied := false
-		if item.heal_amount > 0:
-			hp = min(hp + item.heal_amount, max_hp)
-			_show_action_text("+" + str(item.heal_amount) + " HP")
-			applied = true
-		if item.ammo_amount > 0:
-			if max_ammo <= 0:
-				max_ammo = 10
-			ammo = min(ammo + item.ammo_amount, max_ammo)
-			_show_action_text("+" + str(item.ammo_amount) + " arrows")
-			applied = true
-		if applied:
-			gi.queue_free()
-		_update_health_bar()
-		return
-	# Everything else goes into the inventory.
+	# Potions, quivers and arrow bundles used to be spent the instant they were picked up. They
+	# go in the bag now: drinking a potion is a decision with a moment's cost to it, and it
+	# should be possible to carry one for when it is needed. Using them is a separate action —
+	# see use_item, wired to the bag slots by InventoryUI.
+	# Everything goes into the inventory — and straight into a free hand if
+	# that is what it found, so fetching a thrown weapon back arms you in the same action
+	# instead of costing a second turn to draw it.
 	if inventory and inventory.has_method("add_item") and inventory.add_item(item):
-		_show_action_text("Picked up " + item.item_name)
+		var drew: bool = inventory.has_method("try_auto_equip_hand") \
+			and inventory.try_auto_equip_hand(item)
+		# "Drew" is the wording the weapon-break replacement already uses for the same event.
+		_show_action_text(("Drew " if drew else "Picked up ") + item.item_name)
 		gi.queue_free()
 	else:
 		_show_action_text("Inventory full!")
@@ -518,7 +809,32 @@ func equip_weapon(slot_index: int) -> void:
 			hand = " (off-hand)"
 	_show_action_text("Equipped " + item_name + hand)
 	_update_health_bar()
-	_pending_cost = max(1, equip_cost)
+	# Priced by the item, floored at the character's own equip_cost: drawing a blade is quick,
+	# strapping a shield or buckling a helmet is not, and body armour is slower still. This is
+	# the same number that decides what may be auto-equipped on pickup.
+	var cost: int = equip_cost
+	if equipped:
+		cost = max(cost, equipped.get_equip_time())
+	_pending_cost = max(1, cost)
+	_end_action_in_place()
+
+
+func use_item(slot_index: int) -> void:
+	## Drink a potion, or take the arrows from a quiver. A full action, priced the same way
+	## equipping is: the potion is a swallow, the quiver has to be slung and sorted.
+	if not can_act or is_moving:
+		return
+	if not inventory or not inventory.has_method("use_consumable"):
+		return
+	var item: ItemResource = inventory.items[slot_index] if slot_index < inventory.items.size() else null
+	if item == null:
+		return
+	# use_consumable puts up its own "+8 HP" / "+9 arrows" text and clears the bag slot.
+	if not inventory.use_consumable(slot_index):
+		_show_action_text("Cannot use " + item.item_name)
+		return
+	_update_health_bar()
+	_pending_cost = max(1, max(equip_cost, item.get_equip_time()))
 	_end_action_in_place()
 
 
@@ -538,7 +854,9 @@ func unequip_item(item: ItemResource) -> void:
 	inventory.unequip_item(item)
 	_show_action_text("Unequipped " + item.item_name)
 	_update_health_bar()
-	_pending_cost = max(1, equip_cost)
+	# Priced by the item, like equipping — but off its own unequip time, which is quick for
+	# everything except body armour (see ItemResource.get_unequip_time).
+	_pending_cost = max(1, max(equip_cost, item.get_unequip_time()))
 	_end_action_in_place()
 
 
@@ -559,6 +877,39 @@ func _try_trip(target: Node) -> bool:
 
 func _on_move_complete() -> void:
 	can_act = false
-	var combat_mgr := get_parent().get_node_or_null("CombatManager")
+	if _queued_attack != null:
+		# Arrived with a swing owed. _run_queued_attack ends the turn itself, once the blow has
+		# landed — awaiting it here would mean the turn ended before the animation.
+		_run_queued_attack()
+		return
+	var combat_mgr := _combat_mgr()
+	if combat_mgr:
+		combat_mgr.turn_done(max(_pending_cost, 1))
+
+
+func _run_queued_attack() -> void:
+	## The second half of a move-and-attack: we have arrived, so swing.
+	##
+	## Adjacency is checked AGAIN rather than assumed. A guardian's zone can stop a move short
+	## (see Combatant._clip_at_guard), and the target can die to something else while we are
+	## still walking — in both cases the walk happened and is charged for, and the swing simply
+	## does not. Being intercepted on the way to someone is a real outcome, not an error.
+	var foe: Node = _queued_attack
+	var slot: int = _queued_attack_slot
+	_queued_attack = null
+	_queued_attack_slot = NO_ACTION
+
+	var walked: int = get_move_cost()
+	if is_instance_valid(foe) and foe.is_alive and _is_adjacent(foe.position) 			and slot >= 0 and slot < abilities.size():
+		_face_target(foe as Node3D)
+		# Walk AND swing: the whole turn is one bill, so a move-and-attack costs exactly what
+		# doing the two separately would have.
+		_pending_cost = walked + max(1, abilities[slot].get_cost(self))
+		await abilities[slot].execute(self, foe)
+	else:
+		_pending_cost = walked
+		_show_action_text("Stopped short!")
+
+	var combat_mgr := _combat_mgr()
 	if combat_mgr:
 		combat_mgr.turn_done(max(_pending_cost, 1))

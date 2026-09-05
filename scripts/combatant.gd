@@ -62,9 +62,45 @@ const COVER_DEFENSE_BONUS := 3    ## added to an active dodge/parry roll when in
 const COVER_SAVE_CHANCE := 25     ## % chance the obstacle eats the shot when we can't actively defend
 const COVER_RAY_DROP := 0.6       ## metres below eye-line for the "does a short prop block us" ray
 
+## Bonus to a Protection-stance parry roll. Melee only, on purpose: planting your feet and
+## keeping the guard up is worth something against a blade in front of you and nothing at all
+## against an arrow, which is what stops Protection being the strictly-best stance.
+const GUARD_PARRY_BONUS := 2
+
+## Reach of a Protection-stance guardian's zone, in tiles. One square by default, which is
+## exactly the ring _is_adjacent already covers — so an enemy stopped at the edge of the zone
+## is, by definition, already within the guardian's melee reach and he within its. Exists as a
+## constant so a polearm could widen it without touching the logic.
+const GUARD_RADIUS := 1
+
+## Movement is divided by this while guarding — planted feet. Floored at 1 in get_move_range(),
+## so holding a line never leaves a character genuinely stuck.
+const GUARD_MOVE_DIVISOR := 2
+
 ## Dual-wield free off-hand attack (see _do_melee_attack).
 const OFFHAND_HIT_PENALTY := 5    ## to-hit penalty for the off-hand strike (0 with dual_wield_skill)
 const OFFHAND_DELAY := 0.3        ## beat between the main hit and the off-hand follow-up
+
+## Sound family (ItemResource.WeaponSound) of the hand currently mid-strike, or -1 for a hand
+## with no weapon in it. Set at the top of each melee strike and read back by everything the
+## blow sets off — the whoosh, the parry clang, the wound — because those fire from three
+## different places (_swing_arc here, _parry_sparks and take_damage on the DEFENDER) and only
+## the attacker knows which of its two hands is swinging. Kept as state rather than threaded
+## through take_damage: what a weapon sounds like is no business of the damage rules.
+var _swing_sound: int = -1
+
+## Shortest gap between two lines from the same throat, in seconds. Sized just over
+## OFFHAND_DELAY: a dual-wielder's main and off-hand strikes land 0.3 s apart and would
+## otherwise have both the attacker grunt and the defender cry out twice over themselves on
+## every single attack. One gate for grunts, cries and battle cries alike, because a character
+## has one voice and everything they might say competes for it.
+const VOICE_GAP := 0.45
+var _last_voice_ms: int = -100000
+
+## A charge is a once-a-fight thing. Without this every enemy would bellow on every turn it
+## spent walking, which is most turns, and the moment they first come at you would be worth
+## nothing.
+var _has_charged := false
 
 ## What a hit is made of, which decides which defences apply to it (see _calculate_damage).
 ## PHYSICAL is the default everywhere, so every existing blade, arrow and shove keeps behaving
@@ -78,6 +114,20 @@ const HP_PER_STAMINA := 5
 ## Mana per point of willpower, matching HP_PER_STAMINA so the two pools read on one scale.
 ## Only characters with `can_cast` get a pool at all; for everyone else it is 0.
 const MANA_PER_WILLPOWER := 5
+
+## Defence debt per point of stamina — how many ticks of "already spent reacting" a character
+## can carry before the guard drops (see defense_debt / is_overwhelmed). Stamina because this
+## is endurance, the same attribute behind HP_PER_STAMINA.
+##
+## At 1 the cast reads boss 6, hero 4, wizard 3, goblin 2. Kept here after playtesting: a
+## guard drops after only a handful of reactions, which reads as a real limit on how much one
+## character can cover at once. Doubling it (boss 12, hero 8) puts the threshold out of reach
+## in a four-enemy fight, because the advancing clock drains debt about as fast as parries and
+## interceptions add it — the mechanic technically works but never visibly fires.
+const DEBT_PER_STAMINA := 1
+## How near the limit counts as strained. Only the initiative readout uses it, to warn amber
+## before the guard actually drops rather than after.
+const DEBT_WARN_MARGIN := 2
 
 ## Missile to-hit penalties, applied to bow shots AND thrown weapons alike by
 ## get_missile_skill(). Distance uses the same Manhattan measure the range checks do.
@@ -94,6 +144,19 @@ const RANGE_PENALTY_NEAR := 3      ## beyond the free range, out to half the wea
 const RANGE_PENALTY_FAR := 6       ## beyond half the weapon's range
 ## Shooting at someone already in melee with one of ours: you are picking a gap in a scrum.
 const ENGAGED_PENALTY := 5
+## Shooting at someone lying down: a much smaller silhouette, and a still one behind whatever
+## is on the floor between you.
+##
+## Just under the scrum penalty, because a prone man is a hard shot but not as hard as a moving
+## gap between two people. MISSILES ONLY — being down is still a disaster in melee, where the
+## dodge penalty in _attempt_defense goes on applying. A trip is now a genuine trade rather
+## than a strict win: it wrecks its victim at arm's length and shelters them from the archers.
+const PRONE_TARGET_PENALTY := 4
+
+## Time to get back on your feet. Going DOWN is free — dropping is not something you have to
+## find time for — but getting up is a real part of a turn, and paying for it is what makes
+## lying down a decision rather than a permanent upgrade against archers.
+const STAND_UP_COST := 1
 
 ## Optional data-driven stat block (a CombatantStats resource). When assigned,
 ## its values are copied onto this combatant at _ready (overriding the
@@ -108,6 +171,10 @@ var move_range: int = 4
 
 @export var initiative: int = 10
 @export var character_name: String = "Hero"
+## Which of voice_sfx.gd's voice sets this character speaks with — "male_a" through "male_d",
+## "female_a", "female_b". A string rather than an enum so it reads as itself in a scene diff;
+## an unrecognised one falls back to the default with a warning rather than going silent.
+@export var voice: String = "male_a"
 @export var is_player_controlled: bool = true
 ## Time units charged per PAIR of tiles walked (see get_move_cost). At the default 1 a
 ## stride of 2-3 tiles costs one unit, 4-5 costs two, and so on — striding out is cheaper
@@ -120,7 +187,8 @@ var move_range: int = 4
 @export var parry_skill: int = 4        ## parry defense skill
 ## No dodge_skill: dodging is agility (see get_dodge_skill), so there is one number to tune
 ## rather than two that can contradict each other.
-@export_enum("Parry", "Dodge") var defensive_option: int = 0  ## 0=Parry, 1=Dodge
+## Ids are load-bearing and append-only — see Stance for the catalogue and the warning.
+@export_enum("Parry", "Dodge", "Protection") var defensive_option: int = 0
 @export var shove_skill: int = 5
 @export var trip_skill: int = 4
 @export var shove_cost: int = 2
@@ -136,6 +204,15 @@ var move_range: int = 4
 ## so the real price is fetching it back off the floor.
 @export var throw_cost: int = 1
 @export var equip_cost: int = 1         ## time cost to swap equipped weapon/shield
+## Time to work a door, a chest or a lever. One tick: cheaper than a swing, because throwing a
+## door open is not meant to be a decision — it is meant to be the thing you do on the way.
+@export var interact_cost: int = 1
+## Trade skill, not a combat one: added to a 1-5 roll against a lock's difficulty.
+##
+## ZERO MEANS UNTRAINED, and untrained does not roll at all — a character with no idea how a
+## lock works does not get lucky with one. That is what keeps a locked chest a real obstacle
+## rather than a delay everybody eventually passes.
+@export var lockpick_skill: int = 0
 
 ## Whether this character can cast at all. Off by default, so only a character explicitly
 ## marked a caster gets a mana pool or any spell power — willpower is a universal attribute,
@@ -145,6 +222,13 @@ var move_range: int = 4
 ## Time units a spell takes. Spells also cost mana, which is per-spell (see the ability), so
 ## this is only the tempo half of the price.
 @export var spell_cost: int = 3
+
+## Whether this character may take the Protection stance at all (Stance.PROTECTION). Off by
+## default and gated on the capability rather than on what happens to be in hand, exactly as
+## can_cast gates spellcasting: a wizard who picks up a shield is still no line-holder. The
+## stance also needs a weapon or shield to actually DO anything, but that is checked when the
+## defence resolves, not when the stance is chosen.
+@export var can_guard: bool = false
 
 ## Core attributes. Reach is deliberately NOT here: how far a weapon throws or shoots is a
 ## property of the weapon, so ranged_range / throw_range live on ItemResource and are read
@@ -172,6 +256,9 @@ var move_range: int = 4
 @export var weight: int = 2
 
 var next_turn_at: int = 0
+## What next_turn_at was set to by the ACTION this character took, before any defending.
+## CombatManager.turn_done stamps it; defense_debt() subtracts it back out. See there for why.
+var action_turn_at: int = 0
 var is_prone: bool = false
 
 var is_moving := false
@@ -181,6 +268,11 @@ var _move_path: Array = []
 ## Tiles the move in progress covers, recorded when the route is queued and read by
 ## get_move_cost() to price the move by distance. Zero when nothing is moving.
 var _move_tiles: int = 0
+## Who this move was aimed at, or null for a move aimed at a tile rather than a combatant
+## (every player move, and an archer repositioning). Read only by _clip_at_guard, to tell a
+## unit that walked INTO a guardian on purpose from one that was going somewhere else and got
+## stopped. Set at each move initiation site, never left stale.
+var _move_intent: Node = null
 
 ## Emitted whenever hp / max_hp / is_alive change, so HUD elements (the party
 ## portraits) can refresh without polling. Fired from _update_health_bar(),
@@ -196,7 +288,41 @@ var max_mana := 0
 var attack_dmg := 4
 var is_alive := true
 
+## Metres of air between the crown of a character's head and the bottom of their health bar.
+##
+## The same for everybody, which is the point: these models differ by half a metre — the Boss
+## tops out at world 1.67 and the Hero at 1.17 — so a fixed HEIGHT put one bar a hand's width
+## over its owner and another three times that. Measured per character instead, and this is the
+## one number that decides how the whole floating cluster sits.
+const HEAD_CLEARANCE := 0.25
+## And between the bar and the nameplate above it. The bar is about 0.11 tall, so this leaves
+## them near enough to read as one label.
+const PLATE_OVER_BAR := 0.32
+
+## The stance this character was configured with, captured before play starts. Restored when
+## Protection is broken — see _lay_prone. Never Protection itself: that one has to be chosen.
+var _default_stance: int = Stance.PARRY
+
+## Emitted when this corpse's loot changes, so an open loot window repaints. Named to match
+## LootContainer's, because the loot window talks to both through the same three methods.
+signal contents_changed
+
+## What is left on the body, once there is a body. Array[ItemResource], filled by _die from
+## whatever this character was carrying — see _gather_corpse_loot.
+##
+## Named `contents` rather than something more descriptive because that IS the name: it is the
+## property loot_ui.gd reads, and a corpse and a chest have to answer to the same one or the
+## window would need to know which it was looking at.
+var contents: Array = []
+
+## Last measured crown height, in local space. Kept so the labels are only moved when the
+## silhouette actually changed — putting a helmet on is worth a re-measure, taking a hit is not.
+var _crown_y := INF
+
 var health_bar: Label3D
+## The hit-point bar over this character's head. Built at runtime rather than placed in the
+## scene — see health_bar_3d.gd.
+var hp_bar: Node3D
 var inventory: Node  ## InventoryComponent
 
 ## Actions/skills this combatant can perform, as Ability resources. Populated by
@@ -217,6 +343,9 @@ const ArrowProjectileScript := preload("res://scripts/fx/arrow_projectile.gd")
 const BloodSplashScript := preload("res://scripts/fx/blood_splash.gd")
 const SwordSwingScript := preload("res://scripts/fx/sword_swing.gd")
 const ParrySparksScript := preload("res://scripts/fx/parry_sparks.gd")
+const WeaponSfxScript := preload("res://scripts/fx/weapon_sfx.gd")
+const HealthBar3DScript := preload("res://scripts/health_bar_3d.gd")
+const VoiceSfxScript := preload("res://scripts/fx/voice_sfx.gd")
 
 var _weapon_socket = null
 var _shield_socket = null
@@ -249,6 +378,11 @@ const CHARACTER_SCALE := 1.6
 ## Set true in project to re-enable verbose equipment logging.
 const DEBUG_EQUIPMENT := false
 
+## Traces every routed move against the guard zones: whether the route met one, at which step,
+## who the mover was aimed at, and whether that counted as an interception. Worth switching on
+## again if interceptions ever stop firing when they look like they should.
+const DEBUG_GUARD := false
+
 # Preloaded weapon models
 const SWORD_MODEL_PATH := "res://assets/models/kenney/mini-arena/weapon-sword.glb"
 const BOW_MODEL_PATH := "res://assets/weapons/bow.fbx"
@@ -262,8 +396,14 @@ func _ready() -> void:
 	target_position = position
 	position.y = _ground_y()
 	health_bar = get_node_or_null("HealthBar")
+	hp_bar = HealthBar3DScript.build(self)
+	_place_floating_labels()
 	inventory = get_node_or_null("Inventory")
 	_apply_stats()
+	# After the stat block has had its say, so it is the character's real starting stance and
+	# not the export default. Protection is not a fallback — a guardian knocked down falls back
+	# to fighting, not to guarding from the floor.
+	_default_stance = defensive_option if defensive_option != Stance.PROTECTION else Stance.PARRY
 	_readd_equipment_bonuses()
 	_pre_setup()
 	# After both the stat block and the subclass hook have had their say, so it derives from
@@ -333,6 +473,7 @@ func _apply_stats() -> void:
 	throw_skill = s.throw_skill
 	throw_cost = s.throw_cost
 	can_cast = s.can_cast
+	can_guard = s.can_guard
 	spell_cost = s.spell_cost
 	strength = s.strength
 	agility = s.agility
@@ -392,8 +533,37 @@ func _lay_prone() -> void:
 		return
 	is_prone = true
 	_show_condition_text("PRONE!")
+	# Protection is a stance you hold on your feet. Knocked off them, the character drops back
+	# to whatever they fight as normally rather than nominally guarding a line from the floor.
+	#
+	# The stance has to actually CHANGE, not merely stop working: is_guarding() already refused
+	# while prone, so the zone and its aura went — but the stance itself stayed Protection, and
+	# with it the melee parry bonus (see _attempt_defense) and the word "Protection" on the
+	# toolbar. The picture said the guard was broken and the numbers said it was not.
+	if defensive_option == Stance.PROTECTION:
+		defensive_option = _default_stance
+		_show_condition_text("Guard broken!")
+		# The stance cell on the toolbar is painted from defensive_option; without this it goes
+		# on advertising a stance this character is no longer in.
+		get_tree().call_group("action_toolbar", "refresh")
 	_update_health_bar()
 	_update_prone_anim()
+
+
+func toggle_prone() -> void:
+	## Drop, or get up. The player's Prone action; the AI still stands automatically at the top
+	## of its turn (see Enemy.enable_turn).
+	##
+	## Going down routes through _lay_prone so it breaks a Protection stance exactly as being
+	## knocked down does: choosing to lie in a doorway must not be a way to hold the line from
+	## the floor.
+	if is_prone:
+		is_prone = false
+		_show_condition_text("Stood up")
+		_update_health_bar()
+		_update_prone_anim()
+	else:
+		_lay_prone()
 
 
 func _stand_up_if_prone() -> void:
@@ -765,15 +935,97 @@ func _hostile_combatant_at(tile: Vector3) -> Node:
 	return null
 
 
+func is_guarding() -> bool:
+	## A planted guardian, holding the ring of tiles around them against anyone hostile.
+	##
+	## Every clause is a way the line can fail: dead or knocked prone, no weapon or shield to
+	## hold it WITH (the same test a parry makes), or already overwhelmed — out of time to
+	## react at all. That last one is what makes the shield wall crumble under a swarm instead
+	## of holding forever; see is_overwhelmed.
+	return is_alive and not is_prone \
+		and defensive_option == Stance.PROTECTION \
+		and (_has_usable_weapon() or _has_shield_equipped()) \
+		and not is_overwhelmed()
+
+
+func _in_guard_zone_of(guardian: Node, tile: Vector3) -> bool:
+	## Chebyshev (king-move) reach, written out against GUARD_RADIUS rather than calling
+	## _is_adjacent so that widening the zone stays a one-constant change. At radius 1 the
+	## two are identical.
+	var g: Vector3 = guardian._snap_to_grid(guardian.position)
+	return max(abs(tile.x - g.x), abs(tile.z - g.z)) <= GRID_SIZE * (GUARD_RADIUS + 0.5)
+
+
+func _guard_at(tile: Vector3) -> Node:
+	## The ENEMY guardian whose zone covers `tile`, or null. Called on the mover, so "enemy"
+	## means hostile to US — a guardian never blocks its own side, which is what lets allies
+	## walk freely through a hero's zone.
+	for c in get_tree().get_nodes_in_group("combatants"):
+		if c == self or not is_instance_valid(c):
+			continue
+		if not _is_hostile(c):
+			continue
+		if not (c.has_method("is_guarding") and c.is_guarding()):
+			continue
+		if _in_guard_zone_of(c, tile):
+			return c
+	return null
+
+
+func on_interception(mover: Node) -> void:
+	## Called on the GUARDIAN when its zone actually turned someone aside — see _clip_at_guard
+	## for what counts as "actually".
+	##
+	## The cost and the caption land on different characters, deliberately. The tick is the
+	## guardian's: same price a successful parry pays, charged the same way, because it is the
+	## same kind of expense — time spent reacting to someone else instead of acting. That is
+	## also what feeds defense_debt, so a guardian holding off a crowd spends himself doing it
+	## and is eventually overwhelmed, which drops his zone; interception and overwhelm are each
+	## other's limiter.
+	##
+	## The label goes on the MOVER, because that is who was stopped and where the eye already
+	## is. Parented to it, so it rides along as the unit finishes walking to the tile the clip
+	## left it on.
+	if mover != null and mover.has_method("_show_action_text"):
+		mover._show_action_text("Blocked!")
+	_charge_defense_cost()
+
+
+func on_disengage(mover: Node) -> void:
+	## A free swing at someone breaking out of our reach. Called on the GUARDIAN.
+	##
+	## It costs a tick, exactly as a parry and an interception do. Everything reactive in this
+	## system is paid for out of the reactor's own next turn — that is what defense_debt IS —
+	## and charging it keeps the swing inside the overwhelm limiter instead of being an
+	## unbounded source of free damage. A guardian who has spent himself holding the line stops
+	## getting them for nothing: is_guarding() goes false, and there is then no zone left to
+	## break out of.
+	if mover == null or not is_instance_valid(mover) or not mover.is_alive:
+		return
+	_show_action_text("Opportunity!")
+	_face_target(mover)
+	# Charged before the swing, so the tick lands even if the attack finishes the mover and
+	# unwinds through _die().
+	_charge_defense_cost()
+	_do_melee_attack(mover)
+
+
 func _tile_key(tile: Vector3) -> String:
 	return str(int(round(tile.x))) + "," + str(int(round(tile.z)))
 
 
-func _find_path(from_tile: Vector3, to_tile: Vector3, max_steps: int = -1) -> Array:
+func _find_path(from_tile: Vector3, to_tile: Vector3, max_steps: int = -1,
+		doors_openable: bool = false) -> Array:
 	## BFS on the grid returning the shortest cardinal path [from .. to], routing around
 	## walls, obstacles and EVERY other living combatant (allies included). The goal tile
 	## stays passable so an enemy can still path onto its target's cell (the caller stops
 	## short). Pass max_steps to bound search depth (players cap it at move_range).
+	##
+	## `doors_openable` answers a different question: not "where can I walk this turn" but
+	## "where can I get to at all", counting a shut unlocked door as a step somebody could
+	## spend a turn opening. Movement must leave it false — you cannot walk through a shut
+	## door — and target-picking wants it true, or a party that shuts a door behind them stops
+	## being anybody's problem.
 	# 8-directional: cardinals + diagonals, so a unit can slip through a diagonal gap
 	# between two obstacles instead of being forced around. Walls still block via the
 	# per-step ray, and an obstacle/unit ON the diagonal cell is still rejected.
@@ -802,12 +1054,10 @@ func _find_path(from_tile: Vector3, to_tile: Vector3, max_steps: int = -1) -> Ar
 			var k: String = _tile_key(nxt)
 			if visited.has(k):
 				continue
-			if _is_obstacle_at(nxt):
-				continue
 			var is_goal: bool = nxt.distance_to(to_tile) < 0.5
 			if not is_goal and _get_combatant_at(nxt, self) != null:
 				continue
-			if _step_blocked_by_wall(cur, nxt) or _is_corner_blocked(cur, nxt):
+			if not _step_open(cur, nxt, doors_openable):
 				continue
 			visited[k] = true
 			var new_path: Array = path.duplicate()
@@ -816,10 +1066,145 @@ func _find_path(from_tile: Vector3, to_tile: Vector3, max_steps: int = -1) -> Ar
 	return []
 
 
-func _start_path_move(target: Vector3) -> void:
+func _openable_door_at(tile: Vector3) -> Node:
+	## A door standing on `tile` that is shut but could be opened — something in the way now
+	## that a turn spent on it would put out of the way. Null for an open door, a locked one,
+	## or no door at all.
+	for d in get_tree().get_nodes_in_group("interactables"):
+		if not is_instance_valid(d) or not d.has_method("blocks_openably"):
+			continue
+		if not d.blocks_openably():
+			continue
+		var node := d as Node3D
+		if node == null:
+			continue
+		# Snapped first, exactly as _is_obstacle_at does it. A door stands ON the wall line,
+		# which is the boundary BETWEEN two squares — comparing its raw position against a
+		# square's centre matches nothing, ever.
+		var cell: Vector3 = _snap_to_grid(node.global_position)
+		if absf(cell.x - tile.x) < 0.5 and absf(cell.z - tile.z) < 0.5:
+			return d
+	return null
+
+
+func _step_open(cur: Vector3, nxt: Vector3, doors_openable: bool) -> bool:
+	## Whether the SCENERY lets us step from `cur` to `nxt`. Units are the caller's business.
+	##
+	## `doors_openable` is the difference between "where can I walk" and "where can I get to".
+	## A shut door is impassable to a move and a one-turn detour to a plan, and the two
+	## questions want different answers from the same geometry.
+	var door: Node = _openable_door_at(nxt) if doors_openable else null
+	if door != null and (absf(nxt.x - cur.x) < 0.5 or absf(nxt.z - cur.z) < 0.5):
+		# Cardinal step onto a door we could open: the door is the only thing in the way, so
+		# say yes. Diagonals do NOT qualify — the jamb beside a doorway is still masonry, and
+		# no amount of opening the door moves it.
+		return true
+	if _is_obstacle_at(nxt) and door == null:
+		return false
+	# Leaving a door's own square needs no special case: the ray starts inside the door's
+	# collider, and Godot does not report a hit from inside a shape.
+	return not (_step_blocked_by_wall(cur, nxt) or _is_corner_blocked(cur, nxt))
+
+
+func _approach_field(goal_tile: Vector3, limit: int = 60) -> Dictionary:
+	## Steps from `goal_tile` out to everywhere it can reach, by the same walls-and-obstacles
+	## rules _find_path uses but IGNORING other units.
+	##
+	## Ignoring units is the point. This measures the shape of the DUNGEON, not the shape of
+	## the queue standing in it — so a goblin still knows the doorway is the way to the hero
+	## even while two of its friends are plugging it.
+	var field: Dictionary = {}
+	var start: Vector3 = _snap_to_grid(goal_tile)
+	field[_tile_key(start)] = 0
+	var queue: Array = [start]
+	while not queue.is_empty():
+		var cur: Vector3 = queue.pop_front()
+		var d: int = field[_tile_key(cur)]
+		if d >= limit:
+			continue
+		for dir in GRID_DIRS:
+			var nxt: Vector3 = _snap_to_grid(cur + dir)
+			var k: String = _tile_key(nxt)
+			if field.has(k):
+				continue
+			# Doors count as passable here. The field is what tells a unit which way to walk,
+			# and the way to somebody behind a shut door is TO that door — a field that stopped
+			# at it would leave the unit milling about in the middle of the room instead.
+			if not _step_open(cur, nxt, true):
+				continue
+			field[k] = d + 1
+			queue.append(nxt)
+	return field
+
+
+func _approach_score(tile: Vector3, goal_tile: Vector3, field: Dictionary) -> float:
+	## How good a place `tile` is to end up when heading for `goal_tile`. Lower is better.
+	##
+	## Steps through the dungeon where the field reached us, and straight-line distance plus a
+	## penalty where it did not. The penalty is what makes ANY tile connected to the goal beat
+	## EVERY tile that is not — and the straight-line fallback is what still points a unit at a
+	## shut door when the goal is sealed off behind it, which is the one time walking at
+	## something in a straight line is exactly the right idea.
+	var k: String = _tile_key(tile)
+	if field.has(k):
+		return float(field[k])
+	return 1000.0 + max(abs(tile.x - goal_tile.x), abs(tile.z - goal_tile.z)) / GRID_SIZE
+
+
+func _find_approach_path(goal_tile: Vector3, max_steps: int) -> Array:
+	## The best move available when there is no route to `goal_tile` at all: the path to
+	## whichever reachable tile ends up CLOSEST to it, or [] when standing still is already as
+	## close as we can get.
+	##
+	## _find_path answers "how do I get there" and gives up with nothing when the answer is
+	## "you can't". That is the right answer for a route and the wrong one for a turn: a unit
+	## that cannot reach its target should still be walking at it, not standing in the back
+	## rank waiting for the crowd to clear.
+	var start: Vector3 = _snap_to_grid(position)
+	var field: Dictionary = _approach_field(goal_tile)
+	var best_path: Array = []
+	var best_score: float = _approach_score(start, goal_tile, field)
+
+	var queue: Array = [[start]]
+	var visited: Dictionary = {}
+	visited[_tile_key(start)] = true
+	while not queue.is_empty():
+		var path: Array = queue.pop_front()
+		var cur: Vector3 = path[path.size() - 1]
+		if path.size() - 1 >= max_steps:
+			continue
+		for dir in GRID_DIRS:
+			var nxt: Vector3 = _snap_to_grid(cur + dir)
+			var k: String = _tile_key(nxt)
+			if visited.has(k):
+				continue
+			visited[k] = true
+			# NOT doors_openable: this one is a real move, and a shut door is a wall to it. The
+			# field above already points us at the door; this walks us up to it.
+			if _is_tile_occupied_by_others(nxt, self) or not _step_open(cur, nxt, false):
+				continue
+			var new_path: Array = path.duplicate()
+			new_path.append(nxt)
+			queue.append(new_path)
+			# Strictly better, and BFS hands us shorter paths first, so of two tiles that get
+			# equally close we take the one that costs less to walk to.
+			var score: float = _approach_score(nxt, goal_tile, field)
+			if score < best_score:
+				best_score = score
+				best_path = new_path
+	return best_path
+
+
+func _start_path_move(target: Vector3, intent: Node = null) -> void:
 	## Begin a routed move to `target`: follow the BFS path waypoint-by-waypoint so the
 	## unit walks around walls / enemies instead of sliding straight through them.
-	var path: Array = _find_path(_snap_to_grid(position), target, move_range)
+	##
+	## `intent` is who we are crossing the floor to get AT, when there is somebody — a
+	## move-and-attack passes their victim. Null for a plain move to a square, where nobody was
+	## "come for". _clip_at_guard reads it to tell whether a guardian we end up beside is the
+	## one we were after or merely in the way.
+	_move_intent = intent
+	var path: Array = _find_path(_snap_to_grid(position), target, get_move_range())
 	if path.size() <= 1:
 		# No route found (MoveAbility.can_target already pathed here, so this is a
 		# belt-and-braces fallback). Slide straight over and charge it as one step.
@@ -831,14 +1216,124 @@ func _start_path_move(target: Vector3) -> void:
 		_follow_path(path)
 
 
+func _clip_at_guard(path: Array) -> Array:
+	## Walk a routed path against every hostile guard zone on it and decide where the move
+	## really ends. Two distinct events, tested per step:
+	##
+	##   ENTERING the zone of a guardian we were not already engaged with ends the move on that
+	##   tile. A hostile zone is a wall you may step INTO but never THROUGH, which is what stops
+	##   anything crossing a guardian's reach in a single stride.
+	##
+	##   LEAVING the zone of a guardian who held us is a disengage: he gets a free swing
+	##   (on_disengage) and we keep walking. Moving WITHIN his reach is neither event, so a unit
+	##   can still circle him freely.
+	##
+	## Together those price a crossing at two turns and a free hit rather than forbidding it
+	## outright. An earlier version pinned anyone standing in a zone completely still — which
+	## left no exit for an opportunity attack to punish, and made the zone a cage rather than a
+	## threat.
+	##
+	## Chosen over marking guarded tiles impassable inside _find_path: see the note there
+	## about a route whose next step is blocked being trimmed to nothing, which freezes the
+	## mover in place instead of rerouting it.
+	if path.size() <= 1:
+		return path
+	var prev_guard: Node = _guard_at(path[0])
+	for i in range(1, path.size()):
+		var cur_guard: Node = _guard_at(path[i])
+
+		if prev_guard != null and cur_guard != prev_guard:
+			# Breaking away. Resolved before we clear the square, so the swing can drop us
+			# mid-route — stop where we stand rather than walking a corpse to its destination.
+			if DEBUG_GUARD:
+				print("[guard] %s: breaks away from %s at step %d -> OPPORTUNITY" % [
+					character_name, prev_guard.character_name, i])
+			prev_guard.on_disengage(self)
+			if not is_alive:
+				return path.slice(0, i)
+
+		if cur_guard != null and cur_guard != prev_guard:
+			# Only a genuine redirect costs the guardian a tick, and the test is INTENT, not
+			# path length. An earlier version asked "did the clip shorten the route?" — which
+			# looks equivalent and is not. When a mover's intended destination already sits
+			# inside the zone, the zone captures it without shortening anything: the boss
+			# closing on the wizard from two tiles out gets exactly the tile it wanted and is
+			# still turned aside, because the target lock makes it fight the guardian next turn.
+			# That read as "route ended there anyway" and went uncharged and unannounced.
+			#
+			# So the question is who the mover was coming for: if it came FOR the guardian and
+			# reached him, he is not holding anyone off, he is simply being attacked.
+			var redirected: bool = _move_intent != cur_guard
+			if DEBUG_GUARD:
+				print("[guard] %s: %d-step route meets %s's zone at step %d (aimed at %s) -> %s" % [
+					character_name, path.size() - 1, cur_guard.character_name, i,
+					_move_intent.character_name if _move_intent else "a tile",
+					"INTERCEPTED" if redirected else "came for the guardian, no charge"])
+			if redirected:
+				cur_guard.on_interception(self)
+			return path.slice(0, i + 1)
+
+		prev_guard = cur_guard
+	if DEBUG_GUARD and path.size() > 1:
+		# Distinguishes the two ways this can come up empty: nobody is holding a line, or
+		# somebody is and this route simply never touched it.
+		var active := 0
+		for c in get_tree().get_nodes_in_group("combatants"):
+			if is_instance_valid(c) and _is_hostile(c) and c.has_method("is_guarding") and c.is_guarding():
+				active += 1
+		print("[guard] %s: %d-step route, no guarded tile on it (hostile guardians active: %d)" % [
+			character_name, path.size() - 1, active])
+	return path
+
+
 func _follow_path(path: Array) -> void:
 	## Queue a routed path as waypoints for _physics_process to walk one at a time, and
 	## record its length so the move can be priced by distance. `path` starts on our own
 	## tile, so it must hold at least two entries.
+	##
+	## Every routed move in the game funnels through here — players via _start_path_move,
+	## enemies via _move_toward and _best_firing_path — which is why the guard clip lives
+	## here rather than being repeated in each caller.
+	path = _clip_at_guard(path)
+	if path.size() <= 1:
+		# Pinned by a guardian before taking a single step. Two things still have to happen or
+		# combat stops dead:
+		#
+		# The move floor is billed anyway (get_move_cost's comment explains why a zero-cost
+		# action hands the same unit its turn straight back), and the completion hook is
+		# driven by hand — nothing is moving, so _physics_process will never reach it, and an
+		# AI turn waiting on _on_move_complete would hang forever.
+		#
+		# Deferred, not inline: Enemy._begin_move_toward sets _pending_cost AFTER _move_toward
+		# returns, so calling the hook straight away would bill whatever the previous action
+		# happened to leave in it.
+		_move_tiles = 1
+		_move_path = []
+		is_moving = false
+		_on_move_complete.call_deferred()
+		return
 	_move_tiles = max(1, path.size() - 1)
 	_move_path = path.slice(1)
 	target_position = _move_path.pop_front()
 	is_moving = true
+
+
+func get_move_range() -> int:
+	## Tiles a single move may cover. Holding a line costs mobility: a guardian has his feet
+	## planted, so he shuffles rather than strides.
+	##
+	## Floored at 1 on purpose. A stance that pinned its own user in place would be a trap
+	## rather than a choice — and now that leaving a zone costs an opportunity attack rather
+	## than being forbidden (see on_disengage), an exit has to exist for that price to mean
+	## anything at all.
+	##
+	## Every range check goes through here rather than reading move_range directly, so the
+	## penalty applies to the move indicator, the reachability test and the AI alike.
+	if not is_guarding():
+		return move_range
+	@warning_ignore("integer_division")
+	var reduced: int = move_range / GUARD_MOVE_DIVISOR
+	return max(1, reduced)
 
 
 func get_move_cost(tiles: int = -1) -> int:
@@ -899,12 +1394,26 @@ func take_damage(amount: int, attacker_skill: int = 0, is_ranged: bool = false,
 	if effective > 0:
 		_show_damage_number(effective)
 		_spill_blood(effective, attacker, damage_type)
+	# A blow that got past the defence always lands on something, so this sits outside the
+	# `effective > 0` guard: armour turning a strike dead is a sound, not a silence. What it
+	# is NOT is a wound, which is the flag weapon_sfx uses to pick a cut over a clang.
+	#
+	# Melee only, keyed off is_ranged exactly as _spill_blood keys off damage_type: arrows,
+	# thrown weapons and spells all reach here too, and each wants its own clip rather than a
+	# borrowed sword.
+	if not is_ranged:
+		_melee_landing_sound(attacker, effective > 0)
 	_update_health_bar()
 	if hp <= 0:
 		is_alive = false
 		_die()
 	else:
 		_play_hit_anim()
+		# Inside the else, so a killing blow gets the death cry and not both: a man does not
+		# grunt and then die of it a frame later. Gated on effective, because _play_hit_anim
+		# also flinches at a blow armour stopped dead, and that one is not a wound.
+		if effective > 0:
+			_wound_sound(is_ranged)
 	return false
 
 
@@ -920,12 +1429,32 @@ func _attempt_defense(attacker_skill: int, is_ranged: bool = false, attacker: No
 	var has_cover: bool = is_ranged and attacker != null and _has_partial_cover_from(attacker)
 	var cover_bonus: int = COVER_DEFENSE_BONUS if has_cover else 0
 
-	if defensive_option == 0:
+	# Overwhelmed: too much of our next turn is already spent reacting, so there is no time
+	# left to put a blade or a shoulder in the way. This deliberately falls through to the
+	# same cover-only path a bare-handed defender takes, which buys two things for free —
+	# armour, resistance and a pillar all still apply, so the cliff is cushioned rather than
+	# lethal; and because that path never charges a tick, the debt stops growing HERE instead
+	# of spiralling. See defense_debt.
+	if is_overwhelmed():
+		_show_defense_result("Overwhelmed!")
+		return _resolve_cover_only(has_cover, result)
+
+	# Everything that is not DODGE resolves as a parry — Parry itself and Protection, which is
+	# a parry from a planted position. Written as != DODGE rather than a match so that a future
+	# stance defaults to the branch that at least CHECKS for a weapon, instead of silently
+	# becoming a free empty-handed dodge.
+	if defensive_option != Stance.DODGE:
 		if not (_has_usable_weapon() or _has_shield_equipped()):
 			return _resolve_cover_only(has_cover, result)
 		if is_ranged and not _can_parry_ranged():
 			return _resolve_cover_only(has_cover, result)
-		result.defense_roll = get_parry_skill() + randi_range(1, 5) + cover_bonus
+		# is_guarding(), not a bare stance check: the bonus, the zone that stops enemies, and
+		# the aura on the floor are three faces of one thing and must never disagree about
+		# whether the line is being held. Reading the stance directly let a guardian who was
+		# prone — or overwhelmed, or had lost their weapon — keep parrying at +2 while the
+		# floor showed no zone at all.
+		var guard_bonus: int = GUARD_PARRY_BONUS if (is_guarding() and not is_ranged) else 0
+		result.defense_roll = get_parry_skill() + randi_range(1, 5) + cover_bonus + guard_bonus
 		if result.defense_roll >= attack_roll:
 			if inventory and inventory.has_method("degrade_equipped_weapon"):
 				inventory.degrade_equipped_weapon()
@@ -1004,6 +1533,10 @@ func _apply_impact_damage(amount: int) -> void:
 		_die()
 	else:
 		_play_hit_anim()
+		# A wall knocks the breath out of you the same as a blade does, and this is the one
+		# injury in the game with no weapon behind it. No wind-up to wait for either — the
+		# impact already happened.
+		_wound_sound(true)
 
 
 func _apply_push(push_dir: Vector3, force: int) -> void:
@@ -1159,10 +1692,55 @@ func _on_weapon_broke(_item: ItemResource) -> void:
 	pass
 
 
+func _combat_mgr() -> Node:
+	## The turn clock. Every combatant sits as a direct child of the battlefield root alongside
+	## the manager, so this is a sibling lookup rather than a search.
+	var p := get_parent()
+	return p.get_node_or_null("CombatManager") if p else null
+
+
 func _charge_defense_cost() -> void:
-	var combat_mgr := get_parent().get_node_or_null("CombatManager")
+	var combat_mgr := _combat_mgr()
 	if combat_mgr:
 		combat_mgr.charge_defense_cost(self)
+
+
+func defense_debt() -> int:
+	## How much of the time before our next turn we have spent REACTING — parries and dodges,
+	## and nothing else. Zero for a character who has not defended since they last acted, and
+	## it climbs by one for every successful parry or dodge via charge_defense_cost.
+	##
+	## Reacting, not acting, and the difference is the whole point. next_turn_at is pushed back
+	## by BOTH: the action a character chose on their turn, and every defence they have made
+	## since. Reading the raw gap to the clock therefore billed characters for their own turn —
+	## a hero who spent five ticks crossing the room was over a stamina-4 limit the instant he
+	## stopped walking, and was told his guard had dropped without an enemy having swung at him
+	## once. Subtracting action_turn_at leaves only the reactions.
+	##
+	## Still derived rather than counted, which is what keeps recovery free: as everyone else
+	## acts, current_tick climbs past action_turn_at and eats into the reactions on its own.
+	## There is no counter to reset and no hook to remember to call.
+	var mgr := _combat_mgr()
+	if mgr == null:
+		return 0
+	return maxi(0, next_turn_at - maxi(mgr.current_tick, action_turn_at))
+
+
+func get_defense_debt_limit() -> int:
+	## Debt we can carry before the guard drops. See DEBT_PER_STAMINA.
+	return stamina * DEBT_PER_STAMINA
+
+
+func is_overwhelmed() -> bool:
+	## Out of time to defend with. Note only SUCCESSFUL defences charge a tick, so this taxes
+	## characters who are actually good at defending — a goblin that keeps missing its dodge
+	## never builds debt, it just gets hit.
+	return defense_debt() > get_defense_debt_limit()
+
+
+func is_defense_strained() -> bool:
+	## Within DEBT_WARN_MARGIN of being overwhelmed: still defending, but not for much longer.
+	return not is_overwhelmed() and defense_debt() + DEBT_WARN_MARGIN > get_defense_debt_limit()
 
 
 func _is_in_arena(tile: Vector3) -> bool:
@@ -1286,6 +1864,7 @@ func _show_damage_number(amount: int) -> void:
 # --- Active-turn highlight --------------------------------------------------
 
 var _turn_ring: MeshInstance3D = null
+var _guard_zone: MeshInstance3D = null
 
 
 func set_turn_active(active: bool) -> void:
@@ -1296,6 +1875,53 @@ func set_turn_active(active: bool) -> void:
 		_turn_ring.visible = true
 	elif _turn_ring != null:
 		_turn_ring.visible = false
+	# Piggy-backed on purpose: _highlight_active calls this on EVERY combatant at every turn
+	# change, which is the only hook that fires when the clock — rather than this character —
+	# is what changed. Overwhelm is driven by current_tick advancing, so without a
+	# clock-driven refresh a spent guardian would keep painting a zone he no longer holds.
+	_refresh_guard_zone()
+
+
+func _refresh_guard_zone() -> void:
+	## Show the guarded tiles while we actually hold them. Cheap enough to call freely; the
+	## mesh is built once, on the first turn the stance is taken, and never for anyone who
+	## never guards.
+	var on: bool = is_guarding()
+	if not on:
+		if _guard_zone != null:
+			_guard_zone.visible = false
+		return
+	_ensure_guard_zone()
+	_guard_zone.visible = true
+
+
+func _ensure_guard_zone() -> void:
+	if _guard_zone != null:
+		return
+	var plate := MeshInstance3D.new()
+	plate.name = "GuardZone"
+	var quad := PlaneMesh.new()
+	# The full ring the zone covers, derived from GUARD_RADIUS so widening the rule widens
+	# the decal with it: radius 1 -> 3 tiles across -> 6 world units.
+	var side: float = (GUARD_RADIUS * 2 + 1) * GRID_SIZE
+	quad.size = Vector2(side, side)
+	plate.mesh = quad
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	# Cool steel blue, to stay clearly distinct from the gold turn ring it sits under.
+	mat.albedo_color = Color(0.38, 0.68, 1.0, 0.20)
+	mat.emission_enabled = true
+	mat.emission = Color(0.30, 0.60, 1.0)
+	mat.emission_energy_multiplier = 0.8
+	plate.material_override = mat
+	plate.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# Just above the floor and a hair above the turn ring, so the translucent plate lays over
+	# the gold rather than z-fighting it. Parented to the body, so it tracks every move and
+	# every shove for free — exactly as the turn ring does.
+	plate.position = Vector3(0, 0.20 - _ground_y(), 0)
+	add_child(plate)
+	_guard_zone = plate
 
 
 func _ensure_turn_ring() -> void:
@@ -1337,7 +1963,7 @@ func _can_move() -> bool:
 
 func _is_in_range(target: Vector3) -> bool:
 	var dist: float = abs(target.x - position.x) + abs(target.z - position.z)
-	return dist <= move_range * GRID_SIZE
+	return dist <= get_move_range() * GRID_SIZE
 
 
 # --- Ability stat accessors -------------------------------------------------
@@ -1363,6 +1989,10 @@ func get_missile_skill(base_skill: int, target: Node, max_range: int,
 	var penalty: int = _range_penalty(target, max_range, from_tile)
 	if _is_engaged(target):
 		penalty += ENGAGED_PENALTY
+	# Both missile paths and the AI's shot-pricing all come through here, so a prone target is
+	# a worse shot for the goblin archer choosing where to stand as well as for the player.
+	if "is_prone" in target and target.is_prone:
+		penalty += PRONE_TARGET_PENALTY
 	# A ruined bow shoots as badly as a ruined blade cuts. The melee paths get this through
 	# _weapon_bonus; missiles never consult it, so the penalty has to be applied here.
 	if inventory and inventory.has_method("get_equipped_weapon"):
@@ -1461,6 +2091,20 @@ func get_offhand_attack_damage() -> int:
 	return maxi(1, attack_dmg + _inv_bonus("offhand_damage_bonus"))
 
 
+func get_weapon_sound(offhand: bool) -> int:
+	## Sound family of one hand's weapon, or -1 when that hand holds no weapon (see
+	## InventoryComponent.get_weapon_sound). Bare hands and shields are silent on the swing.
+	if inventory and inventory.has_method("get_weapon_sound"):
+		return inventory.get_weapon_sound(offhand)
+	return -1
+
+
+func get_swing_sound() -> int:
+	## What the blow now landing was struck with. Only meaningful between the start of a melee
+	## strike and its resolution, which is the only window anything asks in.
+	return _swing_sound
+
+
 func _inv_bonus(method: String) -> int:
 	if inventory and inventory.has_method(method):
 		return inventory.call(method)
@@ -1472,10 +2116,17 @@ func _do_melee_attack(target) -> void:
 	## follow-up when dual-wielding two melee weapons. Runs as a coroutine so the off-hand
 	## lands a beat after the main hit (right anim, then left anim) instead of overwriting it.
 	# Only an off-hand weapon held (main hand empty): the lone strike IS an off-hand attack.
-	if inventory and inventory.has_method("offhand_only") and inventory.offhand_only():
+	var lone_offhand: bool = 		inventory and inventory.has_method("offhand_only") and inventory.offhand_only()
+	# One shout per attack action, here rather than in _offhand_attack: a dual-wielder's free
+	# follow-up is part of the same effort, and grunting twice would say otherwise. Sited before
+	# the branch so a lone off-hand strike still gets a voice, sized by the hand actually
+	# swinging.
+	_attack_cry(get_weapon_sound(lone_offhand))
+	if lone_offhand:
 		_offhand_attack(target)
 		return
 	_play_attack_anim("attack-melee-right")
+	_swing_sound = get_weapon_sound(false)
 	var dmg: int = get_attack_damage()
 	_swing_arc(target, dmg)
 	target.take_damage(dmg, get_attack_skill(), false, self)
@@ -1494,6 +2145,7 @@ func _offhand_attack(target) -> void:
 	## The free off-hand strike: left-hand anim, half damage, -5 to hit unless the character
 	## has the dual_wield_skill. Charges no time cost (called inside the main attack action).
 	_play_attack_anim("attack-melee-left")
+	_swing_sound = get_weapon_sound(true)
 	var penalty: int = 0 if dual_wield_skill else OFFHAND_HIT_PENALTY
 	var dmg: int = maxi(1, int(get_offhand_attack_damage() / 2.0))
 	_show_action_text("Off-hand!")
@@ -1726,6 +2378,8 @@ func _parry_sparks(attacker: Node, attacker_skill: int, is_ranged: bool) -> void
 	# A harder blow is a heavier thing to turn aside. Attacker skill is the only measure of the
 	# incoming strike available at this point — the damage is never rolled on a parry.
 	var force: float = clampf(float(attacker_skill) / PARRY_REFERENCE_SKILL, 0.6, 1.5)
+	# Read before the wait below, for the same reason _swing_arc does it.
+	var sound_family: int = attacker.get_swing_sound() if attacker.has_method("get_swing_sound") else -1
 	if not is_ranged:
 		# Melee sparks wait out the same wind-up the attacker's arc does, so the blades meet
 		# rather than the parry flashing before the swing arrives. An arrow needs no such wait:
@@ -1734,6 +2388,11 @@ func _parry_sparks(attacker: Node, attacker_skill: int, is_ranged: bool) -> void
 		if not is_inside_tree():
 			return
 	ParrySparksScript.clash(get_parent(), defender_at, attacker_at, force)
+	# Melee only for now: a parried arrow deserves its own clip rather than a sword's, and
+	# ArrowImpact is sitting unused in the same bundle for whoever adds it.
+	if not is_ranged:
+		WeaponSfxScript.landed(
+			get_parent(), defender_at + Vector3(0, EYE_HEIGHT, 0), sound_family, false)
 
 
 func _swing_arc(target, damage: int, mirrored: bool = false) -> void:
@@ -1755,10 +2414,106 @@ func _swing_arc(target, damage: int, mirrored: bool = false) -> void:
 	# Named arc_scale, not strength: `strength` is a character stat on this class, and shadowing
 	# it here would read as the swing scaling off the attacker's muscle rather than the weapon.
 	var arc_scale: float = clampf(float(damage) / SWING_REFERENCE_DAMAGE, 0.6, 1.6)
+	# Read before the wait, not after: by the time the arc is drawn the off-hand follow-up may
+	# already have set a different weapon swinging.
+	var sound_family: int = _swing_sound
+	# Halfway to the target and up at chest height — where the arc is drawn, and near enough to
+	# both bodies that no attenuation model can tell the difference.
+	var sound_at: Vector3 = from.lerp(to, 0.5) + Vector3(0, EYE_HEIGHT, 0)
 	await get_tree().create_timer(SWING_WINDUP).timeout
 	if not is_inside_tree():
 		return
 	SwordSwingScript.swing(get_parent(), from, to, arc_scale, mirrored)
+	WeaponSfxScript.swing(get_parent(), sound_at, sound_family)
+
+
+func _claim_voice() -> bool:
+	## True if this character's voice is free, and claims it if so. Every line goes through
+	## here; whoever asks first inside a VOICE_GAP window wins and the rest stay quiet.
+	var now: int = Time.get_ticks_msec()
+	if now - _last_voice_ms < int(VOICE_GAP * 1000.0):
+		return false
+	_last_voice_ms = now
+	return true
+
+
+func _voice_at() -> Vector3:
+	## Where a character's voice comes from: the head, not the feet.
+	return global_position + Vector3(0, EYE_HEIGHT, 0)
+
+
+func _attack_cry(family: int) -> void:
+	## The effort of a swing, at the START of the strike rather than on contact — the breath
+	## goes in before the blade lands, and a character who only shouts on a hit sounds like
+	## they knew it was going to connect. `family` is the hand doing the work, which sets how
+	## hard the shout is.
+	if not _claim_voice():
+		return
+	VoiceSfxScript.attack(
+		get_parent(), _voice_at(), voice, VoiceSfxScript.effort_for_weapon(family))
+
+
+func _aim_cry() -> void:
+	## Drawing on someone. Silent for voices the bundle gave no aim lines to.
+	if not _claim_voice():
+		return
+	VoiceSfxScript.aim(get_parent(), _voice_at(), voice)
+
+
+func _charge_cry() -> void:
+	## The battle cry, the first time this character closes on an enemy in a fight.
+	##
+	## Deliberately NOT behind _claim_voice: it happens once, at the top of a move, where
+	## nothing else is competing for the throat — and of everything a character says, this is
+	## the line that should never lose a race.
+	if _has_charged:
+		return
+	_has_charged = true
+	# Claimed but not checked: the cry goes out regardless, and marking the throat busy stops
+	# an attack grunt landing on top of it if the charge ends adjacent and the swing follows
+	# immediately.
+	_claim_voice()
+	VoiceSfxScript.charge(get_parent(), _voice_at(), voice)
+
+
+func _charge_shout() -> void:
+	## A battle cry as the character sets off at somebody — every time, not once a fight.
+	##
+	## The other one, _charge_cry, is the AI's: it fires once per enemy per fight so a room of
+	## goblins does not bellow every turn they spend walking. A player charge is a thing the
+	## player just chose to do, one click at a time, and it should be answered each time.
+	##
+	## Voice-gated, so it cannot land on top of the attack grunt at the far end of a short run.
+	if not _claim_voice():
+		return
+	VoiceSfxScript.charge(get_parent(), _voice_at(), voice)
+
+
+func _wound_sound(is_ranged: bool) -> void:
+	## Us crying out. Only for damage that got through — the caller checks that, because only
+	## the caller knows whether anything actually landed.
+	##
+	## Melee waits out SWING_WINDUP so the grunt arrives with the blade, exactly as the cut and
+	## the blood do; an arrow or a bolt is already at the body by the time we are called.
+	if not _claim_voice():
+		return
+	VoiceSfxScript.wound(
+		get_parent(), _voice_at(), voice, 0.0 if is_ranged else SWING_WINDUP)
+
+
+func _melee_landing_sound(attacker: Node, wounded: bool) -> void:
+	## The blade arriving on us: a cut if it opened something, a clang if armour or a shield
+	## turned it. The audio mirror of _spill_blood and _parry_sparks, and it waits out the same
+	## SWING_WINDUP they do so all three land on the frame the arc does.
+	##
+	## Nothing is awaited here — see WeaponSfx.landed for why the wait cannot live on a node
+	## that this very blow might be about to kill. `get_parent()` is read now, while we are
+	## still in the tree, for the same reason.
+	if attacker == null:
+		return
+	var family: int = attacker.get_swing_sound() if attacker.has_method("get_swing_sound") else -1
+	WeaponSfxScript.landed(
+		get_parent(), global_position + Vector3(0, EYE_HEIGHT, 0), family, wounded, SWING_WINDUP)
 
 
 func _spill_blood(effective: int, attacker: Node, damage_type: int) -> void:
@@ -1798,7 +2553,13 @@ func _loose_arrow_at(target: Node) -> void:
 	var impact_point: Vector3 = target.global_position + Vector3(0, PROJECTILE_IMPACT_HEIGHT, 0)
 	var origin := get_projectile_origin(impact_point)
 	var arrow = ArrowProjectileScript.loose(get_parent(), origin, impact_point)
+	_aim_cry()
+	WeaponSfxScript.bow_shot(get_parent(), origin)
 	await arrow.impacted
+	# Before the early-out below, not after: an arrow loosed at someone who died mid-flight
+	# still lands somewhere, and going silent exactly when the shot is wasted would read as
+	# the game dropping the sound rather than as the shot being wasted.
+	WeaponSfxScript.arrow_impact(get_parent(), impact_point)
 
 	if not is_instance_valid(target) or not target.is_alive:
 		return
@@ -1809,7 +2570,18 @@ func _loose_arrow_at(target: Node) -> void:
 
 
 func _die() -> void:
+	# First, before the animation and before the corpse leaves its collision layer: the cry is
+	# what tells the player someone just went down, and it should lead the fall rather than
+	# arrive under it.
+	VoiceSfxScript.death(get_parent(), global_position + Vector3(0, EYE_HEIGHT, 0), voice)
 	can_act = false
+	# What was being carried becomes the pile on the body. Done HERE, at the top, and not after
+	# the death animation below: that stretch is behind an `await`, so a character whose model
+	# has no "die" clip — or whose clip is interrupted — would never become lootable at all.
+	# Dying is what makes a body searchable, not finishing the fall.
+	_gather_corpse_loot()
+	if not contents.is_empty():
+		add_to_group("interactables")
 	# Take the corpse off its physics layer so targeting/LOS raycasts pass straight
 	# through it. Dead units are already ignored by the tile/occupancy checks (which
 	# gate on is_alive), so a live combatant sharing this tile can no longer be
@@ -1823,10 +2595,12 @@ func _die() -> void:
 		# snapping back to a rest pose. The body is left visible (a corpse on the floor);
 		# dead units no longer block tiles (see _is_tile_occupied_by_others).
 		_freeze_downed_pose(ap)
-	# Drop the floating health bar so a "0/xx" label isn't hovering over the corpse.
+	# Drop the floating nameplate and the bar so neither hovers over the corpse.
 	if health_bar:
 		health_bar.visible = false
-	var combat_mgr := get_parent().get_node_or_null("CombatManager")
+	if hp_bar:
+		hp_bar.visible = false
+	var combat_mgr := _combat_mgr()
 	if combat_mgr:
 		combat_mgr.on_character_died(self)
 
@@ -1836,28 +2610,153 @@ func _die() -> void:
 var can_act := false
 
 
+# --- A corpse is a container --------------------------------------------------
+#
+# The same three questions doors and chests answer (can_interact / interact_verb / interact),
+# plus the two the loot window needs (contents, take). Nothing new had to be taught to the
+# Open/Close action or to loot_ui.gd: a body with things on it IS a container, and writing the
+# action against a contract rather than against chests is what makes that free.
+
+func can_interact(_actor) -> bool:
+	## Only a corpse, and only one with something on it. A living character is not scenery, and
+	## an empty body is not worth walking over to — nor worth a pointer suggesting it is.
+	return not is_alive and not contents.is_empty()
+
+
+func interact_verb() -> String:
+	return "Search"
+
+
+func interact(_actor) -> void:
+	## Nothing to open — a body is already open. The window does the rest; Player._do_interact
+	## puts it up once this returns.
+	pass
+
+
+func wants_loot_window() -> bool:
+	return not is_alive and not contents.is_empty()
+
+
+func blocks_openably() -> bool:
+	## A corpse is never a door. Pathfinding asks this of everything in "interactables", and a
+	## body that answered yes would have goblins queueing up to open it.
+	return false
+
+
+func take(index: int, actor) -> bool:
+	## Move one item off this body and into `actor`'s bag.
+	if index < 0 or index >= contents.size() or actor == null:
+		return false
+	var inv = actor.inventory if "inventory" in actor else null
+	if inv == null or not inv.has_method("add_item"):
+		return false
+	var item: ItemResource = contents[index]
+	if not inv.add_item(item):
+		if actor.has_method("_show_action_text"):
+			actor._show_action_text("Bag is full!")
+		return false
+	contents.remove_at(index)
+	# Off the body as well as out of the pile, or the corpse goes on visibly holding a weapon
+	# somebody else now owns.
+	if inventory and inventory.has_method("forget"):
+		inventory.forget(item)
+	_update_equipment_visuals()
+	if actor.has_method("_show_action_text"):
+		actor._show_action_text(item.item_name)
+	contents_changed.emit()
+	return true
+
+
+func _gather_corpse_loot() -> void:
+	## Everything this character was carrying becomes the pile on the body.
+	##
+	## Straight off `items`, which is enough on its own: equipping never took anything OUT of
+	## the bag (InventoryComponent._equip_to), so the sword in a goblin's hand is in there too.
+	contents.clear()
+	if inventory == null or not ("items" in inventory):
+		return
+	for item in inventory.items:
+		if item != null:
+			contents.append(item)
+
+
+func _model_crown_y() -> float:
+	## Height of the top of this character's art, in LOCAL space — so it can be compared
+	## against, and used to place, the label offsets.
+	##
+	## Off the meshes' own bounding boxes, which for a skinned mesh are the REST pose and do not
+	## follow the animation. That is what makes this stable: measuring the animated silhouette
+	## would raise the bar every time somebody lifted a sword over their head.
+	var model := get_node_or_null("CharacterModel") as Node3D
+	if model == null:
+		return 0.6
+	var top := -INF
+	for mi in _mesh_instances(model):
+		var box: AABB = mi.get_aabb()
+		for i in range(8):
+			top = maxf(top, (mi.global_transform * box.get_endpoint(i)).y)
+	if top == -INF:
+		return 0.6
+	return top - global_position.y
+
+
+func _mesh_instances(node: Node, out: Array = []) -> Array:
+	var mi := node as MeshInstance3D
+	if mi != null and mi.mesh != null:
+		out.append(mi)
+	for child in node.get_children():
+		_mesh_instances(child, out)
+	return out
+
+
+func _place_floating_labels() -> void:
+	## Sit the bar HEAD_CLEARANCE over the crown and the nameplate above that, for whatever
+	## height this particular character turns out to be.
+	##
+	## Overrides the y the scene's Label3D was placed at: it is the same rule for all seven
+	## combatants in main.tscn, and nobody should have to keep seven transforms agreeing.
+	var crown: float = _model_crown_y()
+	# A centimetre of slack, so an animation frame that nudges a bounding box does not set the
+	# labels twitching.
+	if absf(crown - _crown_y) < 0.01:
+		return
+	_crown_y = crown
+	if hp_bar:
+		hp_bar.position.y = crown + HEAD_CLEARANCE
+	if health_bar:
+		health_bar.position.y = crown + HEAD_CLEARANCE + PLATE_OVER_BAR
+
+
 func _update_health_bar() -> void:
 	## Refreshes the floating nameplate above the character (and, via health_changed, the
-	## party portraits). Deliberately does NOT show hp or the equipped item list: hp lives on
-	## the portrait bars, and the gear is on the character model and the equipment panel, so
-	## repeating either here just crowded the battlefield. What is left is the state you
-	## cannot read off the model at a glance.
+	## party portraits and the bar over the head).
+	##
+	## The name, and the two conditions you cannot see on the model — prone, and an empty
+	## quiver. Nothing else. Armour, resistance and stance used to be here and are not any
+	## more: four lines of text over every one of seven characters is a wall in front of the
+	## fight, and all three live on the character sheet where they can be read at leisure.
+	##
+	## Hit points are not here either. They are printed across the bar itself (health_bar_3d),
+	## where the number and the length of the bar it labels are one thing to look at instead of
+	## two stacked above each other.
 	_update_equipment_visuals()
+	# After the gear, before anything reads the labels: a helmet or a two-handed grip changes
+	# how tall the character is, and the bar has to follow the new crown.
+	_place_floating_labels()
+	# Before the Label3D early-out, like the signal below: what a character is holding and
+	# whether they are still standing both feed is_guarding(), and that has to stay true for
+	# combatants with no floating nameplate too.
+	_refresh_guard_zone()
 	# Emitted before the Label3D early-out so listeners fire even for combatants
 	# that have no floating nameplate node.
 	health_changed.emit(hp, max_hp, is_alive)
+	# The bar over the head, driven from the same call as the portraits and the nameplate so
+	# all three are refreshed by anything that touches hp, without a fourth place to remember.
+	if hp_bar:
+		hp_bar.set_hp(hp, max_hp, is_alive)
 	if not health_bar:
 		return
 	var lines: Array = [character_name]
-	# Defensive stats, not gear: these are the totals AFTER equipment bonuses are folded in.
-	var defense := ""
-	if armor > 0:
-		defense = "Armor:" + str(armor)
-	if physical_resistance > 0:
-		defense += (" " if defense != "" else "") + "Res:" + str(physical_resistance) + "%"
-	if defense != "":
-		lines.append(defense)
-	lines.append("Stance:Parry" if defensive_option == 0 else "Stance:Dodge")
 	if is_prone:
 		lines.append("[PRONE]")
 	if max_ammo > 0:

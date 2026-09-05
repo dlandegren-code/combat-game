@@ -69,8 +69,11 @@ func take_turn() -> void:
 
 
 func _take_turn_goblin() -> void:
-	## Original goblin AI: move toward nearest, weighted random adjacent
-	var player := _find_nearest_player()
+	## Original goblin AI: move toward nearest, weighted random adjacent — unless a guardian
+	## has it pinned, in which case that is who it fights (see _pinning_guard).
+	var player := _pinning_guard()
+	if player == null:
+		player = _find_nearest_reachable_player()
 	if not player or not player.is_alive:
 		end_my_turn(0)
 		return
@@ -83,6 +86,11 @@ func _take_turn_goblin() -> void:
 
 	if is_prone:
 		end_my_turn(1)
+		return
+
+	# A shut door in the way is worth a turn: open it, and come through it next turn.
+	if _try_open_door_toward(player):
+		end_my_turn(_pending_cost)
 		return
 
 	# Move toward the nearest player, avoiding occupied tiles
@@ -100,6 +108,22 @@ func _take_turn_archer() -> void:
 
 	if is_prone:
 		end_my_turn(1)
+		return
+
+	# Pinned in a guardian's zone. The reposition search below would pick a firing tile it
+	# cannot legally reach — the guard clip truncates the route to nothing — and the archer
+	# would spend the turn shuffling on the spot. Fight what is in front of it instead: point
+	# blank if there are arrows left, steel if not.
+	var pin := _pinning_guard()
+	if pin != null:
+		if ammo > 0:
+			await _fire_arrow(pin)
+		else:
+			_action_used = Action.ATTACK
+			_do_melee_attack(pin)
+			_pending_cost = attack_cost
+			await get_tree().create_timer(0.3).timeout
+			end_my_turn(_pending_cost)
 		return
 
 	# Out of ammo: kiting is pointless (arrows never come back), so close in and melee.
@@ -134,6 +158,9 @@ func _take_turn_archer() -> void:
 	# still with line of sight.
 	var path: Array = _best_firing_path(player, max_range, cur_dist)
 	if not path.is_empty():
+		# Backing off to a firing tile, not closing on anyone — so a guardian met on the way
+		# has genuinely turned us aside. See _move_intent.
+		_move_intent = null
 		_follow_path(path)
 		_action_used = Action.MOVE
 		_pending_cost = get_move_cost()
@@ -175,7 +202,7 @@ func _best_firing_path(target: Node, max_range: int, cur_dist: float) -> Array:
 	var best_dist: float = cur_dist
 	var best_penalty: int = _range_penalty(target, max_range, _snap_to_grid(position))
 	var best_steps: int = 0
-	for path in _reachable_paths(move_range):
+	for path in _reachable_paths(get_move_range()):
 		var tile: Vector3 = path[path.size() - 1]
 		if not _can_fire_from(tile, target, max_range):
 			continue
@@ -233,10 +260,32 @@ func _reachable_paths(max_steps: int) -> Array:
 
 func _begin_move_toward(target: Node) -> void:
 	## _move_toward queues the route first, so get_move_cost() can price it by distance.
+	# Recorded before the route is built: _clip_at_guard needs to know whether a guardian we
+	# end up next to is who we were actually coming for.
+	_move_intent = target
+	# The one place the AI decides to go and get someone, which is exactly what a battle cry
+	# is for. _charge_cry fires only the first time in a fight, so this is the moment the
+	# enemy comes at you rather than a bellow on every turn it spends walking.
+	_charge_cry()
 	_move_toward(target)
 	_action_used = Action.MOVE
 	_pending_cost = get_move_cost()
-	is_moving = true
+
+	# There used to be an unconditional `is_moving = true` here. It was redundant — _follow_path
+	# sets the flag whenever it queues a real route — and actively harmful: with nothing queued
+	# it left the unit drifting toward a stale target_position from the previous move, which is
+	# what used to (accidentally) end the turn of an enemy that was fully boxed in.
+	#
+	# Three outcomes now, and each has to end the turn exactly once:
+	#   route queued   -> is_moving true; _physics_process reaches _on_move_complete.
+	#   pinned in a zone -> _follow_path billed the floor and deferred the hook itself.
+	#   no route at all -> nothing queued and no hook pending, so end it here.
+	#
+	# _move_tiles separates the last two: _move_toward zeroes it before pathing and only
+	# _follow_path raises it, so 0 means we never got as far as queueing anything. Without this
+	# branch a trapped enemy would stop the clock for good.
+	if not is_moving and _move_tiles == 0:
+		end_my_turn(_pending_cost)
 
 
 func _fire_arrow(player: Node) -> void:
@@ -255,14 +304,25 @@ func _fire_arrow(player: Node) -> void:
 
 
 func _take_turn_boss() -> void:
-	## Boss AI: target weakest player, shove to separate, attack otherwise
-	var target := _find_weakest_player()
+	## Boss AI: target weakest player, shove to separate, attack otherwise. A guardian's zone
+	## overrides the pick — the boss is the one enemy that deliberately dives the weakest hero,
+	## so it is also the one interception has real work to do against.
+	var target := _pinning_guard()
+	if target == null:
+		target = _find_weakest_reachable_player()
 	if not target or not target.is_alive:
 		end_my_turn(0)
 		return
 
 	if is_prone:
 		end_my_turn(1)
+		return
+
+	# Same as the goblins: a door is a turn's work, not a dead end. Checked before the
+	# adjacency test below cannot fire — a door between us and the target means we are not
+	# adjacent to the target anyway.
+	if not _is_adjacent(target.position) and _try_open_door_toward(target):
+		end_my_turn(_pending_cost)
 		return
 
 	# If adjacent: smart action selection
@@ -319,22 +379,116 @@ func _on_weapon_broke(item: ItemResource) -> void:
 	_update_health_bar()
 
 
-func _find_weakest_player() -> Node:
-	## Returns the player-controlled combatant with the lowest current HP
-	var players := get_tree().get_nodes_in_group("combatants")
+func _door_to_open_for(target: Node) -> Node:
+	## The shut door standing between us and `target`, if we are already close enough to work
+	## it. Null when there is nothing to open, or nothing worth opening.
+	##
+	## Checked against the route we could take with the doors AS THEY ARE first: if there is
+	## already a way round, we take it rather than stopping to open something we never needed.
+	## So a door only gets opened when it is genuinely the way through.
+	var from_tile: Vector3 = _snap_to_grid(position)
+	var to_tile: Vector3 = _snap_to_grid(target.position)
+	if _find_path(from_tile, to_tile).size() > 1:
+		return null
+	var route: Array = _find_path(from_tile, to_tile, -1, true)
+	if route.size() <= 1:
+		return null
+	for tile in route:
+		var door: Node = _openable_door_at(tile)
+		if door == null:
+			continue
+		# The FIRST door on the route and no further: a second one behind it is next turn's
+		# problem, and we cannot reach past this one to work it anyway.
+		#
+		# Adjacency is measured to the door's SQUARE, not to the door. _is_adjacent allows half
+		# a square of slack, which is right between two units standing on square centres and
+		# wrong for a door standing on the line between two — measured raw, a goblin could
+		# reach out and work a latch from a square and a half away.
+		return door if _is_adjacent(_snap_to_grid((door as Node3D).global_position)) else null
+	return null
+
+
+func _try_open_door_toward(target: Node) -> bool:
+	## Spend the turn opening the door in our way, if there is one within reach. True when we
+	## did, and the caller should end its turn on that.
+	var door: Node = _door_to_open_for(target)
+	if door == null:
+		return false
+	_face_target(door as Node3D)
+	door.interact(self)
+	_show_action_text("Open!")
+	_pending_cost = interact_cost
+	return true
+
+
+func _player_candidates() -> Array:
+	## Every hero still standing. The raw pool both target pickers choose from.
+	var out: Array = []
+	for c in get_tree().get_nodes_in_group("combatants"):
+		if not is_instance_valid(c) or c == self:
+			continue
+		if not c.is_player_controlled or not c.is_alive:
+			continue
+		out.append(c)
+	return out
+
+
+func _can_reach(target: Node) -> bool:
+	## Is there a route to `target` at all — not this turn, but ever, as the board stands?
+	## Asked with the same _find_path the move itself uses, so a target we call reachable is one
+	## we can genuinely walk at. Somebody already at arm's length trivially counts.
+	if _is_adjacent(target.position):
+		return true
+	# doors_openable: a shut door is a turn's work, not a wall. Without this a party could put
+	# a door between themselves and the goblins and simply stop being a target.
+	return _find_path(_snap_to_grid(position), _snap_to_grid(target.position), -1, true).size() > 1
+
+
+func _reachable_or_all(candidates: Array) -> Array:
+	## The candidates we can actually get to, or — if that is none of them — all of them.
+	##
+	## Reachability as the FIRST sort key, ahead of distance or hp. The hero behind a guarded
+	## doorway may be the closest thing on the board, or the most wounded, and still be someone
+	## we cannot lay a hand on; picking him anyway is how a goblin spends an entire fight
+	## walking into a wall while a wizard stands in the open just beyond him.
+	##
+	## The fallback matters as much as the rule. When the whole party is behind one shut door
+	## nothing is reachable, and an empty list would freeze the AI — so we go back to the full
+	## pool and let _find_approach_path walk us at the door, which is the right instinct anyway.
+	var reachable: Array = candidates.filter(_can_reach)
+	return candidates if reachable.is_empty() else reachable
+
+
+func _nearest_of(candidates: Array) -> Node:
 	var best: Node = null
-	var lowest_hp: int = 999
-
-	for p in players:
-		if not p.is_player_controlled or not p.is_alive:
-			continue
-		if p == self:
-			continue
-		if p.hp < lowest_hp:
-			lowest_hp = p.hp
-			best = p
-
+	var best_dist: float = INF
+	for c in candidates:
+		var dist: float = abs(c.position.x - position.x) + abs(c.position.z - position.z)
+		if dist < best_dist:
+			best_dist = dist
+			best = c
 	return best
+
+
+func _weakest_of(candidates: Array) -> Node:
+	var best: Node = null
+	var lowest_hp: int = 0
+	for c in candidates:
+		if best == null or c.hp < lowest_hp:
+			lowest_hp = c.hp
+			best = c
+	return best
+
+
+func _find_weakest_reachable_player() -> Node:
+	## The most wounded hero we can get to. The boss's pick — see _reachable_or_all for why
+	## "can get to" comes before "most wounded".
+	return _weakest_of(_reachable_or_all(_player_candidates()))
+
+
+func _find_nearest_reachable_player() -> Node:
+	## The nearest hero we can get to. What anything that closes to melee should be walking at.
+	return _nearest_of(_reachable_or_all(_player_candidates()))
 
 
 func _has_ally_adjacent_to(target: Node) -> bool:
@@ -378,32 +532,52 @@ func _move_toward(target: Node) -> void:
 	_move_tiles = 0
 
 	var path: Array = _find_path(from_tile, to_tile)
-	if path.size() <= 1:
-		return
+	var step_count := 0
+	if path.size() > 1:
+		step_count = min(get_move_range(), path.size() - 1)
+		while step_count >= 1 and _is_tile_occupied_by_others(path[step_count], self):
+			step_count -= 1
 
-	var step_count: int = min(move_range, path.size() - 1)
-	while step_count >= 1 and _is_tile_occupied_by_others(path[step_count], self):
-		step_count -= 1
 	if step_count < 1:
-		return
+		# Either there is no route to the target at all, or every tile we could stop on along
+		# the one there is has somebody standing on it. Both used to end the turn on the spot,
+		# which is how a bottleneck — a guarded doorway, say — left the goblins at the back
+		# standing around in the chamber all fight while the two at the front did the work.
+		#
+		# Get as close as we can instead. A unit that cannot reach you should still be coming.
+		path = _find_approach_path(to_tile, get_move_range())
+		if path.size() <= 1:
+			return
+		# _find_approach_path only ever ends on a free tile, so there is nothing to walk back.
+		step_count = path.size() - 1
 
 	_follow_path(path.slice(0, step_count + 1))
 
 
+func _pinning_guard() -> Node:
+	## The guardian whose zone we are standing in, or null. A pinned enemy fights the guardian
+	## and nobody else — it does not reach around him for the softer target behind.
+	##
+	## This is not the goblin getting clever; it is the opposite. The man in armour is in its
+	## face, so that is what it hits. Targeting everywhere else stays exactly as dumb as it was.
+	##
+	## It is also load-bearing, not flavour. _find_nearest_player measures MANHATTAN distance
+	## while _is_adjacent is CHEBYSHEV, so with GRID_SIZE 2 a goblin standing DIAGONALLY off the
+	## guardian rates him at 4 — worse than a cardinally-adjacent wizard's 2, and level with a
+	## wizard two clear tiles away. Without this the goblin would swing past the guardian's
+	## shoulder at her, and since that tie breaks on scene-tree order it would look random.
+	return _guard_at(_snap_to_grid(position))
+
+
 func _find_nearest_player() -> Node:
-	## Returns the nearest alive player-controlled combatant
-	var best: Node = null
-	var best_dist: float = INF
-	for c in get_tree().get_nodes_in_group("combatants"):
-		if not is_instance_valid(c) or not c.is_player_controlled or not c.is_alive:
-			continue
-		if c == self:
-			continue
-		var dist: float = abs(c.position.x - position.x) + abs(c.position.z - position.z)
-		if dist < best_dist:
-			best_dist = dist
-			best = c
-	return best
+	## The nearest alive hero, reachable or not.
+	##
+	## Deliberately NOT the reachable-first pick, and only the archer still uses it: an archer
+	## shoots, so being unable to WALK to someone says nothing about being able to hit them.
+	## A hero holding a doorway is the archer's best target precisely because he is standing in
+	## the one gap in the wall, and filtering him out for being unwalkable would have the
+	## archer turn away from the clearest shot on the board.
+	return _nearest_of(_player_candidates())
 
 
 func _do_adjacent_action(player: Node) -> void:
@@ -431,6 +605,6 @@ func _on_move_complete() -> void:
 
 
 func end_my_turn(cost: int) -> void:
-	var combat_mgr := get_parent().get_node_or_null("CombatManager")
+	var combat_mgr := _combat_mgr()
 	if combat_mgr:
 		combat_mgr.turn_done(cost)

@@ -28,3 +28,9 @@ func execute(actor, target) -> void:
 	# Awaited: the weapon has to fly and land before the throw is rolled, and player.gd waits
 	# on this call so the turn does not end while it is still in the air.
 	await actor._do_throw_attack(target)
+
+
+func get_cursor_icon(_actor, _target) -> String:
+	## An axe: a weapon you can picture leaving somebody's hand. Better than the spear it used
+	## to use, which now belongs to Trip.
+	return CURSOR_AXE

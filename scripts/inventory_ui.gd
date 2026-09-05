@@ -364,10 +364,17 @@ func _on_bag_pressed(index: int) -> void:
 	var item: ItemResource = inv.items[index]
 	if item == null or _is_equipped(inv, item):
 		return
+	# Consumables and ammo are used, not worn — drink the potion, take the arrows — and they do
+	# reach the bag now that pickup no longer spends them on the spot.
+	if item.item_type == ItemResource.ItemType.CONSUMABLE \
+			or item.item_type == ItemResource.ItemType.AMMO:
+		if _active.has_method("use_item"):
+			_active.use_item(index)
+		else:
+			inv.use_consumable(index)
+		return
 	# InventoryComponent.equip works out the destination socket from the item's type, so this
-	# is the one call for a weapon, a shield, armour, a helmet or greaves alike. Consumables
-	# and ammo never reach the bag (Player._do_pickup spends them on the spot), so anything
-	# non-equippable here simply declines to move.
+	# is the one call for a weapon, a shield, armour, a helmet or greaves alike.
 	if _active.has_method("equip_weapon"):
 		_active.equip_weapon(index)
 	else:

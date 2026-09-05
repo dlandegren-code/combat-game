@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_item")
 item_name = "Boss Cleaver"
+weapon_sound = 1
 item_type = 0
 equip_slot = 1
 handedness = 1

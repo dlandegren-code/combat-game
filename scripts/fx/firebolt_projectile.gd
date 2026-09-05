@@ -9,9 +9,10 @@ class_name FireboltProjectile
 ## (MIN_FLIGHT), and a bolt across the whole arena must not leave the turn hanging (MAX_FLIGHT).
 ##
 ## Launch it with `fire()` and forget it — it frees itself once the trail it left behind has
-## burned out.
+## burned out and the spell has finished sounding.
 
 const ParticleKit := preload("res://scripts/fx/particle_kit.gd")
+const AudioKit := preload("res://scripts/fx/audio_kit.gd")
 const FireFx := preload("res://scripts/fx/fire_fx.gd")
 
 ## Emitted when the bolt reaches its target. Nothing else about the spell resolves before it.
@@ -31,6 +32,15 @@ const ARC_HEIGHT := 0.22
 ## it already dropped disappears with it the instant the bolt lands.
 const TRAIL_FADE := 0.75
 
+## The spell's voice, from the staff to the last of the burn. Five seconds of it against a
+## flight of well under one — the clip is the whole spell, not just the launch, so it is still
+## roaring for a good while after the bolt has landed (see _impact).
+const SFX_CAST := "res://assets/audio/spells/firebolt.mp3"
+## The library masters its clips hot next to everything else here. Trim the bolt rather than
+## push the rest of the game up to meet it. This is the bolt's level WITHIN the world mix —
+## anything that should move the whole game belongs on the SFX bus, not here.
+const SFX_VOLUME_DB := -6.0
+
 var _from := Vector3.ZERO
 var _to := Vector3.ZERO
 var _duration := MIN_FLIGHT
@@ -39,6 +49,7 @@ var _flying := false
 
 var _core: Node3D
 var _light: OmniLight3D
+var _sound: AudioStreamPlayer3D
 var _emitters: Array[GPUParticles3D] = []
 
 
@@ -61,6 +72,7 @@ func _ready() -> void:
 	_build_embers()
 	_build_smoke()
 	_build_light()
+	_build_sound()
 	_launch()
 
 
@@ -71,6 +83,8 @@ func _launch() -> void:
 	_face_along(_to - _from)
 	for p in _emitters:
 		p.emitting = true
+	if _sound:
+		_sound.play()
 	_flying = true
 
 
@@ -114,10 +128,23 @@ func _impact() -> void:
 	for p in _emitters:
 		p.emitting = false
 	impacted.emit()
-	# Stay alive — silently — long enough for the fire already hanging in the air behind us to
-	# burn out on its own. Freeing here would snip the trail off mid-flight.
-	await get_tree().create_timer(TRAIL_FADE).timeout
+	# Stay alive — invisibly — long enough for the fire already hanging in the air behind us to
+	# burn out on its own, and for the clip to run out. Freeing on the trail alone would snip
+	# the roar off a fraction of a second after the bolt landed.
+	#
+	# The tail is measured rather than awaited on `finished`: a clip that came in looping would
+	# never fire that signal, and a bolt that never frees is a leak on every cast.
+	await get_tree().create_timer(_linger_time()).timeout
 	queue_free()
+
+
+func _linger_time() -> float:
+	## Seconds to hold the node open past impact: whichever of the trail and the unplayed
+	## remainder of the clip finishes last.
+	var tail := TRAIL_FADE
+	if _sound and _sound.stream:
+		tail = maxf(tail, _sound.stream.get_length() - _elapsed)
+	return tail
 
 
 # --- Construction ----------------------------------------------------------
@@ -228,3 +255,22 @@ func _build_light() -> void:
 	_light.shadow_enabled = false
 	_light.light_bake_mode = Light3D.BAKE_DISABLED
 	add_child(_light)
+
+
+func _build_sound() -> void:
+	## Positional, and a child of the bolt rather than of the caster: the sound travels with
+	## the fire, so it crosses the arena as the bolt does instead of staying at the staff.
+	##
+	## A missing or not-yet-imported clip leaves the bolt silent rather than breaking the cast,
+	## which is why this is load() and a null check instead of preload().
+	var stream := load(SFX_CAST) as AudioStream
+	if stream == null:
+		push_warning("Firebolt SFX missing: " + SFX_CAST)
+		return
+	_sound = AudioStreamPlayer3D.new()
+	_sound.name = "Sfx"
+	_sound.stream = stream
+	# How far it carries is the arena's business, not the bolt's — AudioKit.configure holds the
+	# one answer, shared with every sword swing.
+	AudioKit.configure(_sound, SFX_VOLUME_DB)
+	add_child(_sound)

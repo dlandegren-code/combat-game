@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_item")
 item_name = "Goblin Dagger"
+weapon_sound = 2
 item_type = 0
 attack_bonus = 1
 durability = 4

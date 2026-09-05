@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_item")
 item_name = "Short Bow"
+weapon_sound = 4
 item_type = 0
 handedness = 1
 equip_slot = 1

@@ -97,6 +97,7 @@ func _skill_rows() -> Array[Dictionary]:
 		{"id": "shove", "name": "Shove"},
 		{"id": "trip", "name": "Trip"},
 		{"id": "dual", "name": "Dual Wield"},
+		{"id": "lockpick", "name": "Lockpick"},
 		{"id": "spell", "name": "Spell Power"},
 	]
 
@@ -328,6 +329,10 @@ func _populate(c: Node) -> void:
 	_put("shove", str(c.shove_skill))
 	_put("trip", str(c.trip_skill))
 	_put("dual", "Trained" if c.dual_wield_skill else "—")
+	# Dash rather than zero, same convention: a 0 lockpick is not a bad lockpick, it is somebody
+	# who has never picked a lock — and Combatant.lockpick_skill treats it that way too, refusing
+	# to roll at all rather than rolling badly.
+	_put("lockpick", str(c.lockpick_skill) if c.lockpick_skill > 0 else "—")
 	# A non-caster gets a dash rather than a zero: "0" reads as a bad caster, a dash as not a
 	# caster at all. Same convention as the untrained Dual Wield row above.
 	_put("spell", str(c.get_spell_power()) if c.can_cast else "—")
@@ -338,7 +343,9 @@ func _populate(c: Node) -> void:
 	_put("armor", str(c.armor))
 	_put("resist", "%d%%" % c.physical_resistance)
 	_put("stance", StanceCat.display_name(c.defensive_option))
-	_put("move", "%d tiles" % c.move_range)
+	# Effective range, not the base stat, so the sheet tells the truth while a guardian's feet
+	# are planted (Combatant.get_move_range).
+	_put("move", "%d tiles" % c.get_move_range())
 
 	# Hit points go red on the same threshold the party portraits use, so the two agree.
 	var low: bool = c.max_hp > 0 and float(c.hp) / float(c.max_hp) <= 0.35

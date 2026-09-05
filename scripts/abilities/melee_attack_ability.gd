@@ -13,3 +13,7 @@ func can_target(actor, target) -> bool:
 
 func execute(actor, target) -> void:
 	actor._do_melee_attack(target)
+
+
+func get_cursor_icon(_actor, _target) -> String:
+	return CURSOR_SWORD

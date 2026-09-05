@@ -18,7 +18,10 @@ extends CanvasLayer
 const HudSlotScript := preload("res://scripts/hud_slot.gd")
 const StanceCat := preload("res://scripts/stance.gd")
 
-const HOTBAR_SLOTS := 8
+## Ten, one per ability, reached by the number keys 1-9 and 0. The bar is meant to open with
+## every action a fresh character has under a key; each time an ability is added this grows
+## with it, or the newest action becomes the one nobody can reach without re-assigning a slot.
+const HOTBAR_SLOTS := 10
 ## Ability index meaning "nothing assigned".
 const EMPTY := -1
 
@@ -40,6 +43,7 @@ const BACKPLATE := "res://assets/UI/SPR_FantasyWarrior_Box_Background_Shadowed.p
 const ABILITY_ABBREV := {
 	"Move": "Mv", "Attack": "At", "Shove": "Sh", "Trip": "Tr",
 	"Ranged": "Rn", "Throw": "Th", "Pick Up": "Pk", "Firebolt": "Fb",
+	"Open/Close": "Op", "Prone": "Pr",
 }
 
 var _root: Control
@@ -201,7 +205,7 @@ func _on_turn_changed(active: Node) -> void:
 
 func _ensure_assignments(who: Node) -> void:
 	## First time we see a character, seed its hotbar with its abilities in order. Anything
-	## past slot 8 is simply not reachable from the bar and must be re-assigned onto one.
+	## past the last slot is simply not reachable from the bar and must be re-assigned onto one.
 	if _assignments.has(who):
 		return
 	var seeded: Array[int] = []
@@ -219,7 +223,9 @@ func refresh() -> void:
 		return
 
 	var can_act: bool = _active.can_act
-	var selected: int = _active.selected_action
+	# The PINNED action, which is -1 when the player has left the choice to the mouse. An unlit
+	# hotbar is what automatic looks like — see Player.select_action.
+	var selected: int = _active.pinned_action() if _active.has_method("pinned_action") 		else _active.selected_action
 
 	_stance_slot.set_icon_path(StanceCat.icon_path(_active.defensive_option))
 	_stance_slot.set_caption(StanceCat.display_name(_active.defensive_option))

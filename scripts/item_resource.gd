@@ -2,7 +2,7 @@ extends Resource
 class_name ItemResource
 
 ## Appended, never renumbered: these ordinals are stored in every .tres in resources/items.
-enum ItemType { WEAPON, THROWABLE, CONSUMABLE, AMMO, SHIELD, ARMOR, HELMET, LEGS }
+enum ItemType { WEAPON, THROWABLE, CONSUMABLE, AMMO, SHIELD, ARMOR, HELMET, LEGS, KEY }
 
 enum EquipSlot {
 	ANY_HAND,   ## Can go in either hand (1-handed weapons)
@@ -15,16 +15,51 @@ enum EquipSlot {
 
 enum Handedness { ONE_HANDED, TWO_HANDED }
 
+## Which family of weapon this SOUNDS like when it is swung — see weapon_sfx.gd for the clips.
+## Appended, never renumbered, for the same reason ItemType is: the ordinals are stored in the
+## .tres files under resources/items.
+##
+## Deliberately a field rather than something derived from the name or the model. A cleaver
+## swings like an axe and a staff like a stick; no game rule anywhere else needs to know that,
+## so nothing else can be asked to tell us.
+enum WeaponSound { SWORD, AXE, DAGGER, HAMMER, STICK }
+
 @export var item_name: String = "Item"
 @export var item_type: int = ItemType.WEAPON
 @export var equip_slot: int = EquipSlot.ANY_HAND
 @export var handedness: int = Handedness.ONE_HANDED
+## Defaults to SWORD so an item that never sets it still swings like a blade, which is the
+## right guess for most of resources/items. The ones it is wrong for set it explicitly.
+@export var weapon_sound: int = WeaponSound.SWORD
+
+## Time units to get this into play — drawn, strapped on, slung or drunk. It prices the equip
+## and use actions (Player.equip_weapon / Player.use_item), and it decides what may be
+## auto-equipped on pickup: only EQUIP_QUICK things come to hand in the same motion as bending
+## down for them (InventoryComponent.try_auto_equip_hand).
+##
+## So the tiers are not decoration — they are the whole reason a shield or a helmet can never
+## be picked up and worn for free the way a sword can be snatched off the floor.
+const EQUIP_QUICK := 1   ## drawn in one motion: weapons, throwables, a potion to the lips
+const EQUIP_STRAP := 2   ## strapped, buckled or slung: shields, helmets, greaves, quivers, ammo
+const EQUIP_DON := 3     ## body armour — not really a thing you do mid-fight
+
+## Per-item override. 0 means "derive from item_type", which is what every existing .tres in
+## resources/items relies on, so none of them had to be touched.
+@export var equip_time: int = 0
 
 ## What a ruined weapon costs to use. Steep on purpose: with these a broken weapon is worse
 ## than bare hands for hitting — but bare hands cannot parry at all, and a broken weapon can.
 ## That trade is the point, and it is why dropping one is a decision rather than a formality.
 const BROKEN_HIT_PENALTY := 4
 const BROKEN_DAMAGE_PENALTY := 2
+
+## What lock this opens, for a KEY. Matched against LootContainer.key_id, so a key is not a
+## master key by accident: an empty id opens nothing at all.
+##
+## Deliberately a plain string rather than a reference to the thing it unlocks. A key is made
+## before the door it fits is placed, gets carried between levels, and has to survive the chest
+## it belongs to not existing yet.
+@export var key_id: String = ""
 
 @export var attack_bonus: int = 0
 @export var damage_bonus: int = 0
@@ -204,6 +239,36 @@ func get_description() -> String:
 	if dodge_ranged:
 		desc += " [DodgeRanged]"
 	return desc
+
+
+func get_equip_time() -> int:
+	## See EQUIP_QUICK / EQUIP_STRAP / EQUIP_DON. An explicit equip_time on the resource wins,
+	## so a cursed helmet or a quick-release buckle can break the pattern without a code change.
+	if equip_time > 0:
+		return equip_time
+	match item_type:
+		ItemType.ARMOR:
+			return EQUIP_DON
+		ItemType.SHIELD, ItemType.HELMET, ItemType.LEGS, ItemType.AMMO:
+			return EQUIP_STRAP
+		_:
+			return EQUIP_QUICK
+
+
+func get_unequip_time() -> int:
+	## Getting something off is usually quicker than getting it on: a helmet lifts away with one
+	## hand, a shield's strap slips, a blade is simply dropped in the belt.
+	##
+	## Body armour is the exception, and it is not symmetry for its own sake — the buckles and
+	## straps have to come undone in order, so shedding it costs what donning it did. That is
+	## what stops armour being something you drop for free the moment it stops being convenient.
+	if item_type == ItemType.ARMOR:
+		return get_equip_time()
+	return EQUIP_QUICK
+
+
+func is_quick_to_equip() -> bool:
+	return get_equip_time() <= EQUIP_QUICK
 
 
 func is_hand_item() -> bool:

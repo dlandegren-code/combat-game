@@ -28,3 +28,7 @@ func execute(actor, target) -> void:
 	# Awaited: the arrow has to fly and land before the shot is rolled, and player.gd waits on
 	# this call so the turn does not end while it is still in the air.
 	await actor._do_ranged_attack(target)
+
+
+func get_cursor_icon(_actor, _target) -> String:
+	return CURSOR_BOW

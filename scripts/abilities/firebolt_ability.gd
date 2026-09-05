@@ -79,3 +79,10 @@ func execute(actor, target) -> void:
 	# fly and land before the attack is rolled, and player.gd waits on this call so the turn
 	# does not end while it is still in the air.
 	await actor._do_firebolt(target)
+
+
+func get_cursor_icon(_actor, _target) -> String:
+	## A staff. The set has no wand, and this is the nearest thing to one — it also happens to
+	## be what the Wizard is holding. Magic01, the obvious-sounding choice, reads as a generic
+	## sparkle rather than as casting.
+	return CURSOR_STAFF

@@ -33,7 +33,8 @@ class_name CombatantStats
 @export var armor: int = 0
 @export var physical_resistance: int = 0  ## percentage 0-100
 @export var parry_skill: int = 4
-@export_enum("Parry", "Dodge") var defensive_option: int = 0
+## Ids are load-bearing and append-only — see Stance. Protection additionally needs can_guard.
+@export_enum("Parry", "Dodge", "Protection") var defensive_option: int = 0
 
 ## No ranged_range / throw_range here: reach is a property of the weapon, not the wielder.
 ## See ItemResource.ranged_range / throw_range and Combatant.get_ranged_range().
@@ -52,6 +53,10 @@ class_name CombatantStats
 ## though every character has willpower. See Combatant.can_cast.
 @export var can_cast: bool = false
 @export var spell_cost: int = 3     ## time units per cast; mana cost is per-spell
+
+## Whether this combatant may take the Protection stance. Off by default for the same reason
+## can_cast is — see Combatant.can_guard.
+@export var can_guard: bool = false
 
 ## What each attribute drives is documented on Combatant's Attributes group; intelligence and
 ## charisma currently drive nothing.

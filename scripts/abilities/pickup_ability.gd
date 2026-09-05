@@ -21,3 +21,7 @@ func unavailable_reason(_actor) -> String:
 func execute(actor, target) -> void:
 	actor._play_attack_anim("pick-up")
 	actor._do_pickup(target)
+
+
+func get_cursor_icon(_actor, _target) -> String:
+	return CURSOR_PACK

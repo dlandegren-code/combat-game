@@ -14,3 +14,9 @@ func can_target(actor, target) -> bool:
 func execute(actor, target) -> void:
 	actor._play_attack_anim("attack-kick-right")
 	actor._try_trip(target)
+
+
+func get_cursor_icon(_actor, _target) -> String:
+	## A polearm, as in sweeping the shaft low through somebody's ankles. Had the staff until
+	## Firebolt needed it more. Still one of the two loosest fits in the set — see Shove.
+	return CURSOR_SPEAR

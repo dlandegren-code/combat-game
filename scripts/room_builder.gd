@@ -16,6 +16,13 @@ const CIRCLE_QUARTER := "SM_Env_Tiles_06.tscn"
 # Walls (double-sided so facing never matters) + a single doorway piece.
 const WALL_MESH := "res://Assets/PolygonDungeon/Models/SM_Env_Wall_01_DoubleSided.res"
 const DOOR_MESH := "res://Assets/PolygonDungeon/Models/SM_Env_Wall_DoorFrame_01.res"
+## The leaf that hangs in that frame. One of the pack's plain wooden doors; _02 through _05 are
+## the same size and swap in without touching anything else.
+const DOOR_LEAF_MESH := "res://Assets/PolygonDungeon/Models/SM_Env_Door_02.res"
+## Where the hole is across the frame module, in the module's own units. Synty's wall pieces are
+## a 5-unit span with the opening centred, so this is half of that rather than a number measured
+## off the art — which is why it survives the mesh being swapped for another frame.
+const DOOR_OPENING_LOCAL_X := 2.5
 const WALL_MAT := "res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres"
 
 # Stone props (same atlas material as the walls). Throne/vessel are solid obstacles;
@@ -23,6 +30,59 @@ const WALL_MAT := "res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat
 const THRONE_MESH := "res://Assets/PolygonDungeon/Models/SM_Env_Stone_Throne_01.res"
 const VESSEL_MESH := "res://Assets/PolygonDungeon/Models/SM_Env_Stone_Vessel_01.res"
 const WALL_BANNER_MESH := "res://Assets/PolygonDungeon/Models/SM_Prop_Wall_Banner_01.res"
+
+# Searchable furniture for the south wall — the one opposite the door.
+#
+# The pack's PREFABS, not its raw meshes, unlike everything else in this file. A chest is two
+# meshes plus the transform that marries them, and that transform lives in the prefab: the lid
+# is authored with its origin on its own hinge, so placed at a raw offset it renders sticking
+# out the front of the chest. Barrels come through the same door for consistency.
+const CHEST_PREFAB := "res://Assets/PolygonDungeon/Prefabs/Props/SM_Prop_Chest_01.tscn"
+const BARREL_PREFABS := [
+	"res://Assets/PolygonDungeon/Prefabs/Props/SM_Prop_Barrel_01.tscn",
+	"res://Assets/PolygonDungeon/Prefabs/Props/SM_Prop_Barrel_02.tscn",
+]
+
+## What a barrel might have in it. Drawn from at random, so which barrel gives what is settled
+## by where it stands (LootContainer seeds itself off its position) rather than by the run.
+##
+## Ordinary kit on purpose: a barrel is the consolation prize for searching the room, and the
+## thing worth having is behind the lock.
+const BARREL_LOOT := [
+	"res://resources/items/health_potion.tres",
+	"res://resources/items/arrow_bundle.tres",
+	"res://resources/items/dagger.tres",
+	"res://resources/items/wooden_shield.tres",
+	"res://resources/items/leather_armor.tres",
+]
+
+## What the locked chest has in it. Two draws from the good stuff — this is what the key on the
+## boss is FOR, and it has to be worth crossing the room and killing him for.
+const CHEST_LOOT := [
+	"res://resources/items/boss_cleaver.tres",
+	"res://resources/items/reinforced_leather_armor.tres",
+	"res://resources/items/knight_helmet.tres",
+	"res://resources/items/ranger_dagger.tres",
+]
+
+## The lock on the chest, and the key that opens it. The id is shared with iron_key.tres by
+## hand — there is no registry of locks, and for one chest a registry would be ceremony.
+## Spare scaling for the chest, on top of SCALE, the way the throne has its own scale_mul in
+## _build_props.
+##
+## Body and lid together come to 0.57 world units unscaled, against a barrel's 0.83. Doubled,
+## the chest stands about 1.14 — taller than the barrels beside it, which is the call: a
+## treasure chest is the thing on that wall worth walking over to, and it should look it.
+const CHEST_SCALE_MUL := 2.0
+
+## Whether the chest starts shut AND locked. True: getting in means the boss's key or a lockpick
+## roll against CHEST_LOCK_DIFFICULTY. Flip to false to open and shut it freely, which is what
+## it was set to briefly while the lid animation was being looked at.
+const CHEST_STARTS_LOCKED := true
+
+const CHEST_KEY_ID := "dungeon_chest"
+## Beatable on a 1-5 die by a lockpick skill of 3 or better, and never by anybody untrained.
+const CHEST_LOCK_DIFFICULTY := 8
 
 const SCALE := 0.8                 # dial the whole environment's size here
 const TILE := 5.0 * SCALE          # world units per tile (= 4.0 at 0.8)
@@ -35,6 +95,16 @@ const ROOM_X0 := -8.0              # room's near-x corner (aligned to the door s
 const DOOR_X0 := -4.0              # chamber north wall segment that holds the doorway
 
 const LAYER_OBSTACLE := 4          # matches Combatant.LAYER_OBSTACLE (blocks move + LOS)
+## Combatant.GRID_SIZE: the play grid the doorway has to line up with. The environment is built
+## on TILE (4.0) and played on this (2.0), so one wall module spans exactly two squares — which
+## is the whole reason a doorway needs deciding rather than just leaving a hole.
+const GRID := 2.0
+## How far a doorway jamb reaches past the edge of the doorway square, in world units. See
+## _place_doorway_jambs — it exists to close the seam a diagonal step can otherwise graze.
+const JAMB_OVERLAP := 0.06
+
+const DoorScript := preload("res://scripts/door.gd")
+const LootContainerScript := preload("res://scripts/loot_container.gd")
 
 var _rng := RandomNumberGenerator.new()
 
@@ -50,7 +120,9 @@ func _build() -> void:
 	_build_chamber()
 	_build_room()
 	_build_walls()
+	_build_door()
 	_build_props()
+	_build_containers()
 
 
 func _build_chamber() -> void:
@@ -106,6 +178,32 @@ func _build_walls() -> void:
 		_place_wall(WALL_MESH, ROOM_X0, z, 90.0)                    # room west
 
 
+func doorway_cell_x() -> float:
+	## Centre of the single grid square the doorway occupies, worked out from the hole in the
+	## art with the same snap the movement code uses (Combatant._snap_to_grid). The hole is
+	## centred on the LINE between two squares, so this picks one of them — and everything
+	## else, jambs and door alike, is built from the answer so they cannot disagree.
+	var opening_x := DOOR_X0 + DOOR_OPENING_LOCAL_X * SCALE
+	return (floor(opening_x / GRID) + 0.5) * GRID
+
+
+func _build_door() -> void:
+	## Hang a door in the one doorway, worked out from the same DOOR_X0 the frame is placed
+	## from. Sited here rather than inside _build_walls so the wall loop stays a wall loop.
+	##
+	## The frame piece runs from DOOR_X0 to DOOR_X0 + TILE along +X (Synty wall modules have
+	## their origin on the left edge, not the middle), so the opening is DOOR_OPENING_LOCAL_X
+	## into it. Yaw is 0 to match the north wall the frame sits in.
+	var half := CHAMBER_TILES / 2.0 * TILE                # 16
+	var opening_x := DOOR_X0 + DOOR_OPENING_LOCAL_X * SCALE
+	var cell_x := doorway_cell_x()
+	# The door stands on the square it seals; the leaf hangs over the hole in the art, half a
+	# square away. See the header of door.gd for why those are not the same place.
+	DoorScript.build(
+		self, Vector3(cell_x, FLOOR_Y, half), opening_x - cell_x, 0.0,
+		DOOR_LEAF_MESH, WALL_MAT, SCALE)
+
+
 func _place_wall(mesh_path: String, x: float, z: float, rot_y_deg: float) -> void:
 	var m: Mesh = load(mesh_path)
 	if m == null:
@@ -117,19 +215,70 @@ func _place_wall(mesh_path: String, x: float, z: float, rot_y_deg: float) -> voi
 	mi.rotation_degrees = Vector3(0, rot_y_deg, 0)
 	mi.scale = Vector3(SCALE, SCALE, SCALE)
 	add_child(mi)
-	# Solid walls block movement + line of sight (obstacle layer 4). The doorway is
-	# left collision-free so units can walk/shoot through the opening. The box is
-	# sized from the mesh AABB and rides the MeshInstance's scale, so it matches.
-	if mesh_path != DOOR_MESH:
-		var aabb := m.get_aabb()
+	# Solid walls block movement + line of sight (obstacle layer 4). The box is sized from the
+	# mesh AABB and rides the MeshInstance's scale, so it matches.
+	#
+	# The doorway module is the exception, and it used to be handled by skipping its collider
+	# entirely. That was wrong: a module is 4 units, the play grid is 2, so leaving the WHOLE
+	# module open made a two-square hole in a wall whose art shows a one-square door. Units
+	# walked through the masonry beside the door, and shot through it. It now gets jambs — see
+	# _place_doorway_jambs — and only the doorway square itself is left open.
+	if mesh_path == DOOR_MESH:
+		_place_doorway_jambs(mi, m, x)
+		return
+	var aabb := m.get_aabb()
+	var body := StaticBody3D.new()
+	body.collision_layer = LAYER_OBSTACLE
+	body.collision_mask = 0
+	var cs := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = aabb.size
+	cs.shape = box
+	cs.position = aabb.get_center()
+	body.add_child(cs)
+	mi.add_child(body)
+
+
+func _place_doorway_jambs(mi: MeshInstance3D, m: Mesh, module_x: float) -> void:
+	## Wall the solid parts of a doorway module and leave exactly one grid square open.
+	##
+	## Derived rather than measured: take the module's own span, take the square the doorway
+	## snaps to, and make a collider out of whatever is left over on each side. So it stays
+	## right if the module, DOOR_X0 or SCALE change, and it is the same arithmetic the pathing
+	## uses to decide which square a position is in.
+	var aabb := m.get_aabb()
+	var lo: float = module_x + aabb.position.x * SCALE
+	var hi: float = lo + aabb.size.x * SCALE
+	# Each jamb reaches a hair PAST the doorway square rather than stopping dead on its edge.
+	# A diagonal step from the square beside the doorway to the square beyond it crosses the
+	# wall plane exactly on that edge, and a ray that grazes the seam between two boxes reports
+	# whatever floating point feels like — which is how units were cutting the corner of the
+	# jamb into the room, open door or shut. The overlap is far too small to trouble the ray
+	# down the middle of the doorway square, a whole unit away.
+	var gap_lo: float = doorway_cell_x() - GRID / 2.0 + JAMB_OVERLAP
+	var gap_hi: float = doorway_cell_x() + GRID / 2.0 - JAMB_OVERLAP
+	for span in [[lo, gap_lo], [gap_hi, hi]]:
+		var width: float = span[1] - span[0]
+		# A sliver is the module's own overlap with its neighbour, which that neighbour's
+		# collider already covers. Building a box for it would only add contacts.
+		if width < 0.1:
+			continue
 		var body := StaticBody3D.new()
 		body.collision_layer = LAYER_OBSTACLE
 		body.collision_mask = 0
 		var cs := CollisionShape3D.new()
 		var box := BoxShape3D.new()
-		box.size = aabb.size
+		# Everything here is in the module's OWN units, not world units, because the shape
+		# hangs off the MeshInstance and inherits its SCALE — the same convention the plain
+		# wall collider above uses. Only `width` arrives in world units, so only `width` is
+		# divided back out. Sizing the box in world units instead makes every jamb 20% too
+		# narrow, which leaves precisely enough room for a diagonal step to clip its corner.
+		box.size = Vector3(width / SCALE, aabb.size.y, aabb.size.z)
 		cs.shape = box
-		cs.position = aabb.get_center()
+		cs.position = Vector3(
+			((span[0] + span[1]) / 2.0 - module_x) / SCALE,
+			aabb.get_center().y,
+			aabb.get_center().z)
 		body.add_child(cs)
 		mi.add_child(body)
 
@@ -150,6 +299,40 @@ func _build_props() -> void:
 	# Stone vessel on the circle's center crossing: block diagonal cuts through it (via
 	# the collider) but do NOT reserve a cell, so the four squares around it stay walkable.
 	_place_prop(VESSEL_MESH, 0.0, 0.0, 0.0, true, FLOOR_Y, false)
+
+
+func _build_containers() -> void:
+	## Chest and barrels along the south wall — the far side of the room from the door, so
+	## crossing to them means crossing the fight.
+	##
+	## Sited clear of the throne, which already holds the two squares either side of x = 0 (see
+	## _build_props), and facing north into the room so their loot spills into the floor rather
+	## than into the masonry behind them.
+	var wall_z := -CHAMBER_TILES / 2.0 * TILE + 1.0     # -15, level with the throne
+	var chest = LootContainerScript.new()
+	# The y here is a placeholder: a container settles onto the floor surface itself, because
+	# FLOOR_Y is under it. See LootContainer.FLOOR_SURFACE_Y.
+	# Yaw 0 faces them into the room: the chest's lid hinges at its local -Z, which is the side
+	# against the wall, and swings open over the +Z side you stand on.
+	chest.configure(Vector3(-5.0, FLOOR_Y, wall_z), 0.0,
+		CHEST_PREFAB, SCALE * CHEST_SCALE_MUL)
+	chest.open_verb = "Open"
+	chest.locked = CHEST_STARTS_LOCKED
+	chest.key_id = CHEST_KEY_ID
+	chest.lock_difficulty = CHEST_LOCK_DIFFICULTY
+	chest.loot = CHEST_LOOT
+	chest.loot_rolls = 2
+	# Added last: _ready() builds the geometry, and it must not run before the fields above
+	# are in place.
+	add_child(chest)
+
+	for i in range(BARREL_PREFABS.size()):
+		var barrel = LootContainerScript.new()
+		barrel.configure(Vector3(5.0 + i * 2.0, FLOOR_Y, wall_z), 0.0,
+			BARREL_PREFABS[i], SCALE)
+		barrel.loot = BARREL_LOOT
+		barrel.loot_rolls = 1
+		add_child(barrel)
 
 
 func _reserve_cell(x: float, z: float) -> void:
