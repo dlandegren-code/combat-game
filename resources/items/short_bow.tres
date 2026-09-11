@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_item")
 item_name = "Short Bow"
+icon_path = "res://assets/UI/icons/ICON_FantasyWarrior_Inventory_Bows01_Clean.png"
 weapon_sound = 4
 item_type = 0
 handedness = 1

@@ -1,7 +1,7 @@
 @tool
 extends Node3D
 class_name LootContainer
-## A chest or a barrel: something you stand next to, work once, and take what is inside.
+## A chest, a cask or a crate: something you stand next to, work once, and take what is inside.
 ##
 ## Named LootContainer rather than Container because Godot already has a Container, and a UI
 ## base class quietly shadowing a dungeon prop is a bad afternoon.
@@ -49,7 +49,8 @@ const FLOOR_SURFACE_Y := 0.1
 
 # --- What this container is ------------------------------------------------
 
-## "Open" for a chest, "Search" for a barrel. Only ever shown to the player.
+## "Open" for a chest, "Search" for anything without a lid — a barrel or a crate. Only ever
+## shown to the player.
 var open_verb := "Search"
 ## Shut and refusing. See _try_unlock for the two ways past it.
 var locked := false

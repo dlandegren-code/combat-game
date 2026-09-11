@@ -77,7 +77,8 @@ const BROKEN_DAMAGE_PENALTY := 2
 ## Every weapon can be lobbed a short way, so this defaults to a usable value rather than 0 —
 ## otherwise removing the old character-level throw_range would have made most weapons
 ## unthrowable. Purpose-built throwing weapons set it higher (the dagger reaches 7).
-@export var throw_range: int = 2
+const DEFAULT_THROW_RANGE := 2
+@export var throw_range: int = DEFAULT_THROW_RANGE
 
 ## Defense properties granted while this item is equipped
 @export var is_shield: bool = false    ## Allows parrying ranged attacks
@@ -104,6 +105,22 @@ const BROKEN_DAMAGE_PENALTY := 2
 ## Inventory icon. Leave "" to let ItemIcons guess from the item's name and type, which is
 ## what every existing item does; set it only to override that guess.
 @export var icon_path: String = ""
+## Colour to wash a DRAWN icon with. White leaves it as the artist made it.
+##
+## The pack's "_Clean" icons are white silhouettes, so tinting is what tells two items sharing
+## one outline apart in a grid. Nothing uses it now that the armour is photographed rather than
+## drawn — a photograph carries its own colour — but any item that falls back to a category
+## icon can still be told apart this way.
+@export var icon_tint: Color = Color(1, 1, 1)
+## Fixed angle to photograph the model at for the inventory cell, in degrees. Off by default,
+## and item_thumbnails then picks an angle from the model's own proportions — which is right for
+## anything solid, because a sword or a bottle reads the same from either side.
+##
+## Armour has to be told. A cuirass is a SHELL: its front is the item and its back is an open
+## hole, and nothing in the model's proportions distinguishes the two, so the heuristic is free
+## to choose the hole and the piece renders as a folded sheet of metal.
+@export var icon_rotation_override: bool = false
+@export var icon_rotation: Vector3 = Vector3.ZERO
 @export var model_path: String = ""                ## PackedScene or Mesh to show; "" = auto by name/type
 @export var model_material_path: String = ""       ## atlas material for meshes shipped without one; "" = embedded
 @export var model_scale: float = 0.5               ## longest-dimension target size in tiles (<=0 = leave native scale)
@@ -185,6 +202,87 @@ func _center_and_scale_model(node: Node3D, meshes: Array) -> void:
 		if max_dim > 0.001:
 			var s: float = model_scale / max_dim
 			node.scale = Vector3(s, s, s)
+
+
+func type_name() -> String:
+	## "Helmet", "Two-Handed Weapon", "Shield" — the line under an item's name on its card.
+	var kind := ""
+	match item_type:
+		ItemType.WEAPON:
+			kind = "Weapon"
+		ItemType.THROWABLE:
+			kind = "Throwing Weapon"
+		ItemType.CONSUMABLE:
+			kind = "Consumable"
+		ItemType.AMMO:
+			kind = "Ammunition"
+		ItemType.SHIELD:
+			kind = "Shield"
+		ItemType.ARMOR:
+			kind = "Body Armour"
+		ItemType.HELMET:
+			kind = "Helmet"
+		ItemType.LEGS:
+			kind = "Leg Armour"
+		ItemType.KEY:
+			kind = "Key"
+	if item_type == ItemType.WEAPON and handedness == Handedness.TWO_HANDED:
+		kind = "Two-Handed " + kind
+	return kind
+
+
+func headline_stat() -> Array:
+	## The one number an item leads with, as [value, label], or [] for something that leads with
+	## nothing. Weapons show damage, armour shows armour — the same split the character sheet
+	## makes between what you hit with and what you are wearing.
+	if item_type == ItemType.WEAPON or item_type == ItemType.THROWABLE:
+		return [damage_bonus, "Damage"] if damage_bonus != 0 else [attack_bonus, "Attack"]
+	if armor_bonus != 0:
+		return [armor_bonus, "Armour"]
+	if heal_amount > 0:
+		return [heal_amount, "Healing"]
+	if ammo_amount > 0:
+		return [ammo_amount, "Arrows"]
+	return []
+
+
+func stat_lines() -> Array:
+	## Everything else worth a line, as [label, text] pairs, in the order the card lists them.
+	##
+	## Structured rather than the one long string get_description() builds: the card needs each
+	## stat on its own row with its own colour, and picking a string back apart to get there
+	## would be absurd. get_description stays for the plain tooltip and for debug printing.
+	var out: Array = []
+	var head: Array = headline_stat()
+	var skip_attack: bool = head.size() > 0 and head[1] == "Attack"
+	var skip_damage: bool = head.size() > 0 and head[1] == "Damage"
+	if attack_bonus != 0 and not skip_attack:
+		out.append(["Attack", "%+d" % attack_bonus])
+	if damage_bonus != 0 and not skip_damage:
+		out.append(["Damage", "%+d" % damage_bonus])
+	if parry_bonus != 0:
+		out.append(["Parry", "%+d" % parry_bonus])
+	if resistance_bonus != 0:
+		out.append(["Resistance", "%+d%%" % resistance_bonus])
+	if shove_bonus != 0:
+		out.append(["Shove", "%+d" % shove_bonus])
+	if trip_bonus != 0:
+		out.append(["Trip", "%+d" % trip_bonus])
+	if ranged_range > 0:
+		out.append(["Range", "%d tiles" % ranged_range])
+	# Only when it is actually a property of THIS item. Every item in the game carries a throw
+	# range of 2 by default (see DEFAULT_THROW_RANGE), so listing it unconditionally printed
+	# "Throw range 2 tiles" on potions, shields and breastplates alike — a default dressed up
+	# as a feature, which is worse than saying nothing.
+	if throw_range > DEFAULT_THROW_RANGE or item_type == ItemType.THROWABLE:
+		out.append(["Throw range", "%d tiles" % throw_range])
+	if is_shield or parry_ranged:
+		out.append(["Parries arrows", "yes"])
+	if dodge_ranged:
+		out.append(["Dodges arrows", "yes"])
+	if item_type == ItemType.WEAPON or item_type == ItemType.THROWABLE 			or item_type == ItemType.SHIELD:
+		out.append(["Durability", "broken" if broken else str(durability)])
+	return out
 
 
 func get_description() -> String:
@@ -269,6 +367,54 @@ func get_unequip_time() -> int:
 
 func is_quick_to_equip() -> bool:
 	return get_equip_time() <= EQUIP_QUICK
+
+
+func weapon_kind() -> String:
+	## "bow" | "hammer" | "axe" | "shield" | "blade" | "" (no shared model known).
+	##
+	## Lives here rather than on whatever happens to be drawing the item, because the floor,
+	## the hand and the inventory cell all have to answer it the same way — see
+	## display_model_path.
+	if item_type == ItemType.SHIELD or is_shield:
+		return "shield"
+	if item_type != ItemType.WEAPON and item_type != ItemType.THROWABLE:
+		return ""
+	var n := item_name.to_lower()
+	if n.find("bow") >= 0:
+		return "bow"
+	if n.find("hammer") >= 0:
+		return "hammer"
+	if n.find("axe") >= 0 or n.find("cleaver") >= 0:
+		return "axe"
+	# Anything else edged (sword, dagger, ...) shares the one blade model.
+	return "blade"
+
+
+func display_model_path() -> String:
+	## The art to show for this item, wherever it is being shown: the item's own model if it
+	## names one, otherwise the shared model for its kind of weapon. "" when neither applies and
+	## the caller should fall back to a flat icon.
+	if model_path != "":
+		return model_path
+	# Ammo names no model of its own ON PURPOSE. GroundItem builds a loose pile of one arrow
+	# per unit for a bundle lying on the floor, and it only reaches that branch while
+	# has_model() is false — setting model_path on the .tres would swap that pile for a single
+	# arrow. So the single arrow is named here instead, where the inventory cell can photograph
+	# it and the floor never sees it.
+	if item_type == ItemType.AMMO:
+		return "res://Assets/PolygonDungeon/Models/SM_Arrow_01.res"
+	match weapon_kind():
+		"bow":
+			return "res://assets/weapons/bow.fbx"
+		"hammer":
+			return "res://Assets/PolygonDungeon/Models/SM_Wep_Hammer_Small_01.res"
+		"axe":
+			return "res://Assets/PolygonDungeon/Models/SM_Wep_Goblin_Axe_Large_01.res"
+		"shield":
+			return "res://assets/weapons/Shield_1.obj"
+		"blade":
+			return "res://assets/models/kenney/mini-arena/weapon-sword.glb"
+	return ""
 
 
 func is_hand_item() -> bool:

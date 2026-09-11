@@ -184,36 +184,14 @@ func _set_size(s: Vector3) -> void:
 # a held one resolve to the same model.
 
 func _weapon_kind() -> String:
-	## "bow" | "hammer" | "axe" | "shield" | "blade" | "" (no model known)
-	if item_resource.item_type == ItemResource.ItemType.SHIELD or item_resource.is_shield:
-		return "shield"
-	if item_resource.item_type != ItemResource.ItemType.WEAPON \
-			and item_resource.item_type != ItemResource.ItemType.THROWABLE:
-		return ""
-	var n := item_resource.item_name.to_lower()
-	if n.find("bow") >= 0:
-		return "bow"
-	if n.find("hammer") >= 0:
-		return "hammer"
-	if n.find("axe") >= 0 or n.find("cleaver") >= 0:
-		return "axe"
-	# Anything else edged (sword, dagger, ...) shares the one blade model.
-	return "blade"
+	return item_resource.weapon_kind()
 
 
 func _get_item_model_path() -> String:
-	match _weapon_kind():
-		"bow":
-			return "res://assets/weapons/bow.fbx"
-		"hammer":
-			return "res://Assets/PolygonDungeon/Models/SM_Wep_Hammer_Small_01.res"
-		"axe":
-			return "res://Assets/PolygonDungeon/Models/SM_Wep_Goblin_Axe_Large_01.res"
-		"shield":
-			return "res://assets/weapons/Shield_1.obj"
-		"blade":
-			return "res://assets/models/kenney/mini-arena/weapon-sword.glb"
-	return ""
+	## Moved onto ItemResource so the inventory cell renders the same art the floor does —
+	## see ItemResource.display_model_path. Kept as a wrapper because the callers below read
+	## better for it.
+	return item_resource.display_model_path()
 
 
 func _center_mesh_on_origin(n: Node3D) -> void:

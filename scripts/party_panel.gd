@@ -92,7 +92,23 @@ func _add_slot(parent: Node, who: Node, style: int) -> void:
 	slot.set_script(PortraitSlotScript)
 	parent.add_child(slot)
 	slot.setup(who, style)
+	slot.clicked.connect(_on_slot_clicked)
 	_slots.append(slot)
+
+
+func _on_slot_clicked(who: Node) -> void:
+	## Take control of the clicked hero.
+	##
+	## Refused in combat, and by CombatManager rather than here: whose turn it is belongs to
+	## the clock, and a portrait that could hand the turn around mid-fight would let the player
+	## play the whole battle out of the initiative order. set_explorer answers "not while
+	## fighting" on its own, so this stays a plain forward.
+	##
+	## An enemy plate never gets here — those are built MOUSE_FILTER_IGNORE and receive no GUI
+	## input at all (see PortraitSlot.setup).
+	var cm := get_tree().current_scene.get_node_or_null("CombatManager")
+	if cm and cm.has_method("set_explorer"):
+		cm.set_explorer(who)
 
 
 func _members(player_controlled: bool) -> Array:

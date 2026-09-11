@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemResource" format=3]
+
+[ext_resource type="Script" uid="uid://56vniq8jwqqr" path="res://scripts/item_resource.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+item_name = "Reinforced Goblin Leather"
+item_type = 5
+equip_slot = 3
+armor_bonus = 2
+icon_rotation_override = true
+icon_rotation = Vector3(10, 22, 0)
+model_path = "res://assets/models/synty_armor/studded_harness.res"
+model_scale = 0.45
+model_ground_rotation = Vector3(0, 0, 0)

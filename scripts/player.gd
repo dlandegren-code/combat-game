@@ -114,10 +114,26 @@ func _process(_delta: float) -> void:
 
 const HOTBAR_KEYS := 10
 
+## Input action that passes control to the next hero while exploring. Guarded with
+## InputMap.has_action at the call site, so a project without the binding simply has no
+## party-switch key rather than throwing on every keypress.
+const CYCLE_PARTY_ACTION := "cycle_party"
+
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not can_act or is_moving:
 		return
+
+	# Switching between heroes, which only exists out of combat: in a fight, whose turn it is
+	# is the clock's business and not the player's. Handled on the ACTIVE character only —
+	# every other Player node has already returned above on can_act — so one key press cycles
+	# once rather than once per party member.
+	if InputMap.has_action(CYCLE_PARTY_ACTION) and event.is_action_pressed(CYCLE_PARTY_ACTION):
+		var cm := _combat_mgr()
+		if cm and cm.has_method("cycle_explorer"):
+			cm.cycle_explorer(1)
+		return
+
 	# The number keys drive hotbar SLOTS, not ability indices. The slots are reassignable, so
 	# "3" has to fire whatever the player dropped into the third cell.
 	for slot in range(HOTBAR_KEYS):
@@ -236,6 +252,33 @@ func _resolve_at(screen_pos: Vector2) -> Dictionary:
 				var refused = abilities[selected_action] if action_pinned else abilities[Action.ATTACK]
 				out.reason = refused.unavailable_reason(self)
 		return out
+
+	# Then fittings — a door leaf, and whatever else grows a picker — for the same reason:
+	# something you can work, under the pointer, beats the floor behind it.
+	#
+	# A door is the case that needs this. It answers to the grid square it SEALS, and for a
+	# doorway that square is on the far side of the wall and half a square off from the hole in
+	# the art, so "click the thing on that square" came out as clicking a patch of floor in the
+	# next room while clicking the door did nothing. The picker puts the target back on the
+	# door; the square still works, and is still what the rules use. See door.gd's header.
+	#
+	# Falls through when the fitting is out of reach or not this action's business, rather than
+	# refusing the click: the floor behind an open door's swung-aside leaf is a fair place to
+	# walk, and it would be strange for the leaf to be a hole in the battlefield.
+	var fitting_query := PhysicsRayQueryParameters3D.create(from, to)
+	fitting_query.collision_mask = LAYER_INTERACT
+	var fitting_result := space_state.intersect_ray(fitting_query)
+	if not fitting_result.is_empty():
+		var fitting: Node = _fitting_of(fitting_result.collider)
+		if fitting != null:
+			var fit_tile: Vector3 = _snap_to_grid((fitting as Node3D).global_position)
+			fit_tile.y = position.y
+			if _interactable_at(fit_tile) == fitting:
+				var fit_slot: int = _tile_action_for(fit_tile)
+				if fit_slot != NO_ACTION:
+					out.tile = fit_tile
+					out.slot = fit_slot
+					return out
 
 	var ground_query := PhysicsRayQueryParameters3D.create(from, to)
 	ground_query.collision_mask = LAYER_GROUND
@@ -385,6 +428,18 @@ func _handle_click(screen_pos: Vector2) -> void:
 	var ability = abilities[res.slot]
 	ActionCursorsScript.neutral()
 	_hide_indicator()
+
+	# Starting something is the other way exploration ends. Swing at a goblin and the room is a
+	# fight, whether or not anybody had noticed you — see CombatManager.raise_alarm, which lets
+	# this action finish as the opening blow and begins the order when it reports in.
+	#
+	# Sited here rather than in each hostile branch below because both of them (a swing in
+	# reach, and a walk-and-swing) come through this one call, and a third would too.
+	var foe = res.get("target")
+	if foe != null and is_instance_valid(foe) and _is_hostile(foe):
+		var cm := _combat_mgr()
+		if cm and cm.has_method("raise_alarm"):
+			cm.raise_alarm(self)
 
 	if res.slot == Action.MOVE:
 		_begin_action(Action.MOVE)
@@ -697,6 +752,20 @@ func _on_tile(node: Node3D, tile: Vector3) -> bool:
 	## squares — see Combatant._is_obstacle_at, which snaps for the same reason.
 	var cell: Vector3 = _snap_to_grid(node.global_position)
 	return absf(cell.x - tile.x) < 0.5 and absf(cell.z - tile.z) < 0.5
+
+
+func _fitting_of(collider: Object) -> Node:
+	## The interactable a pointer hit box belongs to, or null.
+	##
+	## Walked up the tree rather than read off the body, because a picker hangs wherever it has
+	## to hang to sit on the art — a door's rides the hinge so it swings with the leaf — and the
+	## thing that answers can_interact / interact is the node the whole fitting is built under.
+	var node := collider as Node
+	while node != null:
+		if node.is_in_group("interactables") and node is Node3D:
+			return node
+		node = node.get_parent()
+	return null
 
 
 func _interactable_at(tile: Vector3) -> Node:

@@ -10,6 +10,10 @@ class_name PortraitSlot
 ## The copy's AnimationPlayer is re-synced whenever the source changes clip, so
 ## the portrait still reacts when its owner attacks, gets hit or goes down.
 
+## The plate was clicked. Carries the combatant rather than nothing, so a listener does not
+## have to know which slot it wired up — PartyPanel connects several to one handler.
+signal clicked(who: Node)
+
 const UiScaleScript := preload("res://scripts/ui_scale.gd")
 
 ## Authored sizes, at UiScale.REFERENCE_HEIGHT. Everything actually drawn uses the scaled
@@ -119,7 +123,15 @@ func setup(who: Node, style: Style = Style.ALLY) -> void:
 	_label_h = roundi(LABEL_HEIGHT_BASE * _s)
 
 	custom_minimum_size = Vector2(_px.x, _px.y + _bar_h + _label_h)
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# An ally's portrait is a button: clicking it takes control of that hero while exploring
+	# (see PartyPanel). STOP rather than PASS on purpose — the click must be eaten here, or the
+	# battlefield underneath also reads it and the newly selected hero is immediately ordered
+	# to walk to whatever floor is behind the panel.
+	#
+	# Enemies stay IGNORE. There is nothing to do with an enemy's portrait, and a row of them
+	# across the top of the screen that quietly swallowed clicks would be a mystery.
+	mouse_filter = Control.MOUSE_FILTER_STOP if style == Style.ALLY \
+		else Control.MOUSE_FILTER_IGNORE
 
 	_build_active_glow()
 	_build_viewport()
@@ -131,6 +143,19 @@ func setup(who: Node, style: Style = Style.ALLY) -> void:
 	if combatant.has_signal("health_changed"):
 		combatant.health_changed.connect(_on_health_changed)
 	_refresh_hp()
+
+
+func _gui_input(event: InputEvent) -> void:
+	## Left click on the plate. Only reached on an ally slot, since an enemy's is IGNORE and
+	## never receives GUI input at all.
+	##
+	## accept_event() as well as the mouse_filter, because STOP alone keeps the click out of
+	## _unhandled_input but leaves it live for anything else listening at the GUI level.
+	if event is InputEventMouseButton and event.pressed \
+			and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+		if combatant != null and is_instance_valid(combatant):
+			clicked.emit(combatant)
+		accept_event()
 
 
 func _build_active_glow() -> void:

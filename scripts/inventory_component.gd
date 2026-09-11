@@ -515,13 +515,11 @@ func use_consumable(slot_index: int) -> bool:
 
 	var applied := false
 
-	# Heal effect
-	if item.heal_amount > 0 and character:
-		character.hp = min(character.hp + item.heal_amount, character.max_hp)
-		if character.has_method("_update_health_bar"):
-			character._update_health_bar()
-		if character.has_method("_show_action_text"):
-			character._show_action_text("+" + str(item.heal_amount) + " HP")
+	# Heal effect. Handed to Combatant.heal rather than done here: it clamps at max_hp, reports
+	# what was actually restored, plays the gesture and blooms. This used to add the hp inline
+	# and print the potion's full value even when most of it spilled.
+	if item.heal_amount > 0 and character and character.has_method("heal"):
+		character.heal(item.heal_amount)
 		applied = true
 
 	# Ammo effect

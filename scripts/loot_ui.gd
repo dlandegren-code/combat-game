@@ -23,7 +23,10 @@ extends CanvasLayer
 const ItemSlotScript := preload("res://scripts/item_slot.gd")
 const UiScaleScript := preload("res://scripts/ui_scale.gd")
 
-const CELL_BASE := 54.0
+## Cell edge in pixels at the reference height. Bumped from 54: between a thinner
+## inset (see ItemSlot.INSET) and a larger cell, an item is now drawn about half again
+## as big as it was, which is what it needed to be legible against this frame art.
+const CELL_BASE := 72.0
 const GAP_BASE := 6.0
 const PAD_BASE := 14.0
 const TITLE_BASE := 34.0

@@ -61,6 +61,12 @@ const BLOCK_HEIGHT := 2.6
 const BLOCK_DEPTH := 0.5
 
 const LAYER_OBSTACLE := 4          # matches Combatant.LAYER_OBSTACLE
+const LAYER_INTERACT := 16         # matches Combatant.LAYER_INTERACT
+
+## Least thickness of the pointer hit box around the leaf, in world units. The leaf mesh is a
+## plank a couple of centimetres thick, which is a thin thing to ask a player to put a mouse on
+## when the camera happens to be looking down its edge.
+const PICK_DEPTH := 0.4
 
 var is_open := false
 
@@ -79,7 +85,9 @@ var _mesh_scale := 1.0
 var _leaf_offset_x := 0.0
 
 var _hinge: Node3D
+var _leaf: MeshInstance3D
 var _body: StaticBody3D
+var _picker: StaticBody3D
 var _tween: Tween
 
 
@@ -107,6 +115,7 @@ static func build(parent: Node, seal_at: Vector3, leaf_offset_x: float, yaw_deg:
 func _ready() -> void:
 	add_to_group("interactables")
 	_build_leaf()
+	_build_picker()
 	_build_blocker()
 	_apply_blocking()
 
@@ -209,6 +218,41 @@ func _build_leaf() -> void:
 		mi.material_override = load(_material_path)
 	mi.scale = Vector3(_mesh_scale, _mesh_scale, _mesh_scale)
 	_hinge.add_child(mi)
+	_leaf = mi
+
+
+func _build_picker() -> void:
+	## A hit box shaped like the leaf, on the pointer-only layer, so a click LANDS ON THE DOOR.
+	##
+	## The alternative — and what this replaces — was clicking the floor square the door seals.
+	## For a doorway that square is a poor stand-in for the door: it is on the far side of the
+	## wall, half a square off from the hole in the art (see the header), and while the door is
+	## shut it is a square nobody may walk on. So the only way to open the door was to click a
+	## piece of floor inside the next room that looks like it has nothing to do with the door,
+	## and the door itself — the obvious thing to click — did nothing at all.
+	##
+	## Hung off the hinge rather than the door, so it swings with the leaf and an open door is
+	## clickable where it now stands. On LAYER_INTERACT alone: this is a target for the mouse
+	## and must never be one for a step, an arrow or a sight line — _build_blocker owns that,
+	## and it is what gets switched off when the door opens. This stays on either way, because
+	## a door you cannot shut again is worse than one you cannot open.
+	if _leaf == null or _leaf.mesh == null:
+		return
+	var aabb := _leaf.mesh.get_aabb()
+	_picker = StaticBody3D.new()
+	_picker.name = "Picker"
+	_picker.collision_layer = LAYER_INTERACT
+	_picker.collision_mask = 0
+	var cs := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(
+		aabb.size.x * _mesh_scale,
+		aabb.size.y * _mesh_scale,
+		maxf(aabb.size.z * _mesh_scale, PICK_DEPTH))
+	cs.shape = box
+	cs.position = aabb.get_center() * _mesh_scale
+	_picker.add_child(cs)
+	_hinge.add_child(_picker)
 
 
 func _build_blocker() -> void:

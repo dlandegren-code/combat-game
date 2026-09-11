@@ -9,3 +9,7 @@ item_type = 8
 key_id = "dungeon_chest"
 durability = 0
 throw_range = 0
+model_path = "res://Assets/PolygonDungeon/Models/SM_Prop_Skeleton_Slave_Shackles_01.res"
+model_material_path = "res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres"
+model_scale = 0.3
+model_ground_rotation = Vector3(0, 0, 0)

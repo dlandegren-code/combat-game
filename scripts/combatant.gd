@@ -6,14 +6,25 @@ class_name Combatant
 ## their control-specific behaviour (input vs AI).
 
 const GRID_SIZE := 2.0
+## Fallback play bound, used only when there is no DungeonRoom to ask — see _is_in_arena.
+## A square, which is what "the arena" used to mean, back when the level WAS one square room.
 const ARENA_MIN := -14.0
 const ARENA_MAX := 14.0
+
+## Cap on a single move while exploring. Not a budget — there is no clock out of combat — just
+## a ceiling that keeps the BFS bounded. See get_move_range.
+const EXPLORE_MOVE_RANGE := 40
 
 ## Collision layers used by ray queries.
 const LAYER_GROUND := 1
 const LAYER_ENEMY := 2
 const LAYER_OBSTACLE := 4
 const LAYER_PLAYER := 8              ## player-controlled combatants (assigned in _ready)
+## Pointer-only layer: bodies that exist so a fitting can be CLICKED where it is drawn, and for
+## nothing else. Deliberately absent from every other mask in the game — a picker must not block
+## a step, stop an arrow or break a line of sight, or it would be scenery instead of a hit box.
+## See Door._build_picker and Player._resolve_at.
+const LAYER_INTERACT := 16
 ## Line-of-sight mask. MUST contain both combatant layers: _has_line_of_sight_from asks
 ## "did the ray reach the target before anything else", so the target's own layer has to
 ## be in the mask or the ray sails straight through it and the check can never pass.
@@ -198,6 +209,8 @@ var move_range: int = 4
 @export var ranged_cost: int = 3
 @export var ammo: int = 0
 @export var max_ammo: int = 0
+## What the arrows still in a quiver become when their owner dies — see _gather_spare_arrows.
+const ARROW_BUNDLE_ITEM := "res://resources/items/arrow_bundle.tres"
 @export var throw_skill: int = 3        ## used for thrown weapon attacks
 ## One time unit — a throw is a single quick action, cheaper than a bow shot (which has to
 ## be nocked and drawn) and cheaper than a melee exchange. Note you also give up the weapon,
@@ -260,6 +273,9 @@ var next_turn_at: int = 0
 ## CombatManager.turn_done stamps it; defense_debt() subtracts it back out. See there for why.
 var action_turn_at: int = 0
 var is_prone: bool = false
+## An animation held on purpose while nothing else is happening — see hold_pose. Empty means
+## the usual walk/idle driver has the character.
+var _held_pose := ""
 
 var is_moving := false
 var target_position := Vector3.ZERO
@@ -298,6 +314,12 @@ const HEAD_CLEARANCE := 0.25
 ## And between the bar and the nameplate above it. The bar is about 0.11 tall, so this leaves
 ## them near enough to read as one label.
 const PLATE_OVER_BAR := 0.32
+
+## How far out a part of a helmet has to reach to count as the part that WRAPS the head, rather
+## than the part that only decorates it, as a fraction of the helmet's own half-width. A brow
+## band reaches the full width and a crest does not, and this is the line between them — see
+## _model_core, its one caller.
+const HELMET_CORE_WIDTH := 0.6
 
 ## The stance this character was configured with, captured before play starts. Restored when
 ## Protection is broken — see _lay_prone. Never Protection itself: that one has to be chosen.
@@ -345,11 +367,20 @@ const SwordSwingScript := preload("res://scripts/fx/sword_swing.gd")
 const ParrySparksScript := preload("res://scripts/fx/parry_sparks.gd")
 const WeaponSfxScript := preload("res://scripts/fx/weapon_sfx.gd")
 const HealthBar3DScript := preload("res://scripts/health_bar_3d.gd")
+const HealBurstScript := preload("res://scripts/fx/heal_burst.gd")
 const VoiceSfxScript := preload("res://scripts/fx/voice_sfx.gd")
 
 var _weapon_socket = null
 var _shield_socket = null
 var _helmet_socket = null
+## The head a helmet has to fit, as an AABB in HelmetSocket space. Measured once by
+## _measure_head, before anything is hanging off the bone to be measured as part of it. A zero
+## size means this rig had no head mesh to measure, and helmets are then placed exactly as the
+## item asks — see _fit_helmet_to_head.
+var _head_bounds := AABB()
+## This rig's head geometry, found once at setup. Switched off while a helmet is worn — see
+## _show_bare_head.
+var _head_meshes: Array = []
 ## Torso-mounted socket a TWO-HANDED weapon hangs off, so its angle is fixed relative to the
 ## chest and both arms can be posed onto it. Null when the rig has no torso bone, in which
 ## case two-handers fall back to the one-handed right-fist placement.
@@ -526,13 +557,17 @@ func _readd_equipment_bonuses() -> void:
 		physical_resistance += item.resistance_bonus
 
 
-func _lay_prone() -> void:
+func _lay_prone(announce: bool = true) -> void:
 	## Get knocked down (tripped / shoved off balance): drop to the prone pose. Getting up
 	## is a separate action charged at the unit's next turn (_stand_up_if_prone).
+	##
+	## `announce` is false for a character lying down of its own accord with nobody watching —
+	## see lie_down_quietly. Being knocked off your feet is news; having a doze is not.
 	if is_prone:
 		return
 	is_prone = true
-	_show_condition_text("PRONE!")
+	if announce:
+		_show_condition_text("PRONE!")
 	# Protection is a stance you hold on your feet. Knocked off them, the character drops back
 	# to whatever they fight as normally rather than nominally guarding a line from the floor.
 	#
@@ -564,6 +599,25 @@ func toggle_prone() -> void:
 		_update_prone_anim()
 	else:
 		_lay_prone()
+
+
+func lie_down_quietly(down: bool) -> void:
+	## Lie down, or get up, with no caption and nothing charged: the idle-time twin of
+	## toggle_prone.
+	##
+	## Quiet because a goblin dozing in a corner before anybody has walked into the room is not
+	## a combat event, and "PRONE!" floating over it reads as one. Uncharged because there is no
+	## clock in exploration to charge — see CombatManager.is_exploring — while the same goblin
+	## getting up once the alarm goes IS billed, by _stand_up_if_prone on its first turn, which
+	## is the price of having been caught lying down.
+	if is_prone == down:
+		return
+	if down:
+		_lay_prone(false)
+		return
+	is_prone = false
+	_update_health_bar()
+	_update_prone_anim()
 
 
 func _stand_up_if_prone() -> void:
@@ -638,6 +692,10 @@ func _setup_sockets() -> void:
 	var skeleton: Skeleton3D = model.find_child("Skeleton3D", true, false) as Skeleton3D
 	if not skeleton:
 		return
+	# Before the sockets exist, so a helmet already hanging off one can never be measured as
+	# part of the head it is supposed to fit.
+	_head_meshes = _find_head_meshes(skeleton)
+	_head_bounds = _measure_head(skeleton, _head_meshes)
 	# Find existing BoneAttachment3D nodes from the wrapper scene
 	_weapon_socket = skeleton.find_child("WeaponSocket", false, false) as BoneAttachment3D
 	_shield_socket = skeleton.find_child("ShieldSocket", false, false) as BoneAttachment3D
@@ -659,6 +717,238 @@ func _setup_sockets() -> void:
 		_helmet_socket.bone_name = "head"
 		skeleton.add_child(_helmet_socket)
 	_setup_two_handed_grip(skeleton)
+
+
+func _find_head_meshes(skeleton: Skeleton3D) -> Array:
+	## This rig's head geometry, by mesh name — which is how these rigs ship a head (a separate
+	## "head-mesh" under the skeleton), and the same lookup tools/build_soldier_helmet.gd uses
+	## to cut one up.
+	var out: Array = []
+	var meshes: Array = []
+	_find_mesh_instances(skeleton, meshes)
+	for m in meshes:
+		var mi := m as MeshInstance3D
+		if mi.mesh != null and String(mi.name).to_lower().find("head") >= 0:
+			out.append(mi)
+	return out
+
+
+func _measure_head(skeleton: Skeleton3D, heads: Array) -> AABB:
+	## The head's own bounds in head-bone space — what a helmet has to sit on. A zero AABB for a
+	## rig with no head bone or no head mesh, which the caller reads as "do not fit".
+	var bone := skeleton.find_bone("head")
+	if bone < 0:
+		return AABB()
+	var to_bone := skeleton.get_bone_global_pose(bone).affine_inverse()
+	var out := AABB()
+	var first := true
+	for m in heads:
+		var mi := m as MeshInstance3D
+		var a: AABB = to_bone * (_xform_within(mi, skeleton) * mi.mesh.get_aabb())
+		out = a if first else out.merge(a)
+		first = false
+	return out
+
+
+func _show_bare_head(shown: bool) -> void:
+	## A helmet REPLACES the head's surface rather than covering it.
+	##
+	## Geometry cannot do that job on its own, and four rounds of trying say so. This helmet is
+	## a human-shaped shell and these rigs have a cube for a head, so whatever the scale and
+	## seating, some corner of the cube is outside the shell: fitted to cover the face it left
+	## the back of the head bare, and made deep enough to cover the back it sat behind the head
+	## instead. Measured, the shell's rear wall passes THROUGH the skull at ear height, 0.08 to
+	## 0.11 in FRONT of the head's own back face — which is scalp showing from behind, at any
+	## placement.
+	##
+	## So the head is switched off while a helmet is on, which is what the split it was built
+	## with was always for: tools/build_soldier_helmet.gd cut the soldier's head into a helmet
+	## and a repainted bare skull so that the helmet could come OFF, and the skull is the
+	## helmetless case. Nothing is lost that a helmet was not hiding anyway — and see
+	## _show_helmet_interior for what is behind the visor once the face is gone.
+	for m in _head_meshes:
+		if is_instance_valid(m):
+			(m as MeshInstance3D).visible = shown
+
+
+func _show_helmet_interior(model: Node3D) -> void:
+	## Draw a worn helmet from the inside as well as the outside.
+	##
+	## With the head switched off there is nothing behind the visor, and Godot culls back faces:
+	## every gap in the grille would look straight through the character at the dungeon behind
+	## it. Double-sided, those gaps look into the helmet instead, which comes out dark — the
+	## faces they land on are pointing away from the light — and a dark slot is what a visor is.
+	##
+	## On a COPY of the material, never the pack's own: one material is shared by every
+	## character in the set, and flipping it there would turn the goblins inside out too.
+	var meshes: Array = []
+	_find_mesh_instances(model, meshes)
+	for m in meshes:
+		var mi := m as MeshInstance3D
+		var flipped := mi.get_active_material(0)
+		if flipped == null:
+			continue
+		var copy := flipped.duplicate() as BaseMaterial3D
+		if copy == null:
+			continue
+		copy.cull_mode = BaseMaterial3D.CULL_DISABLED
+		mi.material_override = copy
+
+
+func _xform_within(node: Node3D, root: Node3D) -> Transform3D:
+	## `node`'s transform relative to `root`, EXCLUDING root's own — identity when they are the
+	## same node.
+	var t := Transform3D.IDENTITY
+	var n: Node3D = node
+	while n != null and n != root:
+		t = n.transform * t
+		n = n.get_parent() as Node3D
+	return t
+
+
+func _model_mesh_xform(mi: MeshInstance3D, model: Node3D) -> Transform3D:
+	## A mesh's place inside an item model, in socket axes: the item's own rotation, then the
+	## mesh's own offset within the model, and NOT the scale or offset instantiate_model left on
+	## the top node — both of which a fit is about to replace.
+	return Transform3D(model.basis.orthonormalized(), Vector3.ZERO) * _xform_within(mi, model)
+
+
+func _model_bounds(model: Node3D) -> AABB:
+	## Everything the model is, as one box in socket axes.
+	var meshes: Array = []
+	_find_mesh_instances(model, meshes)
+	var out := AABB()
+	var first := true
+	for m in meshes:
+		var mi := m as MeshInstance3D
+		if mi.mesh == null:
+			continue
+		var a: AABB = _model_mesh_xform(mi, model) * mi.mesh.get_aabb()
+		out = a if first else out.merge(a)
+		first = false
+	return out
+
+
+func _model_core(model: Node3D, bounds: AABB) -> AABB:
+	## The bounds of the part of a helmet that WRAPS a head, as against the part that merely
+	## decorates it. Empty when there is nothing to measure, which the caller reads as "no
+	## separate depth fit".
+	##
+	## Told apart by width, because that is what tells them apart: a brow band and a dome are as
+	## wide as the helmet gets, while a crest or a plume is a narrow strip laid along it. So the
+	## core is every vertex out past HELMET_CORE_WIDTH of the half-width — which on the Synty
+	## helm keeps a dome reaching 0.126 either side of the centreline and drops a crest that
+	## never passes 0.068, while that crest is carrying 37% of the whole model's depth.
+	##
+	## Vertices rather than bounding boxes, because a box drawn round a helmet AND its crest
+	## cannot afterwards be asked which part of it was the crest. Read once, when the helmet is
+	## put on.
+	var limit: float = bounds.size.x * 0.5 * HELMET_CORE_WIDTH
+	var mid_x: float = bounds.get_center().x
+	var meshes: Array = []
+	_find_mesh_instances(model, meshes)
+	var out := AABB()
+	var first := true
+	for m in meshes:
+		var mi := m as MeshInstance3D
+		if mi.mesh == null:
+			continue
+		var t: Transform3D = _model_mesh_xform(mi, model)
+		for si in range(mi.mesh.get_surface_count()):
+			var arrays: Array = mi.mesh.surface_get_arrays(si)
+			if arrays.is_empty() or arrays[Mesh.ARRAY_VERTEX] == null:
+				continue
+			for v in (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array):
+				var p: Vector3 = t * v
+				if absf(p.x - mid_x) < limit:
+					continue
+				out = AABB(p, Vector3.ZERO) if first else out.expand(p)
+				first = false
+	return out
+
+
+func _fit_helmet_to_head(model: Node3D, item: ItemResource) -> void:
+	## Size and seat a helmet on the head it is going on, instead of trusting the item's own
+	## numbers to land it.
+	##
+	## Two coordinate systems meet at this socket and neither is negotiable. A helmet mesh is
+	## cut off whatever character the art pack modelled it on — the Synty knight stands 1.87
+	## units tall with his helm up at y=1.65 — while the socket is a bone on OUR rig, where a
+	## head is about a third of a unit across and sits at the bone's origin. model_scale cannot
+	## bridge that, because it is also the size the item is drawn at on the floor and in the
+	## bag, and one number cannot be both: at the 0.3 that suits the floor, the knight's helm
+	## arrived scaled to 47% and a clear two head-heights above the crown.
+	##
+	## So the floor and the bag keep model_scale, and the head measures for itself.
+	##
+	## SCALE makes the helmet exactly as WIDE as the head. Width against width, and not the
+	## longest side of either: the helmet's longest side is a crest trailing behind the skull,
+	## and scaling that to fit a head is what left a thimble on top of one.
+	##
+	## Width is the measurement that decides whether this reads as a helmet at all, because it
+	## is the head's whole silhouette from the front. Matching the head's DEPTH instead — on the
+	## theory that a skull is as wide as it is deep, and that the head's own width is inflated by
+	## ears a helmet need not cover — came out a quarter too narrow and sat on the head like a
+	## cap with the ears and temples still showing. These rigs have a CUBE for a head, wider
+	## than it is deep, and the ear tabs are part of its outline rather than something a helmet
+	## can be excused from covering.
+	##
+	## DEPTH is then fitted SEPARATELY, and it has to be: no single number puts this helmet on
+	## this head. The head is a cube a third wider than it is deep; the helmet is human-shaped
+	## and half again deeper than it is wide, a 2:1 disagreement. Scaled by one number, matching
+	## the width leaves it three times too deep — the dome and crest trailing away behind a
+	## forehead that pokes out the front of them, which is what "too far back" was — and
+	## matching the depth leaves it half the head's width, which was "too small".
+	##
+	## So the part of the helmet that WRAPS the head is squashed to the head's own depth, and
+	## the crest comes along for the ride and trails whatever is left. See _model_core for how
+	## the one is told from the other. The helmet is a squashed copy of itself from the side, by
+	## about half; on rigs whose heads are boxes that is what fitting one means, and the front
+	## view — the one the player is looking at — keeps the proportions the artist drew.
+	##
+	## SEATING puts the two vertical CENTRES together — centres, not bottoms.
+	##
+	## Sitting the helmet's lowest point on the head's lowest point is the obvious rule and it
+	## rides far too high, because this helmet is twice the height of the head: crest above,
+	## chin guard below, so resting it on the jaw lifts the eye slit clear over the crown.
+	## Measured, the slit landed at y=0.340 with the head's eyes at 0.113 — a visor above the
+	## top of the head. Centring lands it at 0.128, inside the eye band of 0.058..0.168.
+	##
+	## Both of those anchors were measured off the art rather than guessed: the slit is the ten
+	## near-black triangles across the front of the helm and the eyes are the fourteen on the
+	## head, each found by sampling that pack's atlas through the triangle's own UV — the trick
+	## tools/build_synty_armor.gd uses to tell goblin hide from the straps worn over it. They
+	## are not consulted here, because opening a texture to hang a hat would be a poor trade;
+	## they are what says this rule is right, and what to re-measure with if a helmet looks off.
+	##
+	## In z the WRAPPING part is front-aligned on the face, which — now that it is also as deep
+	## as the head — puts it around the head instead of behind it. The visor comes out flush
+	## with the face it covers rather than floating ahead of it, and what is left over goes
+	## backwards and upwards, which is where a crest belongs and what the nameplate re-measures
+	## the crown for.
+	##
+	## model_hand_position stays live on top of the fit, as a nudge for an item that wants one.
+	if _head_bounds.size == Vector3.ZERO:
+		return
+	var bounds: AABB = _model_bounds(model)
+	if bounds.size.x < 0.001 or _head_bounds.size.x <= 0.0:
+		return
+	var s: float = _head_bounds.size.x / bounds.size.x
+	# The squash has to line up with the helmet's own front-to-back axis, and model.scale is
+	# applied before the node's rotation. A helmet asking to be turned in the socket would get
+	# it along the wrong axis, so that one keeps a plain uniform scale. None asks yet.
+	var core: AABB = _model_core(model, bounds)
+	var sz: float = s
+	if core.size.z > 0.001 and _head_bounds.size.z > 0.0 \
+			and item.model_hand_rotation.is_zero_approx():
+		sz = _head_bounds.size.z / core.size.z
+	else:
+		core = bounds
+	model.scale = Vector3(s, s, sz)
+	model.position = Vector3(
+		-bounds.get_center().x * s,
+		_head_bounds.get_center().y - bounds.get_center().y * s,
+		_head_bounds.end.z - core.end.z * sz) + item.model_hand_position
 
 
 func _setup_two_handed_grip(skeleton: Skeleton3D) -> void:
@@ -707,6 +997,8 @@ func _update_equipment_visuals() -> void:
 	_refresh_socket(_weapon_socket, null if use_grip else main)
 	_refresh_socket(_shield_socket, null if two_handed else off)
 	_refresh_socket(_helmet_socket, helmet_item)
+	# The helmet does not sit over the head, it stands in for it — see _show_bare_head.
+	_show_bare_head(helmet_item == null)
 
 
 func _refresh_grip_socket(item: ItemResource) -> void:
@@ -755,6 +1047,11 @@ func _refresh_socket(socket, item: ItemResource) -> void:
 			model_node.position = item.model_hand_position
 			model_node.rotation_degrees = item.model_hand_rotation
 			_apply_offhand_mirror(model_node, socket, item)
+			# A hand is a hand whatever it holds, so a weapon lands where the item says. A head
+			# is a measurable thing a helmet has to FIT, so a helmet is fitted to it instead.
+			if socket == _helmet_socket:
+				_fit_helmet_to_head(model_node, item)
+				_show_helmet_interior(model_node)
 			socket.add_child(model_node)
 			return
 	# Otherwise fall back to the name/type-based lookup below.
@@ -878,31 +1175,43 @@ func _apply_offhand_mirror(node: Node3D, socket, item: ItemResource) -> void:
 	node.rotation_degrees = r
 
 
-func _step_blocked_by_wall(from_tile: Vector3, to_tile: Vector3) -> bool:
+func _step_blocked_by_wall(from_tile: Vector3, to_tile: Vector3,
+		ignore: Array[RID] = []) -> bool:
 	## True if a wall (obstacle-layer collision) lies on the edge between two adjacent
 	## tiles. Used per-step by _find_path so routes can't cross walls but pass freely
 	## through the collision-free doorway. Combatants (layer 2) are ignored here.
+	##
+	## `ignore` drops named bodies from the cast, and exists for one caller: _is_side_solid
+	## needs to know whether a WALL seals an edge while a pillar happens to be standing in
+	## the cell beyond it. See there — nothing else should need it.
 	var space_state := get_world_3d().direct_space_state
 	var from_pos := Vector3(from_tile.x, position.y + EYE_HEIGHT, from_tile.z)
 	var to_pos := Vector3(to_tile.x, position.y + EYE_HEIGHT, to_tile.z)
 	var query := PhysicsRayQueryParameters3D.create(from_pos, to_pos)
 	query.collision_mask = LAYER_OBSTACLE
-	query.exclude = [get_rid()]
+	var excluded: Array[RID] = [get_rid()]
+	excluded.append_array(ignore)
+	query.exclude = excluded
 	return not space_state.intersect_ray(query).is_empty()
 
 
 func _is_corner_blocked(from_tile: Vector3, to_tile: Vector3) -> bool:
-	## True when a DIAGONAL step would squeeze through the corner-to-corner gap between two
-	## solid cells — i.e. BOTH cells the diagonal passes between are blocked. Rounding a
-	## single obstacle's corner (one side free) stays legal, so units keep their diagonal
-	## mobility. Cardinal steps always return false.
+	## True when a DIAGONAL step would squeeze between two cells that are SEALED — filled
+	## edge to edge, the way a wall or the throne's slab is. Rounding a single obstacle's
+	## corner (one side free) stays legal, so units keep their diagonal mobility. Cardinal
+	## steps always return false.
 	##
-	## The per-step wall ray can't catch this on its own: it is cast at eye height, and the
-	## arena's pillars are deliberately short (they grant partial cover rather than blocking
-	## a shot — see _has_partial_cover_from), so the ray flies straight over them. Worse, the
-	## pillars sit in diagonally-touching PAIRS — (5,3)+(3,5) and its three mirrors — so a
-	## unit cutting that corner walked visibly between and through the pair. Testing the two
-	## orthogonal cells is height-independent and fixes it.
+	## The per-step wall ray can't catch this on its own. Cast between the two cell centres,
+	## a diagonal ray passes a comfortable 1.4 units clear of anything standing in either
+	## flanking cell, so it reports a gap even where two slabs meet at their corners with no
+	## gap at all. Testing the two flanking cells instead is what closes that.
+	##
+	## What counts as sealed is the flanking cell's own business, NOT merely whether
+	## something stands in it — see _is_side_solid. A pillar owns its square and still leaves
+	## room to walk past, which is the case this used to get wrong: the eight arena pillars
+	## sit in diagonally-touching PAIRS — (5,3)+(3,5) and its three mirrors — and cutting
+	## between a pair was refused even though the gap between the two stones is nearly two
+	## units of open floor.
 	##
 	## Only static geometry counts here; units still slip diagonally past each other.
 	if abs(to_tile.x - from_tile.x) < 0.5 or abs(to_tile.z - from_tile.z) < 0.5:
@@ -913,7 +1222,71 @@ func _is_corner_blocked(from_tile: Vector3, to_tile: Vector3) -> bool:
 
 
 func _is_side_solid(from_tile: Vector3, side: Vector3) -> bool:
-	return _is_obstacle_at(side) or _step_blocked_by_wall(from_tile, side)
+	## Whether the cell at `side` SEALS the corner that a diagonal step cuts past.
+	##
+	## A different question from _is_obstacle_at, which asks whether you may stand there, and
+	## the distinction is the whole point: a pillar is half a metre of stone in the middle of
+	## a two-metre square. It owns the square — you cannot stand in it — but it does not close
+	## it, so two pillars meeting at their corners leave a gap a unit walks straight through.
+	## A wall, a throne or a stone slab does fill its square, and those still seal.
+	##
+	## Obstacles declare which they are by answering fills_cell(); see _obstacle_fills_cell
+	## for what silence means.
+	var slim: Array[RID] = []
+	for o in _obstacles_at(side):
+		if _obstacle_fills_cell(o):
+			return true
+		_collect_body_rids(o, slim)
+	# Nothing in the cell closes it, so only geometry on the EDGE can — a wall between here
+	# and there, or a shut door. The slim props found above are dropped from that cast: a
+	# pillar stands dead centre of its cell, so a ray aimed at that centre spears it every
+	# time and would otherwise be mistaken for the wall it is standing in front of.
+	return _step_blocked_by_wall(from_tile, side, slim)
+
+
+func _collect_body_rids(node: Node, out: Array[RID]) -> void:
+	## Every physics body at or under `node`, for excluding a prop from a ray.
+	##
+	## Recursive rather than just testing `node` itself, because an obstacle is not reliably
+	## its own collider: a pillar IS a StaticBody3D, but the props RoomBuilder places are a
+	## MeshInstance3D with the body hung underneath, and a LootContainer keeps its Blocker as
+	## a child. Ask only the group member itself and the next slim prop to opt out would be
+	## excluded in name only, its collider still spearing every ray aimed at its cell.
+	if node is CollisionObject3D:
+		out.append((node as CollisionObject3D).get_rid())
+	for child in node.get_children():
+		_collect_body_rids(child, out)
+
+
+func _obstacle_fills_cell(o: Node) -> bool:
+	## Whether an obstacle occupies its whole square or merely stands in the middle of it.
+	##
+	## Silence means it fills. That is the conservative answer and it is the right default for
+	## everything that has never thought about the question — the reserved cells behind the
+	## throne, a wall prop, a plain marker — so only the slim things have to opt out, and
+	## forgetting to opt out costs a little mobility rather than letting units walk through
+	## scenery.
+	if o.has_method("fills_cell"):
+		return o.fills_cell()
+	return true
+
+
+func _obstacles_at(tile: Vector3) -> Array:
+	## Every member of the "obstacles" group whose cell is `tile`. The snapping matches
+	## _is_obstacle_at exactly — an obstacle is placed at a position, not at a cell, and the
+	## two have to agree on which cell that lands in.
+	var out: Array = []
+	for o in get_tree().get_nodes_in_group("obstacles"):
+		if not is_instance_valid(o) or not (o is Node3D):
+			continue
+		var obs: Node3D = o
+		var obs_tile := Vector3(
+			(floor(obs.position.x / GRID_SIZE) + 0.5) * GRID_SIZE,
+			tile.y,
+			(floor(obs.position.z / GRID_SIZE) + 0.5) * GRID_SIZE)
+		if obs_tile.distance_to(tile) < 0.5:
+			out.append(obs)
+	return out
 
 
 func _is_hostile(other: Node) -> bool:
@@ -1055,7 +1428,12 @@ func _find_path(from_tile: Vector3, to_tile: Vector3, max_steps: int = -1,
 			if visited.has(k):
 				continue
 			var is_goal: bool = nxt.distance_to(to_tile) < 0.5
-			if not is_goal and _get_combatant_at(nxt, self) != null:
+			# Where somebody stands, and — see _claimed_by_mover — where somebody walking is
+			# going to be. Routing through a square another unit has already claimed is what
+			# let two idle enemies cross the same square and walk through one another; in
+			# combat, where one unit moves at a time, there is never a claim to trip over.
+			if not is_goal and (_get_combatant_at(nxt, self) != null
+					or _claimed_by_mover(nxt, self)):
 				continue
 			if not _step_open(cur, nxt, doors_openable):
 				continue
@@ -1328,7 +1706,13 @@ func get_move_range() -> int:
 	## anything at all.
 	##
 	## Every range check goes through here rather than reading move_range directly, so the
-	## penalty applies to the move indicator, the reachability test and the AI alike.
+	## penalty applies to the move indicator, the reachability test and the AI alike — and so
+	## the exploration case below lands in all three at once.
+	if is_player_controlled and _exploring():
+		# Out of combat there is no clock, so rationing steps measures nothing. A hero walks as
+		# far as the floor goes, in one click. EXPLORE_MOVE_RANGE is a cap only so the BFS
+		# stays bounded, and it sits under _find_path's own 50-step ceiling.
+		return EXPLORE_MOVE_RANGE
 	if not is_guarding():
 		return move_range
 	@warning_ignore("integer_division")
@@ -1374,6 +1758,32 @@ func _has_line_of_sight_from(from_tile: Vector3, target: Node) -> bool:
 	if result.is_empty():
 		return false
 	return result.collider == target
+
+
+func heal(amount: int) -> void:
+	## Put hit points back, and show it.
+	##
+	## THE one place hp goes up, the way take_damage is the one place it goes down. A potion
+	## goes through here, and so will a healing spell, a shrine or a night's rest — none of
+	## which will have to be taught to bloom, animate or make a noise.
+	##
+	## A heal that would overflow is clamped and reports what was ACTUALLY restored: "+8 HP" on
+	## a character missing two is a lie about the potion you just spent.
+	if not is_alive or amount <= 0:
+		return
+	var before: int = hp
+	hp = mini(hp + amount, max_hp)
+	var gained: int = hp - before
+	if gained <= 0:
+		_show_action_text("Already whole")
+		return
+	_show_action_text("+%d HP" % gained)
+	_update_health_bar()
+	# The gesture: a hand raised to the mouth or held out. The rig has no drink or cast clip,
+	# and "interact" is the nearest thing to either — it is what Pick Up borrows too.
+	_play_attack_anim("interact-right")
+	HealBurstScript.bloom(
+		get_parent(), global_position + Vector3(0, EYE_HEIGHT, 0), get_feet_y())
 
 
 func take_damage(amount: int, attacker_skill: int = 0, is_ranged: bool = false,
@@ -1699,6 +2109,17 @@ func _combat_mgr() -> Node:
 	return p.get_node_or_null("CombatManager") if p else null
 
 
+func _exploring() -> bool:
+	## Whether the party is walking the dungeon rather than fighting in it. The manager owns
+	## the mode; nothing here keeps a copy of it, because a stale copy of which mode you are in
+	## is the one bug this would not survive.
+	##
+	## Answers false with no manager at all, so a combatant dropped into a bare test scene
+	## behaves as it always did rather than gaining unlimited movement.
+	var cm := _combat_mgr()
+	return cm != null and cm.has_method("is_exploring") and cm.is_exploring()
+
+
 func _charge_defense_cost() -> void:
 	var combat_mgr := _combat_mgr()
 	if combat_mgr:
@@ -1744,6 +2165,21 @@ func is_defense_strained() -> bool:
 
 
 func _is_in_arena(tile: Vector3) -> bool:
+	## Is there dungeon floor under this square?
+	##
+	## Asked by the three things that need somewhere to PUT a unit or an object rather than a
+	## route to walk: a shove's landing square (_apply_push), the archer's choice of firing
+	## position, and where a thrown weapon comes to rest. Movement does not consult it at all —
+	## _find_path is bounded by walls, which is why the party can already walk through the door.
+	##
+	## It used to be the ±14 square in the constants above, and that square predated the room
+	## through the north door: the room starts at z = 16, so every square of it read as off the
+	## board. A shove in there would have been scored as a shove into the void. The floor plan
+	## is DungeonRoom's business, so it is asked, and the square is kept only as the answer for
+	## a scene that has no DungeonRoom in it.
+	var room := get_parent().get_node_or_null("DungeonRoom") if get_parent() else null
+	if room != null and room.has_method("is_floor_at"):
+		return room.is_floor_at(tile.x, tile.z)
 	return tile.x >= ARENA_MIN and tile.x <= ARENA_MAX and tile.z >= ARENA_MIN and tile.z <= ARENA_MAX
 
 
@@ -1778,12 +2214,35 @@ func _is_tile_occupied_by_others(tile: Vector3, exclude: Node = null) -> bool:
 			continue
 		if c._snap_to_grid(c.position).distance_to(tile) < 0.5:
 			return true
-		# Reserve a MOVING unit's destination too (so two movers don't pick the same
-		# cell). A stationary unit only occupies the tile it actually stands on, so a
-		# stale target_position can't phantom-block an empty square.
-		if c.is_moving and c._snap_to_grid(c.target_position).distance_to(tile) < 0.5:
+	return _claimed_by_mover(tile, exclude) or _is_obstacle_at(tile)
+
+
+func _claimed_by_mover(tile: Vector3, exclude: Node = null) -> bool:
+	## Whether another unit is already walking THROUGH this square — anywhere along the route it
+	## is currently walking, not merely the step it happens to be taking now.
+	##
+	## The whole route, because that is where two idle enemies were ending up on the same
+	## square. _follow_path keeps only the NEXT waypoint in target_position and the rest of the
+	## route in _move_path, so reserving target_position alone reserved one step of a stroll
+	## several squares long: a goblin two steps from where it was going had not yet claimed the
+	## square it was going to, and the next goblin to look found it free and set off for it too.
+	##
+	## Only for units actually in motion. A stationary unit occupies the square it stands on and
+	## nothing else, so a stale target_position cannot phantom-block an empty square.
+	##
+	## Costs nothing in combat, where exactly one unit is ever moving, and is what keeps the
+	## exploration pulse — which moves everybody at once — from walking them through each other.
+	for c in get_tree().get_nodes_in_group("combatants"):
+		if not is_instance_valid(c) or c == exclude or not c.is_moving:
+			continue
+		if "is_alive" in c and not c.is_alive:
+			continue
+		if c._snap_to_grid(c.target_position).distance_to(tile) < 0.5:
 			return true
-	return _is_obstacle_at(tile)
+		for step in c._move_path:
+			if c._snap_to_grid(step).distance_to(tile) < 0.5:
+				return true
+	return false
 
 
 func _is_adjacent(target_pos: Vector3, source_pos: Vector3 = Vector3.INF) -> bool:
@@ -2198,7 +2657,7 @@ func _physics_process(delta: float) -> void:
 		position += dir.normalized() * move_speed * delta
 		position.y = _ground_y()
 
-	if is_alive and not _is_attacking and not is_prone:
+	if is_alive and not _is_attacking and not is_prone and _held_pose == "":
 		var model := get_node_or_null("CharacterModel") as Node3D
 		if model:
 			if _anim_player == null:
@@ -2252,8 +2711,34 @@ func _play_rest_anim() -> void:
 		return
 	if not is_alive or is_prone:
 		_freeze_downed_pose(ap)
+	elif _held_pose != "":
+		if ap.current_animation != _held_pose:
+			ap.play(_held_pose)
 	elif ap.current_animation != "idle":
 		ap.play("idle")
+
+
+func hold_pose(anim: String) -> void:
+	## Hold a pose until somebody lets go of it — the boss sitting on his throne.
+	##
+	## A flag rather than just playing the clip, because the animation driver in
+	## _physics_process re-asserts "walk or idle" EVERY FRAME for anybody upright. A sit played
+	## without this blinks back to standing on the next frame, which is the same reason prone is
+	## a state there and not a clip.
+	var ap := _ensure_anim_player()
+	if ap == null or not ap.has_animation(anim):
+		return
+	_held_pose = anim
+	ap.play(anim)
+
+
+func release_pose() -> void:
+	## Let go of a held pose and settle back to neutral. Safe to call when nothing is held,
+	## which is what lets the alarm shout it at the whole room without asking who was sitting.
+	if _held_pose == "":
+		return
+	_held_pose = ""
+	_play_rest_anim()
 
 
 func _update_prone_anim() -> void:
@@ -2670,14 +3155,44 @@ func take(index: int, actor) -> bool:
 func _gather_corpse_loot() -> void:
 	## Everything this character was carrying becomes the pile on the body.
 	##
-	## Straight off `items`, which is enough on its own: equipping never took anything OUT of
-	## the bag (InventoryComponent._equip_to), so the sword in a goblin's hand is in there too.
+	## Straight off `items`, which is enough for everything in the bag: equipping never took
+	## anything OUT of it (InventoryComponent._equip_to), so the sword in a goblin's hand is in
+	## there too.
 	contents.clear()
+	_gather_spare_arrows()
 	if inventory == null or not ("items" in inventory):
 		return
 	for item in inventory.items:
 		if item != null:
 			contents.append(item)
+
+
+func _gather_spare_arrows() -> void:
+	## Whatever is left in the quiver, as a bundle on the pile.
+	##
+	## Needed because arrows are not an ITEM while they are in a quiver — they are a number on
+	## the character (`ammo`, filled from CombatantStats and spent a shaft at a time by
+	## Enemy._do_ranged_attack), and a number is not something a body can be searched for. So an
+	## archer dropped his bow, his dagger and his jerkin and left four arrows nowhere at all.
+	##
+	## It matters more than tidiness: ammunition is the one thing a bow cannot be used without,
+	## there is exactly one bundle in the crates, and the archers are carrying the rest of the
+	## level's supply. Killing one and taking his arrows is how the party's own bow keeps
+	## shooting, which is a fair trade to have to notice.
+	if ammo <= 0:
+		return
+	var bundle: ItemResource = load(ARROW_BUNDLE_ITEM)
+	if bundle == null:
+		return
+	# Duplicated, because a .tres is a shared cached object: written to directly, the arrow
+	# bundle in the crates would quietly become however many arrows the last archer died with.
+	# The same reason CombatManager._spawn_item duplicates before dropping one.
+	var spare := bundle.duplicate() as ItemResource
+	spare.ammo_amount = ammo
+	contents.append(spare)
+	# The quiver is empty now — they are in the pile. Nothing reads a corpse's ammo today, and
+	# this is so that nothing can ever read it and find the same arrows twice.
+	ammo = 0
 
 
 func _model_crown_y() -> float:
