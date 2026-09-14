@@ -186,7 +186,12 @@ func notices_intruders() -> bool:
 	for hero in _player_candidates():
 		var there: Vector3 = _snap_to_grid((hero as Node3D).position)
 		var gap: float = here.distance_to(there)
-		if gap <= hear and _find_path(here, there, hear_tiles).size() > 1:
+		# Stealth is tested BEFORE the route, and only against hearing: it is cheaper than a
+		# path search, and it is the answer to noise and to nothing else. A hero who creeps
+		# into the open is still standing in the open — see the sight test below, which no
+		# roll touches.
+		if gap <= hear and not hero.is_unheard_by(self) \
+				and _find_path(here, there, hear_tiles).size() > 1:
 			return true
 		if gap <= see and _has_line_of_sight(hero):
 			return true

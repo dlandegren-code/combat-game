@@ -44,6 +44,19 @@ class_name CombatantStats
 @export var ammo: int = 0
 @export var max_ammo: int = 0
 
+@export_group("Stealth")
+## Crossing a room without being heard. Rolled — skill + 1d5, the same shape as every other
+## check in the game — on each move made while sneaking, and compared against the perception of
+## anybody in earshot. See Combatant.roll_stealth and Enemy.notices_intruders.
+@export var stealth_skill: int = 3
+## What it takes to hear somebody sneaking past: a flat difficulty, not a roll of its own.
+##
+## Flat on purpose. One roll is made per MOVE and compared against every listener's own number,
+## so a keen-eared goblin catches what a dull one misses without the same footstep being rolled
+## for twice. Pitched ABOVE the stealth skills so the die always matters: at 7 against a
+## stealth of 5 a ranger is heard on a 1, and a wizard in robes on anything but a 5.
+@export var perception_skill: int = 7
+
 @export_group("Throw")
 @export var throw_skill: int = 3
 @export var throw_cost: int = 1     ## a throw is one quick action (see Combatant.throw_cost)

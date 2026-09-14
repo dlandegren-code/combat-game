@@ -5,7 +5,8 @@ extends "res://scripts/combatant.gd"
 ## new player skill is just adding an Ability to _build_abilities().
 
 # Slot order of the action bar / abilities list. Values are indices into `abilities`.
-enum Action { MOVE, ATTACK, SHOVE, TRIP, RANGED, THROW, PICKUP, FIREBOLT, INTERACT, PRONE }
+enum Action { MOVE, ATTACK, SHOVE, TRIP, RANGED, THROW, PICKUP, FIREBOLT, INTERACT, PRONE,
+	SNEAK }
 
 const MoveAbilityScript := preload("res://scripts/abilities/move_ability.gd")
 const MeleeAttackAbilityScript := preload("res://scripts/abilities/melee_attack_ability.gd")
@@ -17,6 +18,7 @@ const PickupAbilityScript := preload("res://scripts/abilities/pickup_ability.gd"
 const FireboltAbilityScript := preload("res://scripts/abilities/firebolt_ability.gd")
 const InteractAbilityScript := preload("res://scripts/abilities/interact_ability.gd")
 const ProneAbilityScript := preload("res://scripts/abilities/prone_ability.gd")
+const SneakAbilityScript := preload("res://scripts/abilities/sneak_ability.gd")
 const ActionCursorsScript := preload("res://scripts/action_cursors.gd")
 
 const FireboltProjectileScript := preload("res://scripts/fx/firebolt_projectile.gd")
@@ -75,6 +77,9 @@ func _build_abilities() -> void:
 		# stored in the hotbar, so they have to mean the same thing on every character.
 		InteractAbilityScript.new(),
 		ProneAbilityScript.new(),
+		# Appended, never inserted: the hotbar stores ability INDICES per character, so putting
+		# a new action anywhere but the end would silently re-point everybody's saved cells.
+		SneakAbilityScript.new(),
 	]
 
 

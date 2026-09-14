@@ -211,6 +211,14 @@ var move_range: int = 4
 @export var max_ammo: int = 0
 ## What the arrows still in a quiver become when their owner dies — see _gather_spare_arrows.
 const ARROW_BUNDLE_ITEM := "res://resources/items/arrow_bundle.tres"
+## Moving quietly, and hearing somebody who is. See CombatantStats for what the numbers mean
+## and roll_stealth / is_unheard_by for how they meet.
+@export var stealth_skill: int = 3
+@export var perception_skill: int = 7
+## What an unremarkable attribute is: CombatantStats defaults every one of them to this, so it
+## is the line an attribute is above or below rather than a number of its own. Read by
+## get_stealth_skill to turn agility into a bonus.
+const AVERAGE_ATTRIBUTE := 3
 @export var throw_skill: int = 3        ## used for thrown weapon attacks
 ## One time unit — a throw is a single quick action, cheaper than a bow shot (which has to
 ## be nocked and drawn) and cheaper than a melee exchange. Note you also give up the weapon,
@@ -273,6 +281,13 @@ var next_turn_at: int = 0
 ## CombatManager.turn_done stamps it; defense_debt() subtracts it back out. See there for why.
 var action_turn_at: int = 0
 var is_prone: bool = false
+## Whether this character is deliberately moving quietly. A standing choice rather than a
+## per-move one — see set_sneaking and SneakAbility — so the player picks it once and every step
+## after is rolled for.
+var sneaking: bool = false
+## The last stealth roll made, and so how quiet this character's current move turned out to be.
+## Meaningless unless `sneaking`. See roll_stealth.
+var _stealth_roll: int = 0
 ## An animation held on purpose while nothing else is happening — see hold_pose. Empty means
 ## the usual walk/idle driver has the character.
 var _held_pose := ""
@@ -501,6 +516,8 @@ func _apply_stats() -> void:
 	ranged_cost = s.ranged_cost
 	ammo = s.ammo
 	max_ammo = s.max_ammo
+	stealth_skill = s.stealth_skill
+	perception_skill = s.perception_skill
 	throw_skill = s.throw_skill
 	throw_cost = s.throw_cost
 	can_cast = s.can_cast
@@ -1672,6 +1689,13 @@ func _follow_path(path: Array) -> void:
 	## Every routed move in the game funnels through here — players via _start_path_move,
 	## enemies via _move_toward and _best_firing_path — which is why the guard clip lives
 	## here rather than being repeated in each caller.
+	##
+	## And why the stealth roll does: one roll per MOVE is the rule, and this is what a move is.
+	## Rolled as the character sets off rather than on arrival, because the listeners are asked
+	## on their own pulse and may well ask while the walk is still happening — a roll made at
+	## the far end would leave the noisiest part of the journey uncovered by any roll at all.
+	if sneaking:
+		roll_stealth()
 	path = _clip_at_guard(path)
 	if path.size() <= 1:
 		# Pinned by a guardian before taking a single step. Two things still have to happen or
@@ -2534,6 +2558,71 @@ func get_dodge_skill() -> int:
 	## and takes none. Adding a `dodge_bonus` to ItemResource (a cloak, light boots) would be
 	## the place to change that.
 	return agility
+
+
+func get_stealth_skill() -> int:
+	## How quietly this character can cross a room: what they have been taught, plus half of
+	## whatever agility they have over an average body.
+	##
+	## Both halves earn their place. Creeping is a CRAFT, so the trained number leads and is the
+	## per-character dial. But it is a craft done with the body, so the nimble are better at it —
+	## which is what makes the ranger the best sneak in this party without anybody having to
+	## write it down: agility 7 against the soldier's 5 and the wizard's 3, on stealth 3 each,
+	## comes out 5 / 4 / 3.
+	##
+	## HALF the difference rather than all of it, because the attribute spread in this party is
+	## four points and a die is five: at full weight the ranger would never be heard and the
+	## wizard never missed, and the roll would stop being a roll. Halved, against a goblin's
+	## perception of 7, they get through on 80% / 60% / 40% of moves.
+	##
+	## Nothing WORN feeds it yet, and armour should — a man in plate has no business
+	## out-sneaking one in leather. ItemResource growing a stealth_penalty is where that goes,
+	## in the same breath as the parry_bonus get_parry_skill reads.
+	@warning_ignore("integer_division")
+	var nimble: int = (agility - AVERAGE_ATTRIBUTE) / 2
+	return stealth_skill + nimble
+
+
+func roll_stealth() -> int:
+	## Make one attempt at moving quietly, and remember it: skill + 1d5, the same roll the
+	## attack, the parry and the lockpick all make.
+	##
+	## Remembered rather than returned to a caller, because the roll and the question are asked
+	## by different people at different times. The mover rolls as it sets off (_follow_path);
+	## the listeners ask on their own pulse, which may be a second later and may be several of
+	## them. One roll per move, checked by everybody who might have heard it.
+	_stealth_roll = get_stealth_skill() + randi_range(1, 5)
+	return _stealth_roll
+
+
+func is_unheard_by(listener) -> bool:
+	## Whether this character's last move got past `listener`'s ears.
+	##
+	## Only ever about NOISE. Somebody sneaking is still there to be seen, and no roll hides a
+	## hero who walks into a goblin's line of sight — see Enemy.notices_intruders, which tests
+	## hearing and sight separately for exactly this reason.
+	##
+	## Ties go to the sneak, as they do to a lockpick (LootContainer._try_unlock): the roll with
+	## the die in it is the active attempt, and the flat number it beats is a difficulty.
+	if not sneaking or not _exploring():
+		return false
+	if listener == null or not ("perception_skill" in listener):
+		return false
+	return _stealth_roll >= listener.perception_skill
+
+
+func set_sneaking(on: bool) -> void:
+	## Start or stop creeping. Rolled on entering as well as on every move after, so standing
+	## still and sneaking is a state with a number behind it rather than a free pass.
+	if sneaking == on:
+		return
+	sneaking = on
+	if on:
+		roll_stealth()
+	_show_action_text("Sneaking" if on else "Walking openly")
+	# Repainted by group rather than through a method, for the same reason _lay_prone does it:
+	# this class has no toolbar of its own and enemies have no toolbar at all.
+	get_tree().call_group("action_toolbar", "refresh")
 
 
 func get_parry_skill() -> int:

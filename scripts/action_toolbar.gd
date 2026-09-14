@@ -21,7 +21,11 @@ const StanceCat := preload("res://scripts/stance.gd")
 ## Ten, one per ability, reached by the number keys 1-9 and 0. The bar is meant to open with
 ## every action a fresh character has under a key; each time an ability is added this grows
 ## with it, or the newest action becomes the one nobody can reach without re-assigning a slot.
-const HOTBAR_SLOTS := 10
+## One per ability, so every action a character has is on the bar without the player having to
+## find it in the assign menu. The number keys only reach the first ten (Player.HOTBAR_KEYS is
+## 1-0), so an eleventh cell is click-only — which is right for a standing choice like Sneak and
+## would not be for anything wanted mid-fight.
+const HOTBAR_SLOTS := 11
 ## Ability index meaning "nothing assigned".
 const EMPTY := -1
 
@@ -43,7 +47,7 @@ const BACKPLATE := "res://assets/UI/SPR_FantasyWarrior_Box_Background_Shadowed.p
 const ABILITY_ABBREV := {
 	"Move": "Mv", "Attack": "At", "Shove": "Sh", "Trip": "Tr",
 	"Ranged": "Rn", "Throw": "Th", "Pick Up": "Pk", "Firebolt": "Fb",
-	"Open/Close": "Op", "Prone": "Pr",
+	"Open/Close": "Op", "Prone": "Pr", "Sneak": "Sn",
 }
 
 var _root: Control
