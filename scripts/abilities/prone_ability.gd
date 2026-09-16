@@ -15,6 +15,15 @@ extends "res://scripts/abilities/ability.gd"
 ## Getting up costs a tick and ends the turn, which is the whole balance of the thing: lying
 ## down shelters you from archers (see Combatant.PRONE_TARGET_PENALTY) and wrecks you in melee,
 ## and the price of changing your mind is a turn.
+##
+## Out of combat it does a third thing: a sneak who has gone to ground beside cover hides
+## better lying down than crouching (Combatant.HIDE_PRONE_BONUS). Free there too, and it wants
+## to be — the whole move is stop, drop, and let the patrol go past.
+##
+## And out of combat only, moving gets you up by itself (Combatant._start_path_move), so that
+## loop is one click per stop rather than two. The price of changing your mind is a turn in a
+## fight and nothing at all in a corridor, which is the same rule the tick system draws
+## everywhere else.
 
 func _init() -> void:
 	display_name = "Prone"
@@ -34,6 +43,9 @@ func can_use(actor) -> bool:
 func get_description(actor) -> String:
 	if actor.is_prone:
 		return "Get back on your feet. Costs a tick and ends the turn."
+	if actor.sneaking:
+		return ("Drop flat: worth %d to a hiding place, and a hard target for archers. Free, "
+			+ "and moving gets you back up.") % actor.HIDE_PRONE_BONUS
 	return "Drop flat: a hard target for archers, an easy one for anybody in reach. Free."
 
 

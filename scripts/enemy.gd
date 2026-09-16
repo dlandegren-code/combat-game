@@ -52,6 +52,22 @@ enum IdleRole {
 ## door beats any amount of it (Combatant._has_line_of_sight).
 @export var sight_tiles: int = 10
 
+## The arc it sees through, in degrees, centred on the way it is FACING. On the eight grid
+## directions 120 is the three ahead — forward and both front diagonals — and blind to the
+## other five, so a guard can be slipped past at the FLANK and not only at the back. That is
+## the point of the number: 200 (a realistic pair of eyes, everything but over the shoulders)
+## left the only safe square directly behind, which makes sneaking a matter of getting to one
+## square rather than of reading which way a room is looking.
+##
+## Hearing is deliberately NOT arced. Ears have no front, and hearing is the sense the stealth
+## roll contests (Combatant.is_unheard_by) — so the two senses divide the job between them:
+## come at a goblin off its nose and the only thing that can give you away is your footsteps,
+## walk into the wedge it is looking down and no roll will help you.
+##
+## 360 restores the old ring of vision for any enemy that should have eyes in the back of its
+## head.
+@export var sight_arc_degrees: float = 120.0
+
 ## How far it can HEAR one, in tiles. Shorter than sight, and no clear line needed — that is
 ## the whole point of it.
 ##
@@ -167,9 +183,21 @@ func notices_intruders() -> bool:
 	##
 	## Two ways to notice somebody, and a hero only has to trip one.
 	##
-	## SEEING is range plus an unobstructed line, cheap test first so a room full of goblins is
-	## not casting rays at a party three walls away. The line is the same _has_line_of_sight the
-	## archer aims with, so a goblin notices you exactly where an archer could shoot you.
+	## Unless it is ASLEEP, which closes one of them. A goblin dozing in a corner keeps its ears
+	## and loses its eyes: the sight test is skipped outright, and the hearing test — the one
+	## the stealth roll contests — is left exactly as it is. So a sleeper is woken by the noise
+	## you make and never by the sight of you, which is both what sleeping is and what makes
+	## creeping past one a real choice rather than a free pass.
+	##
+	## SEEING is range, then FACING, then an unobstructed line, and finally — for a hero who has
+	## gone to ground beside something — a roll. Cheapest test first, so a room full of goblins
+	## is not casting rays at a party three walls away, not casting them behind itself at all,
+	## and not rolling for anybody who is simply standing in the open. The line is the same _has_line_of_sight the archer aims with; the
+	## arc is sight_arc_degrees off the way the model is turned, and it is what makes the
+	## difference between walking up to a guard and coming round behind one. Facing is only
+	## consulted HERE, before the alarm — once alerted, an enemy turns to whatever it is dealing
+	## with, and gating its own attacks on which way it had happened to be looking would be a
+	## different and much worse game.
 	##
 	## HEARING is range plus a WALKABLE ROUTE, and the route is what makes it honest. A plain
 	## distance check would carry sound straight through the masonry, and through the shut door
@@ -183,6 +211,9 @@ func notices_intruders() -> bool:
 	var here: Vector3 = _snap_to_grid(position)
 	var see: float = sight_tiles * GRID_SIZE
 	var hear: float = hear_tiles * GRID_SIZE
+	# Asleep. Lying down in exploration is a doze (Combatant.lie_down_quietly) — the only way an
+	# unalerted enemy is prone, since being knocked flat is a thing that happens after the alarm.
+	var eyes_open: bool = not is_prone
 	for hero in _player_candidates():
 		var there: Vector3 = _snap_to_grid((hero as Node3D).position)
 		var gap: float = here.distance_to(there)
@@ -193,8 +224,13 @@ func notices_intruders() -> bool:
 		if gap <= hear and not hero.is_unheard_by(self) \
 				and _find_path(here, there, hear_tiles).size() > 1:
 			return true
-		if gap <= see and _has_line_of_sight(hero):
-			return true
+		if eyes_open and gap <= see and _is_within_sight_arc(there) and _has_line_of_sight(hero):
+			# Looked straight at — which is the end of it out in the open, and one more roll
+			# beside a pillar or a crate. See Combatant.is_unseen_by, which returns false for
+			# anybody not sneaking and stopped in cover, so this costs nothing in the usual
+			# case and is the whole of hiding in the interesting one.
+			if not hero.is_unseen_by(self):
+				return true
 	return false
 
 
@@ -237,10 +273,10 @@ func _idle_rouse() -> void:
 func _idle_look_around() -> void:
 	## Every so often, look somewhere else.
 	##
-	## Cosmetic today: _has_line_of_sight casts in every direction, so which way an enemy faces
-	## does not yet change what it notices. It is here because a motionless guard reads as
-	## scenery, and because the day facing DOES gate sight this is already the thing that would
-	## have to move.
+	## Not cosmetic: notices_intruders tests _is_within_sight_arc, so every one of these turns
+	## hands a sneaking party a different blind side and takes another one away. A guard that
+	## looks around is also the only warning the player gets — the sweep is readable, and it is
+	## what makes waiting for it a decision rather than a gamble.
 	##
 	## Turns the MODEL and not the body, which is the whole of the bug this used to be. Facing
 	## lives on the CharacterModel everywhere else — _face_target, _face_point, and the walk
@@ -508,6 +544,33 @@ func _idle_clear_goal() -> void:
 
 func _idle_wait(pulses: Vector2i) -> void:
 	_idle_hold = randi_range(pulses.x, pulses.y)
+
+
+func _is_within_sight_arc(at: Vector3) -> bool:
+	## Is `at` inside the arc this one is looking through? See sight_arc_degrees.
+	##
+	## Facing is read off the model's GLOBAL basis rather than its rotation.y, and the
+	## difference is not pedantry: rotation.y is an angle in the BODY's frame, so a body that
+	## is not square to the world would have the model pointing somewhere other than the number
+	## says — the exact bug _idle_look_around documents having been. The basis is the truth
+	## whatever is underneath it. Local +Z is forward, because every setter in the game writes
+	## atan2(dir.x, dir.z), which is the yaw that puts +Z along `dir`.
+	##
+	## A rig with no model sees in every direction, which is what this all did before there was
+	## an arc.
+	var model := get_node_or_null("CharacterModel") as Node3D
+	if model == null:
+		return true
+	var forward: Vector3 = model.global_transform.basis.z
+	forward.y = 0.0
+	var toward: Vector3 = at - position
+	toward.y = 0.0
+	# Standing on top of somebody is not a direction. Scale is divided out by normalising, which
+	# matters because enemy_type scales these rigs.
+	if forward.length() < 0.01 or toward.length() < 0.01:
+		return true
+	var half := cos(deg_to_rad(clampf(sight_arc_degrees, 0.0, 360.0) * 0.5))
+	return forward.normalized().dot(toward.normalized()) >= half
 
 
 func _face_point(at: Vector3) -> void:

@@ -47,7 +47,9 @@ class_name CombatantStats
 @export_group("Stealth")
 ## Crossing a room without being heard. Rolled — skill + 1d5, the same shape as every other
 ## check in the game — on each move made while sneaking, and compared against the perception of
-## anybody in earshot. See Combatant.roll_stealth and Enemy.notices_intruders.
+## anybody in earshot. It is rolled a second way for HIDING, when a sneak stops beside something
+## and a goblin has a clear look at it. See Combatant.roll_stealth, Combatant.get_hide_total and
+## Enemy.notices_intruders.
 @export var stealth_skill: int = 3
 ## What it takes to hear somebody sneaking past: a flat difficulty, not a roll of its own.
 ##

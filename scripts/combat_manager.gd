@@ -248,6 +248,11 @@ func _engage(shouted_by: Node, opening_actor: Node = null, opening_cost: int = 0
 			continue
 		if "alerted" in c:
 			c.alerted = true
+		# A sneak does not survive the alarm, and it must not: Sneak greys out in combat
+		# (there is nobody left to creep past), so a character who carried the flag across
+		# would be stuck at half movement for the whole fight with no way to switch it off.
+		if "sneaking" in c and c.sneaking:
+			c.set_sneaking(false)
 		# Everybody's clock starts here, at zero. Exploration never advanced next_turn_at, but
 		# it is reset rather than trusted: this is the moment the tick system takes over, and
 		# it should not inherit anything.

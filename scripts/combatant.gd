@@ -70,6 +70,21 @@ const GRID_DIRS := [
 
 ## Partial cover (ranged & thrown only): a short obstacle between shooter and target.
 const COVER_DEFENSE_BONUS := 3    ## added to an active dodge/parry roll when in cover
+
+## Hiding: a sneak who has STOPPED beside something gets one roll to be overlooked. See
+## _update_hiding and get_hide_total.
+##
+## Eyes are better at this than ears, so the same character is a point worse at going unnoticed
+## than at going unheard — and lying down behind the thing is worth two, which is the difference
+## between a hero who is usually spotted and one who usually is not. Against the standard
+## perception of 7 that puts a standing hero at 40% and a prone one at 80%, a wizard at 20/60
+## and a ranger at 60/100: only the character built for it, flat on the floor, is a sure thing,
+## and any enemy with a perception above 7 beats even that.
+const HIDE_EXPOSURE_PENALTY := 1
+const HIDE_PRONE_BONUS := 2
+
+## Movement is divided by this while sneaking — see get_move_range.
+const SNEAK_MOVE_DIVISOR := 2
 const COVER_SAVE_CHANCE := 25     ## % chance the obstacle eats the shot when we can't actively defend
 const COVER_RAY_DROP := 0.6       ## metres below eye-line for the "does a short prop block us" ray
 
@@ -288,6 +303,13 @@ var sneaking: bool = false
 ## The last stealth roll made, and so how quiet this character's current move turned out to be.
 ## Meaningless unless `sneaking`. See roll_stealth.
 var _stealth_roll: int = 0
+
+## Set while stopped beside cover with a sneak on, and cleared by the first step away.
+## See _update_hiding.
+var _hiding: bool = false
+## The die rolled on going to ground, kept APART from the skill and the prone bonus so that
+## dropping flat improves the attempt without buying a fresh die. See get_hide_total.
+var _hide_die: int = 0
 ## An animation held on purpose while nothing else is happening — see hold_pose. Empty means
 ## the usual walk/idle driver has the character.
 var _held_pose := ""
@@ -1598,6 +1620,19 @@ func _start_path_move(target: Vector3, intent: Node = null) -> void:
 	## move-and-attack passes their victim. Null for a plain move to a square, where nobody was
 	## "come for". _clip_at_guard reads it to tell whether a guardian we end up beside is the
 	## one we were after or merely in the way.
+	# Get up to go. Lying down is free out of combat and so is standing up again, so a hero who
+	# dropped flat behind a crate rises when told to move instead of crawling there:
+	# _physics_process has no prone gate and the walk animation is switched off while prone, so
+	# what used to happen was the lying pose sliding across the floor. Enemies have always had
+	# this, one layer up — see Enemy.enable_turn, which stands them before their turn runs.
+	#
+	# EXPLORATION ONLY, and the line matters. In a fight, getting up costs a tick and ends the
+	# turn (ProneAbility.get_cost, _stand_up_if_prone); standing for free on the way past would
+	# make that price optional, and billing it from inside a click would push it through
+	# charge_defense_cost, which is the ledger for REACTIONS and the wrong one for a thing the
+	# character chose. In combat, getting up stays a decision.
+	if is_prone and _exploring():
+		lie_down_quietly(false)
 	_move_intent = intent
 	var path: Array = _find_path(_snap_to_grid(position), target, get_move_range())
 	if path.size() <= 1:
@@ -1696,6 +1731,9 @@ func _follow_path(path: Array) -> void:
 	## the far end would leave the noisiest part of the journey uncovered by any roll at all.
 	if sneaking:
 		roll_stealth()
+	# Whatever we were pressed against, we are leaving it. Decided again on arrival, by the
+	# _update_hiding calls that sit in front of every route into _on_move_complete.
+	_hiding = false
 	path = _clip_at_guard(path)
 	if path.size() <= 1:
 		# Pinned by a guardian before taking a single step. Two things still have to happen or
@@ -1712,6 +1750,9 @@ func _follow_path(path: Array) -> void:
 		_move_tiles = 1
 		_move_path = []
 		is_moving = false
+		# Pinned on the spot still counts as having stopped there — if it was cover a moment
+		# ago it is cover now.
+		_update_hiding()
 		_on_move_complete.call_deferred()
 		return
 	_move_tiles = max(1, path.size() - 1)
@@ -1732,6 +1773,14 @@ func get_move_range() -> int:
 	## Every range check goes through here rather than reading move_range directly, so the
 	## penalty applies to the move indicator, the reachability test and the AI alike — and so
 	## the exploration case below lands in all three at once.
+	if sneaking:
+		# Creeping is slow, and it has to cost something or there would be no reason ever to
+		# walk normally. Measured against move_range and placed ABOVE the exploration case on
+		# purpose: that case hands a hero the whole floor in one click, and half of the whole
+		# floor is still the whole floor. Against what the character could do in a turn it is a
+		# real limit, and it is the thing that makes crossing a room quietly take time.
+		@warning_ignore("integer_division")
+		return max(1, move_range / SNEAK_MOVE_DIVISOR)
 	if is_player_controlled and _exploring():
 		# Out of combat there is no clock, so rationing steps measures nothing. A hero walks as
 		# far as the floor goes, in one click. EXPLORE_MOVE_RANGE is a cap only so the BFS
@@ -2598,9 +2647,13 @@ func roll_stealth() -> int:
 func is_unheard_by(listener) -> bool:
 	## Whether this character's last move got past `listener`'s ears.
 	##
-	## Only ever about NOISE. Somebody sneaking is still there to be seen, and no roll hides a
-	## hero who walks into a goblin's line of sight — see Enemy.notices_intruders, which tests
-	## hearing and sight separately for exactly this reason.
+	## Only ever about NOISE, and only about the move just made. Being overlooked where you
+	## STAND is the other roll and a different one — see is_unseen_by. No amount of quiet hides
+	## a hero who walks into the arc a goblin is looking through — see Enemy.notices_intruders,
+	## which tests hearing and sight separately for exactly this reason. Sight is the one you
+	## beat by standing somewhere else: it is gated on facing, and switched off entirely in
+	## anything asleep, so off a guard's nose there is nothing left to give you away but this
+	## roll.
 	##
 	## Ties go to the sneak, as they do to a lockpick (LootContainer._try_unlock): the roll with
 	## the die in it is the active attempt, and the flat number it beats is a difficulty.
@@ -2609,6 +2662,75 @@ func is_unheard_by(listener) -> bool:
 	if listener == null or not ("perception_skill" in listener):
 		return false
 	return _stealth_roll >= listener.perception_skill
+
+
+func has_cover_adjacent() -> bool:
+	## Is there something to press yourself against from the tile we stand on?
+	##
+	## Any obstacle in one of the eight neighbouring cells: a pillar, a crate, a cask, a shut
+	## door, the throne. Exactly the things that break a silhouette up without hiding a body
+	## outright — and note that one standing BETWEEN us and the goblin is not this question at
+	## all, because the ray would already have stopped and there would be nothing to roll for
+	## (see _has_line_of_sight).
+	##
+	## Walls are not in the "obstacles" group and so are not cover here. Pressing into a corner
+	## probably ought to count; it wants a test against wall EDGES rather than cells, which is a
+	## different question from this one.
+	var here := _snap_to_grid(position)
+	for dir in GRID_DIRS:
+		if _is_obstacle_at(here + dir):
+			return true
+	return false
+
+
+func _update_hiding() -> void:
+	## Decide, on coming to a stop, whether this character has gone to ground.
+	##
+	## Hiding is something you do by STOPPING somewhere, which is why it is settled here and
+	## torn up by the first step away (see _follow_path). A creeping figure crossing open floor
+	## is a creeping figure; one that has stopped beside something is part of the room.
+	##
+	## The die is rolled ONCE, on going to ground, and kept apart from the modifiers — see
+	## get_hide_total. Rolling the whole total here would turn dropping prone into a re-roll,
+	## and prone is free out of combat, so a player could lie down and get up until the number
+	## came out right.
+	var can_hide: bool = sneaking and is_alive and _exploring() and has_cover_adjacent()
+	if can_hide == _hiding:
+		return
+	_hiding = can_hide
+	if not _hiding:
+		return
+	_hide_die = randi_range(1, 5)
+	_show_action_text("Hidden")
+
+
+func is_hiding() -> bool:
+	return _hiding
+
+
+func get_hide_total() -> int:
+	## What this character's hiding place is worth, recomputed live rather than stored: the
+	## skill, less what it costs to be looked straight at, plus the prone bonus, plus the die
+	## rolled on stopping. See HIDE_EXPOSURE_PENALTY.
+	var prone_bonus: int = HIDE_PRONE_BONUS if is_prone else 0
+	return get_stealth_skill() - HIDE_EXPOSURE_PENALTY + prone_bonus + _hide_die
+
+
+func is_unseen_by(listener) -> bool:
+	## Whether this character's hiding place is holding against `listener`'s eyes. The twin of
+	## is_unheard_by, asked at the same moment for the other sense.
+	##
+	## It only ever runs when the goblin is awake, looking this way and has a clear line to us
+	## (see Enemy.notices_intruders), which is what keeps it a hiding roll rather than a second
+	## chance at everything: the arc and the pillars decide whether there is anything to roll
+	## for, and only then does this decide how it went.
+	##
+	## Ties go to the hider, as they do to the sneak and the lockpick.
+	if not _hiding or not sneaking or not _exploring():
+		return false
+	if listener == null or not ("perception_skill" in listener):
+		return false
+	return get_hide_total() >= listener.perception_skill
 
 
 func set_sneaking(on: bool) -> void:
@@ -2623,6 +2745,9 @@ func set_sneaking(on: bool) -> void:
 	# Repainted by group rather than through a method, for the same reason _lay_prone does it:
 	# this class has no toolbar of its own and enemies have no toolbar at all.
 	get_tree().call_group("action_toolbar", "refresh")
+	# Last, so that crouching down where you already stand beside a crate both hides you and
+	# says so — "Hidden" is the more useful of the two captions, and it wins by arriving after.
+	_update_hiding()
 
 
 func get_parry_skill() -> int:
@@ -2741,6 +2866,10 @@ func _physics_process(delta: float) -> void:
 		else:
 			is_moving = false
 			velocity = Vector3.ZERO
+			# Before the hook, and in the base rather than in each override: Player and Enemy
+			# both replace _on_move_complete without calling super, and going to ground is not
+			# either of their business.
+			_update_hiding()
 			_on_move_complete()
 	else:
 		position += dir.normalized() * move_speed * delta
