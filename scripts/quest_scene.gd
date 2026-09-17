@@ -19,10 +19,9 @@ extends Node3D
 const CharacterDataScript := preload("res://scripts/character_data.gd")
 const HERO_SCENE := preload("res://scenes/characters/hero.tscn")
 
-## Where the party goes when the quest ends. The town screen replaces this in Phase 1; the
-## bootstrap screen standing in for it already does the one thing that matters here, which is
-## to show what the party came back with.
-const TOWN_SCENE := "res://scenes/bootstrap.tscn"
+## Where the party goes when the quest ends: the results screen, which reports what happened
+## and then sends them on to town.
+const RESULTS_SCENE := "res://scenes/results_screen.tscn"
 
 ## Placeholders, and marked as such: what a quest PAYS is a property of the quest, and in
 ## Phase 4 it comes off QuestDef (reward_gold, difficulty tier) rather than being counted in
@@ -40,6 +39,17 @@ var _party_views: Array = []
 ## finish_quest, and two of them arriving together must not pay the party twice.
 var _finished := false
 
+## Set when the last enemy falls. The quest is not OVER at that point — there is a chest
+## through the north door and loot on the floor — so this is the difference between "you may
+## leave whenever you like" and "you have won", and it is what the Town button reads to decide
+## which of those the player is doing.
+var _field_held := false
+
+## What each party member was carrying when they walked in, by item name. Diffed at the end to
+## work out what they found, which is the one thing a results screen can say that the party
+## sheet cannot.
+var _gear_on_arrival: Array = []
+
 
 func _ready() -> void:
 	var authored := _authored_heroes()
@@ -49,6 +59,34 @@ func _ready() -> void:
 		_party_views = authored
 		_seed_party(authored)
 	GameState.current_quest = {"scene": scene_file_path}
+	_gear_on_arrival = _carried_names()
+	_watch_the_fight()
+
+
+func _watch_the_fight() -> void:
+	## Listen for the combat layer deciding the quest one way or the other.
+	##
+	## Connected from here rather than wired in the scene because the manager is a child and
+	## this is its parent: a signal connection made in the editor would have to be re-made by
+	## hand in every quest scene that ever exists, and Phase 4 generates them.
+	var cm := get_node_or_null("CombatManager")
+	if cm == null:
+		return
+	if cm.has_signal("fight_won"):
+		cm.fight_won.connect(_on_fight_won)
+	if cm.has_signal("party_wiped"):
+		cm.party_wiped.connect(_on_party_wiped)
+
+
+func _on_fight_won() -> void:
+	## The room is theirs. Nothing ends here on purpose — see _field_held.
+	_field_held = true
+
+
+func _on_party_wiped() -> void:
+	## Nobody left to give an order to, so there is nothing to decide and no reason to make the
+	## player click anything: straight to the results, where the run is reported as lost.
+	finish_quest("defeat")
 
 
 # --- Hydration -------------------------------------------------------------
@@ -112,6 +150,10 @@ func _spawn_member(data, at: Vector3, index: int) -> Node:
 	var model := (load(data.model_scene_path()) as PackedScene).instantiate()
 	model.name = "CharacterModel"
 	model.position = CharacterDataScript.MODEL_OFFSET
+	# Before the tree as well, because CharacterSkin reads these in its own _ready: an archer
+	# whose quiver is switched on afterwards never gets one built.
+	for prop in data.model_props():
+		model.set(prop, data.model_props()[prop])
 	node.add_child(model)
 	# Same reason: the stat block has to be in place before _ready derives hit points from it.
 	data.apply_to(node)
@@ -173,10 +215,60 @@ func finish_quest(outcome: String = "retreat") -> void:
 		"kills": kills,
 		"xp": xp,
 		"gold": coin,
+		"loot": _loot_found(),
+		"fallen": _fallen_names(),
 	}
 	GameState.current_quest = {}
 	print("[Quest] %s — %d slain, +%d xp, +%d gold" % [outcome, kills, xp, coin])
-	get_tree().change_scene_to_file(TOWN_SCENE)
+	get_tree().change_scene_to_file(RESULTS_SCENE)
+
+
+func field_is_held() -> bool:
+	## Whether the fighting is done. Read by the system menu, which offers to leave a won
+	## quest in different words from an abandoned one.
+	return _field_held
+
+
+func _carried_names() -> Array:
+	## Every item each party member holds, as a flat list of names per member.
+	var out: Array = []
+	for view in _party_views:
+		var names: Array = []
+		if is_instance_valid(view) and view.inventory != null:
+			for item in view.inventory.items:
+				if item != null:
+					names.append(item.item_name)
+		out.append(names)
+	return out
+
+
+func _loot_found() -> Array:
+	## What the party is carrying that they did not walk in with.
+	##
+	## A diff of names rather than a tally kept as items are picked up: loot arrives through
+	## the pickup ability, corpse looting and chests, and a results screen is not a good enough
+	## reason to make three systems report to a fourth.
+	var found: Array = []
+	var now := _carried_names()
+	for i in range(now.size()):
+		var before: Array = _gear_on_arrival[i].duplicate() if i < _gear_on_arrival.size() else []
+		for carried in now[i]:
+			# Removed as it is matched, so two potions carried out with one carried in counts
+			# as one found rather than none.
+			var at: int = before.find(carried)
+			if at >= 0:
+				before.remove_at(at)
+			else:
+				found.append(carried)
+	return found
+
+
+func _fallen_names() -> Array:
+	var fallen: Array = []
+	for view in _party_views:
+		if is_instance_valid(view) and not view.is_alive:
+			fallen.append(view.character_name)
+	return fallen
 
 
 func _enemies_slain() -> int:

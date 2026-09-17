@@ -40,6 +40,7 @@
 [ext_resource type="PackedScene" path="res://scenes/pillar_visual.tscn" id="38_s2t0t"]
 [ext_resource type="Script" uid="uid://bp8qfogtdois4" path="res://scripts/room_builder.gd" id="39_85r62"]
 [ext_resource type="PackedScene" path="res://scenes/party_panel.tscn" id="40_ctgds"]
+[ext_resource type="Script" uid="uid://b8hme06kvx6nq" path="res://scripts/quest_scene.gd" id="41_quest"]
 
 [sub_resource type="StandardMaterial3D" id="mat_ground"]
 albedo_color = Color(0.35, 0.5, 0.25, 1)
@@ -104,6 +105,7 @@ size = Vector3(0.8, 2, 0.8)
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_1u8w0"]
 
 [node name="Battlefield" type="Node3D" unique_id=331942802]
+script = ExtResource("41_quest")
 
 [node name="Sun" type="DirectionalLight3D" parent="." unique_id=1894012257]
 transform = Transform3D(0.8253356, 0.44229966, -0.3509874, 0, 0.62161, 0.7833269, 0.5646425, -0.6465076, 0.51303685, 10, 18, 10)

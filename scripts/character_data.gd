@@ -23,17 +23,24 @@ const CombatantStatsScript := preload("res://scripts/combatant_stats.gd")
 ## without one.
 const SCHEMA_VERSION := 1
 
-## Which body each class wears. The values are the model wrapper scenes under
-## scenes/characters — the same ones the authored battlefield heroes were built from, so a
-## spawned hero and a hand-placed one look alike.
+## What each class LOOKS like: the model wrapper scene under scenes/characters, and any
+## property that wrapper needs set — the same ones the authored battlefield heroes were built
+## with, so a spawned hero and a hand-placed one are the same character.
+##
+## `props` is not decoration. The authored archer's model carries `show_quiver = true`, and a
+## spawned archer without it is an archer with no quiver on their back (see CharacterSkin).
 ##
 ## A class is a string rather than an enum on purpose: it is stored in saves, and a string
 ## survives someone reordering this table. "archer" has no model of its own yet and borrows
 ## male_d, which is what the authored archer used.
-const CLASS_MODELS := {
-	"soldier": "res://scenes/characters/soldier_model.tscn",
-	"wizard": "res://scenes/characters/wizard_model.tscn",
-	"archer": "res://scenes/characters/male_d_model.tscn",
+##
+## Only the body lives here. What a NEW character of a class starts with — stats, gear, a
+## name for the screen — is character_classes.gd, which is authoring data rather than
+## something every spawn needs.
+const CLASS_BODIES := {
+	"soldier": {"model": "res://scenes/characters/soldier_model.tscn", "props": {}},
+	"wizard": {"model": "res://scenes/characters/wizard_model.tscn", "props": {}},
+	"archer": {"model": "res://scenes/characters/male_d_model.tscn", "props": {"show_quiver": true}},
 }
 
 const DEFAULT_CLASS := "soldier"
@@ -49,7 +56,7 @@ const VITALS_FULL := -1
 
 @export var id: String = ""
 @export var character_name: String = "Hero"
-## Which body this hero wears — a key of CLASS_MODELS. Decides the model at spawn and nothing
+## Which body this hero wears — a key of CLASS_BODIES. Decides the model at spawn and nothing
 ## else yet; Phase 1's creation screen and Phase 3's training will hang starting stats and
 ## skill costs off it.
 @export var class_id: String = DEFAULT_CLASS
@@ -63,8 +70,13 @@ const VITALS_FULL := -1
 ## comment there. The .tres still carries the real class.
 @export var stats: Resource
 
+## Level and experience. `xp` is a POOL — it is spent on training and goes down — so it cannot
+## also be the measure of how far a character has come; `xp_total` is what they have earned in
+## their life and only ever rises. Level is derived from the total (see Progression.level_for)
+## and stored so that a screen can show it without the rules having to be loaded.
 @export var level: int = 1
 @export var xp: int = 0
+@export var xp_total: int = 0
 
 ## Wounds carried between quests. VITALS_FULL means "arrive at full", which is what a hero
 ## who has never fought yet is. Phase 1 decides what resting in town costs; until then a
@@ -102,6 +114,12 @@ func apply_to(c: Node) -> void:
 	c.voice = voice
 	c.is_player_controlled = true
 	if stats != null:
+		# The stat block carries a name of its own, because an enemy .tres is authored with one
+		# ("Goblin"), and Combatant._apply_stats copies it onto the body during _ready — after
+		# this function has run. So a character created with a name and a fresh block would
+		# walk into the dungeon called "Hero". The character's name is the real one; the block
+		# mirrors it.
+		stats.character_name = character_name
 		c.stats = stats
 
 
@@ -125,7 +143,16 @@ func restore_into(c: Node) -> void:
 
 
 func model_scene_path() -> String:
-	return CLASS_MODELS.get(class_id, CLASS_MODELS[DEFAULT_CLASS])
+	return _body()["model"]
+
+
+func model_props() -> Dictionary:
+	## Properties to set on the instanced model — see CLASS_BODIES.
+	return _body()["props"]
+
+
+func _body() -> Dictionary:
+	return CLASS_BODIES.get(class_id, CLASS_BODIES[DEFAULT_CLASS])
 
 
 func _restore_inventory(c: Node) -> void:
@@ -155,6 +182,111 @@ func _restore_inventory(c: Node) -> void:
 		already.append(bag[idx])
 		# int() because a Dictionary round-tripped through JSON hands its keys back as strings.
 		inv.equip_into(int(slot), bag[idx])
+
+
+# --- The bag, out of the dungeon -------------------------------------------
+# A town screen has no live InventoryComponent to work through — there is no body in town —
+# so buying, selling and wearing things there happen here instead. The invariant these keep is
+# the one the whole bag depends on: `equipped` points INTO `bag` by index, so an item can never
+# be removed without the slots pointing at it being cleared too.
+
+const InventoryComponentScript := preload("res://scripts/inventory_component.gd")
+
+
+func bag_has_room() -> bool:
+	return _free_slot() >= 0
+
+
+func bag_add(item) -> bool:
+	## Put something in the pack. False if there is no room, having changed nothing.
+	if item == null:
+		return false
+	var slot: int = _free_slot()
+	if slot < 0:
+		return false
+	if slot >= bag.size():
+		bag.resize(slot + 1)
+	bag[slot] = item
+	return true
+
+
+func bag_remove_at(idx: int):
+	## Take something out of the pack for good — sold, or dropped. Returns the item, or null.
+	if idx < 0 or idx >= bag.size() or bag[idx] == null:
+		return null
+	var item = bag[idx]
+	unequip_index(idx)
+	bag[idx] = null
+	return item
+
+
+func is_equipped(idx: int) -> bool:
+	for slot in equipped:
+		if int(equipped[slot]) == idx:
+			return true
+	return false
+
+
+func unequip_index(idx: int) -> void:
+	## Clear every slot pointing at this bag index. Every one, not the first: a two-handed
+	## weapon is held in both hands and listed under both.
+	for slot in equipped.keys():
+		if int(equipped[slot]) == idx:
+			equipped.erase(slot)
+
+
+func equip_from_bag(idx: int) -> bool:
+	## Wear or wield something out of the pack, displacing whatever is in the way.
+	##
+	## The town-side counterpart of InventoryComponent._equip_to, and it follows the same rules
+	## — the slot comes from InventoryComponent.preferred_slot, a two-hander takes both hands,
+	## and a one-hander cannot share a hand with one. It has to be a separate implementation
+	## because the live one needs a body to fold the item's bonuses into, and that body does
+	## not exist until the next quest starts.
+	if idx < 0 or idx >= bag.size() or bag[idx] == null:
+		return false
+	var item = bag[idx]
+	var slot: int = InventoryComponentScript.preferred_slot(item)
+	if slot < 0:
+		return false   # carried, not worn: arrows, potions, keys
+	var two_handed: bool = item.handedness == ItemResource.Handedness.TWO_HANDED
+	var into_hand: bool = slot == ItemResource.EquipSlot.RIGHT_HAND \
+		or slot == ItemResource.EquipSlot.LEFT_HAND
+	if into_hand:
+		var held: int = int(equipped.get(ItemResource.EquipSlot.RIGHT_HAND, -1))
+		var offhand: int = int(equipped.get(ItemResource.EquipSlot.LEFT_HAND, -1))
+		# Both hands come free for a two-hander, and both come free if a two-hander is what is
+		# currently in them.
+		if two_handed or (held != -1 and held == offhand):
+			equipped.erase(ItemResource.EquipSlot.RIGHT_HAND)
+			equipped.erase(ItemResource.EquipSlot.LEFT_HAND)
+	equipped[slot] = idx
+	if two_handed:
+		equipped[ItemResource.EquipSlot.RIGHT_HAND] = idx
+		equipped[ItemResource.EquipSlot.LEFT_HAND] = idx
+	return true
+
+
+func slot_is_free(item) -> bool:
+	## Whether this item's usual slot is empty — the test for whether putting it on would take
+	## a decision away from the player. Used when buying: new gear goes on if there is nothing
+	## to displace, and waits in the pack if there is.
+	var slot: int = InventoryComponentScript.preferred_slot(item)
+	if slot < 0:
+		return false
+	if item.handedness == ItemResource.Handedness.TWO_HANDED:
+		return not equipped.has(ItemResource.EquipSlot.RIGHT_HAND) \
+			and not equipped.has(ItemResource.EquipSlot.LEFT_HAND)
+	return not equipped.has(slot)
+
+
+func _free_slot() -> int:
+	for i in range(bag.size()):
+		if bag[i] == null:
+			return i
+	if bag.size() < InventoryComponentScript.MAX_SLOTS:
+		return bag.size()
+	return -1
 
 
 # --- Capture: node -> data --------------------------------------------------
@@ -274,8 +406,8 @@ static func _class_of(c: Node) -> String:
 	var model: Node = c.get_node_or_null("CharacterModel")
 	if model != null:
 		var scene_path: String = model.scene_file_path
-		for cls in CLASS_MODELS:
-			if CLASS_MODELS[cls] == scene_path:
+		for cls in CLASS_BODIES:
+			if CLASS_BODIES[cls]["model"] == scene_path:
 				return cls
 	return DEFAULT_CLASS
 
@@ -294,6 +426,7 @@ func to_dict() -> Dictionary:
 		"voice": voice,
 		"level": level,
 		"xp": xp,
+		"xp_total": xp_total,
 		"hp": hp,
 		"mana": mana,
 		"ammo": ammo,
@@ -317,6 +450,9 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	data.voice = d.get("voice", "male_a")
 	data.level = int(d.get("level", 1))
 	data.xp = int(d.get("xp", 0))
+	# A save written before xp was a spendable pool has no lifetime total; what it does have is
+	# an xp figure that was never spent, so it IS the lifetime total.
+	data.xp_total = int(d.get("xp_total", data.xp))
 	data.hp = int(d.get("hp", VITALS_FULL))
 	data.mana = int(d.get("mana", VITALS_FULL))
 	data.ammo = int(d.get("ammo", VITALS_FULL))

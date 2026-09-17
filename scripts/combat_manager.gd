@@ -23,6 +23,19 @@ extends Node
 
 signal turn_changed(combatant: Node)
 
+## The two ways a quest can be decided, announced for whoever is running the quest to act on
+## (QuestScene). The combat layer deliberately does not act on them itself — it knows when a
+## fight is over, not what that means for the adventure.
+##
+## fight_won is NOT "quest cleared": the last goblin falling leaves a room with a chest in it
+## and loot on the floor, and the party is meant to go and collect it. So this says the way
+## out is open, and something above decides when to take it. See _stand_down.
+##
+## party_wiped IS final. There is nobody left to give an order to, so there is no play left
+## and the only question is how the defeat is reported.
+signal fight_won
+signal party_wiped
+
 const GroundItemScript := preload("res://scripts/ground_item.gd")
 
 ## Beat between an enemy's turn lighting up and it acting, so the player can register
@@ -141,6 +154,32 @@ func party_members() -> Array:
 		if is_instance_valid(c) and c.is_alive and c.is_player_controlled:
 			out.append(c)
 	return out
+
+
+func _check_party_wiped() -> bool:
+	## Has the party been wiped out? If so, stop the clock and say so, once.
+	##
+	## game_over rather than a stand-down: there is no exploring a dungeon with no explorers,
+	## and every route into a turn checks this flag. The bodies are left where they fell —
+	## whoever is running the quest still has to read what the party was carrying off them
+	## (QuestScene.finish_quest).
+	if game_over:
+		return false
+	if not party_members().is_empty():
+		return false
+	# An empty room is not a defeat: with no combatants at all there is nobody to lose.
+	if combatants.is_empty():
+		return false
+	game_over = true
+	_highlight_active(null)
+	if initiative_panel:
+		initiative_panel.visible = false
+	if _idle_timer:
+		_idle_timer.stop()
+	if turn_label:
+		turn_label.text = "The party has fallen..."
+	party_wiped.emit()
+	return true
 
 
 func enemies_alive() -> bool:
@@ -308,6 +347,11 @@ func _stand_down() -> void:
 		initiative_panel.visible = false
 	if _idle_timer:
 		_idle_timer.start()
+	# The field is held. Announced before the tidying-up below so that whoever is running the
+	# quest hears it at the moment the fight ends rather than a few statements later, and note
+	# that it says the fight is won and not that the quest is over — there is still a room to
+	# search. See the signal's own comment.
+	fight_won.emit()
 	# The clock is wound back to where _start_exploration leaves it, and this is not cosmetic:
 	# defense_debt() is derived from the gap between next_turn_at and current_tick, so a hero
 	# who ended the fight owing two ticks of parries would carry that debt into exploration —
@@ -363,6 +407,13 @@ func _start_combat() -> void:
 
 func _activate_next() -> void:
 	if game_over:
+		return
+
+	# Before anything is handed a turn: is there still a party? Checked here for the same
+	# reason the enemy check below is — this is the one guaranteed clean turn boundary — and
+	# without it a fight the party had lost went on being played, with the surviving goblins
+	# taking turn after turn against corpses and nobody able to end it.
+	if _check_party_wiped():
 		return
 
 	# Nobody left to fight. Tested here because this is the one moment that is guaranteed to be

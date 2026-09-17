@@ -33,33 +33,33 @@ todos:
     content: >-
       Phase 1: explicit victory/defeat signal from the combat layer -> results
       screen (XP, loot summary) -> back to town
-    status: pending
+    status: completed
   - id: town-screen
     content: >-
       Phase 1: town screen as pure UI (background + Shop / Training / Quest
       Board / Adventure buttons) - no walkable 3D town yet
-    status: pending
+    status: completed
   - id: character-creation
     content: >-
       Phase 1: character creation screen (name + class from existing
       soldier/wizard/archer models + starting stats) feeding a fresh
       CharacterData into GameState
-    status: pending
+    status: completed
   - id: save-load
     content: >-
       Phase 2: save/load to user:// as JSON with a schema version field;
       autosave on every return to town
-    status: pending
+    status: completed
   - id: xp-training
     content: >-
       Phase 3: XP -> skill/stat progression rules; Training screen in town
       spends gold to improve skills
-    status: pending
+    status: completed
   - id: shop
     content: >-
       Phase 3: shop buy/sell using existing ItemResource items; add a gold
       value field to ItemResource
-    status: pending
+    status: completed
   - id: questdef-resource
     content: >-
       Phase 4: QuestDef resource (seed, difficulty tier, theme, enemy budget,
@@ -272,3 +272,158 @@ hold a cached copy of that scene WITHOUT the script — reload the scene tab
 before editing it, or a save from that tab will drop the root script. The
 symptom is the Town button reporting "this is not a quest", and the round-trip
 test fails immediately.
+
+## Phase 1 as built (2026-09-17)
+
+The loop is closed: creation -> town -> quest -> results -> town.
+
+- `scripts/bootstrap.gd` is now genuinely thin — one decision (is there a party?)
+  and a scene change. Phase 2 adds "is there a save?" in front of it.
+- `scenes/character_creation.tscn` + `scripts/character_creation.gd` — name,
+  class, a readout of what that class is, Begin. Also a door back to the old
+  test scenario, which starts a quest with an empty party and lets the seeding
+  path make the authored trio real.
+- `scripts/character_classes.gd` — the catalogue: soldier / archer / wizard,
+  each with the stats and gear the authored heroes had, so a created character
+  is the same character the dungeon was balanced around. `stats` lists only
+  what differs from CombatantStats' defaults.
+- `scenes/town.tscn` + `scripts/town.gd` — Riverwatch. Party roster, gold, Go
+  Adventuring, Rest, and buttons for Quest Board / Shop / Training that say
+  which phase they belong to rather than being absent.
+- `scenes/results_screen.tscn` + `scripts/results_screen.gd` — outcome, kills,
+  xp, gold, what was carried out, who was carried home. Consumes
+  `GameState.last_result` so an adventure is never reported twice.
+- `scripts/screen_panel.gd` — shared furniture for those three flat screens.
+- `CombatManager` now emits `fight_won` and `party_wiped`. `fight_won` is
+  deliberately NOT "quest cleared" — the room still has a chest in it — so the
+  quest scene only records that the field is held, and the Town button then
+  reads "Leave Victorious" and finishes as a victory. `party_wiped` IS final
+  and goes straight to the results screen.
+- Defeat is now handled at all. Before this, a wiped party left the surviving
+  goblins taking turns against corpses with no way to end the run.
+
+Bugs found and fixed while building on Phase 0:
+
+- `lockpick_skill` and `interact_cost` were Combatant exports with no field in
+  `CombatantStats`, so they silently reverted to defaults on the first capture —
+  the authored archer lost their lockpicking. Both are now in the stat block.
+- A created character arrived in the dungeon named "Hero": the stat block
+  carries a name of its own and `_apply_stats` copies it over during `_ready`,
+  after hydration had set the right one. `CharacterData.apply_to` now keeps the
+  block's name in step.
+- A spawned archer had no quiver. `show_quiver` is a property of the authored
+  model node, not of an item, so class bodies now carry model properties
+  (`CharacterData.CLASS_BODIES`) and the spawner sets them before the model
+  enters the tree.
+
+The round-trip test now covers all of this and runs 615 checks. The check that
+caught the lost stats compares every script variable on an authored hero against
+the rebuilt one, and it deliberately does NOT take its field list from
+CombatantStats — doing that would make it blind to exactly this class of bug.
+
+Balance note, not a bug: the one dungeon holds five enemies and was built for
+three heroes, so a single created character will struggle. That is what the
+"take the test party" door and Phase 5's hirelings are for; Phase 4's
+difficulty tiers are the real answer.
+
+## Phase 2 as built (2026-09-17)
+
+The game now remembers. Quit from town, relaunch, continue.
+
+- `scripts/save_game.gd` — the only place that touches the disk.
+  `user://savegame.json`, written atomically (to a `.part` file, then moved into
+  place) so a crash mid-write cannot replace a good save with half of one.
+  JSON rather than a packed resource on purpose: a save is a file a player can
+  edit or swap, and `binary_to_variant` on a .res will instantiate whatever
+  script the file names.
+- The envelope carries its own `save_version`, separate from
+  `GameState.SCHEMA_VERSION` and `CharacterData.SCHEMA_VERSION`, so a change to
+  how a character is stored does not need the file format bumped and vice versa.
+  `_migrate` is written as `if from_version < N` steps and is empty today —
+  there so the first format change is not the day every existing save has to be
+  thrown away. A save from a NEWER version is refused outright rather than
+  half-read.
+- A `summary` block is written beside the state (party names, classes, levels,
+  gold) so the title screen can say what is in a save without loading it and
+  trampling whatever is in memory.
+- `scenes/title_screen.tscn` — Continue / New Character / Quit, reached only
+  when a save exists. New Character confirms first and says what is lost; the
+  old save is left on disk until the new character actually reaches town, so
+  backing out of creation costs nothing.
+- Autosave is on ARRIVAL IN TOWN, and on anything done there (resting). Town is
+  the checkpoint because it is the only quiet moment: no turn half-taken, no
+  arrow in flight, no action owed. A failed save says so on screen and stays
+  there — it is the one error that costs the player something no amount of
+  skill gets back.
+- The quest's Save button now says "the party is saved when they reach town"
+  rather than "not implemented": mid-quest saving is a decision, not a gap.
+  Saving inside a fight would mean serialising the tick clock and every owed
+  action, and the reward for it is letting somebody re-roll a bad die.
+- Town gained a Main Menu button, which is the way to a different character.
+
+Verified: the round-trip test is up to 643 checks and covers the save path —
+written, peeked at without loading, loaded back with every stat, wound, item
+and trained skill intact, plus the three failure cases (no file, a file from a
+newer version, a file that is not a save at all), each of which must leave the
+party in memory untouched. The test writes to a save path of its own; a dev tool
+has no business touching the player's slot.
+
+A real save was written by hand to check the boot path end to end — the game
+opens on the title screen, lists the saved character and reports its age — then
+deleted, so the next launch is a clean first run.
+
+## Phase 3 as built (2026-09-17)
+
+Gold and xp now buy something, which makes the loop a progression rather than a
+circuit.
+
+- `scripts/progression.gd` — all the rules in one file, because these numbers
+  only mean anything against each other. Training spends BOTH xp and gold, so
+  neither is ever the only thing worth having: a rich character with no
+  experience has nothing to train, an experienced one with no money has to go
+  and earn some. Cost per point = step * the value being bought, so the tenth
+  point of a skill costs twice the fifth. Skills cap at 15 and attributes at 10
+  — rolls are skill + 1d5, so a gap of ten makes the die a formality.
+- `scenes/training.tscn` — 9 skills and 5 attributes, each with its current
+  value, what the next point costs, and a line on what it actually does. A
+  party picker when there is more than one member. Disabled buttons say why.
+- `scenes/shop.tscn` — a fixed stock of 13 items already in resources/items.
+  Buying puts gear in the pack and puts it ON only when the slot it wants is
+  empty; buying a second sword is a decision about which to hold, and the
+  dungeon inventory is where that is made. Selling unequips on the way out,
+  which is why it goes through CharacterData rather than poking the array.
+- `ItemResource.value` + `gold_value()` / `sell_value()` — prices DERIVED from
+  what an item does, with `value` as a per-item override. No .tres needed
+  touching, and rebalancing what armour is worth reaches every piece of armour
+  at once. Shops sell at full and buy at 40%, which is what stops a dungeon
+  full of goblin daggers from being an income.
+- `CharacterData` gained the bag operations town needs — `bag_add`,
+  `bag_remove_at`, `equip_from_bag`, `is_equipped`, `slot_is_free` — because
+  there is no live InventoryComponent in town and the `equipped`-points-into-
+  `bag` invariant has to hold anyway. `CharacterClasses` now builds its
+  starting loadout through the same functions instead of its own copy of the
+  rules, and `InventoryComponent.preferred_slot` is the one place that decides
+  where a piece of gear goes.
+- `xp` is now a POOL that training spends, so `xp_total` was added to carry the
+  character's history and the level is derived from that. A save written before
+  this reads its old `xp` as the lifetime total, which is what it was.
+- Resting costs 2 gold per missing hit point, and mends hp and mana but NOT
+  ammunition. Arrows are bought — that is what makes the bundle on the shelf
+  worth anything and an archer's upkeep different from a soldier's.
+
+How it adds up: one clear of the five-enemy dungeon pays 100 xp and 75 gold. A
+skill point is 60 xp / 30 gold, an attribute 200-240 xp / 100-120 gold, heavy
+armour 66 gold, and putting a badly mauled hero back together about 32. Gold is
+the slightly tighter constraint, which is what gives it a job.
+
+Verified: 706 checks. The new ones cover the level curve, training refusing and
+explaining itself, the cap, price ordering and the buy/sell spread, a full pack,
+selling something that is being worn, and — the part that matters — a trained
+skill and a bought weapon arriving in the dungeon on the right body.
+
+The test now also MOUNTS each town screen with a real party and presses its
+buttons, which is the only way to cover the glue between a button and a rule
+without a mouse. It logs every press into the report, because a button-walking
+test that matches the wrong button passes just as happily as one that does not.
+Those screens save as they go, so the test backs up the player's save file and
+puts it back, and asserts at the end that it left it as it found it.

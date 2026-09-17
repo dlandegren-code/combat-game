@@ -43,19 +43,32 @@ func _ready() -> void:
 		_add_starting_item(template.make_instance())
 
 
+## The slots a piece of gear is tried against, in order, when nobody has chosen one for it.
+## Hands first, so a weapon is drawn rather than filed.
+const SLOT_ORDER := [ItemResource.EquipSlot.RIGHT_HAND, ItemResource.EquipSlot.LEFT_HAND,
+	ItemResource.EquipSlot.ARMOR, ItemResource.EquipSlot.HELMET, ItemResource.EquipSlot.LEGS]
+
+
+static func preferred_slot(item: ItemResource) -> int:
+	## Where this item goes by default: the first slot it is allowed in, or -1 for something
+	## that is carried rather than worn (arrows, potions, keys).
+	##
+	## Static, and the rule lives here rather than being written out twice, because the
+	## character creation screen has to work out a starting loadout with no live inventory to
+	## do it with (CharacterClasses._starting_loadout).
+	if item == null:
+		return -1
+	for slot in SLOT_ORDER:
+		if item.can_equip_in(slot):
+			return slot
+	return -1
+
+
 func _add_starting_item(item: ItemResource) -> void:
 	add_item(item)
-	# Auto-equip starting items into their intended slot
-	if item.can_equip_in(ItemResource.EquipSlot.RIGHT_HAND):
-		_equip_to(ItemResource.EquipSlot.RIGHT_HAND, item)
-	elif item.can_equip_in(ItemResource.EquipSlot.LEFT_HAND):
-		_equip_to(ItemResource.EquipSlot.LEFT_HAND, item)
-	elif item.can_equip_in(ItemResource.EquipSlot.ARMOR):
-		_equip_to(ItemResource.EquipSlot.ARMOR, item)
-	elif item.can_equip_in(ItemResource.EquipSlot.HELMET):
-		_equip_to(ItemResource.EquipSlot.HELMET, item)
-	elif item.can_equip_in(ItemResource.EquipSlot.LEGS):
-		_equip_to(ItemResource.EquipSlot.LEGS, item)
+	var slot: int = preferred_slot(item)
+	if slot >= 0:
+		_equip_to(slot, item)
 
 
 func add_item(item: ItemResource) -> bool:

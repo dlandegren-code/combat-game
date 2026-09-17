@@ -153,6 +153,65 @@ const DEFAULT_THROW_RANGE := 2
 @export var model_ground_rotation: Vector3 = Vector3(-90, 0, 0)  ## rotation when dropped on the ground (degrees)
 
 
+## What this is worth in a market, or 0 to let gold_value() work it out from the item's stats.
+##
+## Zero by default so that none of the .tres in resources/items had to be given a number by
+## hand, and so that a change to what armour is worth reaches every piece of armour in the
+## game at once. Set it only for something whose price is not a function of its stats — a
+## quest item, or a famous sword.
+@export var value: int = 0
+
+## Prices per point, used when `value` is 0. Attack and damage cost the same because a point
+## of either is a point of either; armour is dearer than both because nothing in this game
+## lets you dodge a blow you did not see coming.
+const VALUE_BASE := {
+	ItemType.WEAPON: 12, ItemType.THROWABLE: 10, ItemType.CONSUMABLE: 8, ItemType.AMMO: 5,
+	ItemType.SHIELD: 16, ItemType.ARMOR: 20, ItemType.HELMET: 14, ItemType.LEGS: 14,
+	ItemType.KEY: 0,
+}
+const VALUE_PER_ATTACK := 8
+const VALUE_PER_DAMAGE := 8
+const VALUE_PER_ARMOUR := 12
+const VALUE_PER_RESISTANCE := 1
+const VALUE_PER_PARRY := 6
+const VALUE_PER_HEAL := 2
+const VALUE_PER_ARROW := 1
+## Reach is worth something, but a longbow reaches 200 squares and a shortbow 60 — priced per
+## point that would make the bow worth more than the armoury.
+const VALUE_PER_RANGE_TILES := 10
+
+## What a ruined weapon fetches, as a fraction. A quarter: somebody will buy the metal.
+const BROKEN_VALUE_DIVISOR := 4
+
+## What a shop pays for something it is going to have to sell again, as a percentage of what
+## it would charge. The gap between buying and selling is the whole reason looting a dungeon
+## is not just free money.
+const SELL_PERCENT := 40
+
+
+func gold_value() -> int:
+	## What a merchant asks for this.
+	if value > 0:
+		return value
+	var total: int = VALUE_BASE.get(item_type, 10)
+	total += VALUE_PER_ATTACK * attack_bonus
+	total += VALUE_PER_DAMAGE * damage_bonus
+	total += VALUE_PER_ARMOUR * armor_bonus
+	total += VALUE_PER_RESISTANCE * resistance_bonus
+	total += VALUE_PER_PARRY * parry_bonus
+	total += VALUE_PER_HEAL * heal_amount
+	total += VALUE_PER_ARROW * ammo_amount
+	total += floori(ranged_range / float(VALUE_PER_RANGE_TILES))
+	if broken:
+		total = floori(total / float(BROKEN_VALUE_DIVISOR))
+	return maxi(1, total)
+
+
+func sell_value() -> int:
+	## What a merchant pays for it.
+	return maxi(1, floori(gold_value() * SELL_PERCENT / 100.0))
+
+
 func make_instance() -> ItemResource:
 	## Stamp a real item out of a template. Every item that enters play — starting gear, a
 	## ground pickup, the contents of a chest — comes through here.

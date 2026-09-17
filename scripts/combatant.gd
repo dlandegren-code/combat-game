@@ -553,6 +553,8 @@ func _apply_stats() -> void:
 	charisma = s.charisma
 	weight = s.weight
 	equip_cost = s.equip_cost
+	interact_cost = s.interact_cost
+	lockpick_skill = s.lockpick_skill
 
 
 func _derive_stats() -> void:

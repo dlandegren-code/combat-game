@@ -63,6 +63,14 @@ class_name CombatantStats
 @export var throw_skill: int = 3
 @export var throw_cost: int = 1     ## a throw is one quick action (see Combatant.throw_cost)
 
+@export_group("Interaction")
+## Doors, chests and levers. Both of these were Combatant exports with no home in a stat
+## block, which was harmless while a character only ever existed inside one scene — but a
+## character that travels is rebuilt from this block, and anything missing from it silently
+## reverts to the default. The authored archer's lockpicking went from 3 to 0 that way.
+@export var interact_cost: int = 1
+@export var lockpick_skill: int = 0
+
 @export_group("Spellcasting")
 ## Off by default: only a character marked a caster gets a mana pool or any spell power, even
 ## though every character has willpower. See Combatant.can_cast.

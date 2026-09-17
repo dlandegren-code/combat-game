@@ -13,6 +13,7 @@ extends Node
 ## reaches into.
 
 const CharacterDataScript := preload("res://scripts/character_data.gd")
+const ProgressionScript := preload("res://scripts/progression.gd")
 
 ## Bumped when the shape of a SAVE changes, independently of a character's own schema — see
 ## CharacterData.SCHEMA_VERSION.
@@ -69,7 +70,11 @@ func award_xp(amount: int) -> void:
 	if amount <= 0:
 		return
 	for member in party:
+		# Two counters, and both of them matter: `xp` is the pool training spends, `xp_total`
+		# is the life's work that decides the level. See CharacterData.
 		member.xp += amount
+		member.xp_total += amount
+		member.level = ProgressionScript.level_for(member.xp_total)
 	party_changed.emit()
 
 
@@ -80,18 +85,29 @@ func add_gold(amount: int) -> void:
 	gold_changed.emit(gold)
 
 
-func rest_party() -> void:
-	## Everybody back to full. Called when the party reaches town, which is the only place
-	## that has beds in it.
+func spend_gold(amount: int) -> bool:
+	## Take gold if there is enough, and say whether there was.
 	##
-	## Free for now, and that is a placeholder rather than a decision: healing is exactly the
-	## sort of thing the town economy should charge for (Phase 3), and a downed hero should
-	## probably cost more than a scratched one. Until there is an economy to charge against,
-	## a quest that leaves the party at 2 hp must not make the next one unplayable.
+	## Separate from add_gold(-n), which clamps at zero: a purchase must not go through for
+	## whatever the party happened to have. Everything that spends money goes through here.
+	if amount <= 0 or gold < amount:
+		return false
+	gold -= amount
+	gold_changed.emit(gold)
+	return true
+
+
+func rest_party() -> void:
+	## Everybody back to full. Called when the party pays for a night in town, which is the
+	## only place with beds in it — the price is Town's business (Progression.REST_GOLD_PER_HP).
+	##
+	## Hit points and mana, and deliberately NOT ammunition. Sleeping mends a man and clears
+	## his head; it does not put arrows back in his quiver. Arrows are bought, which is what
+	## makes the bundle on the market shelf worth anything and what makes an archer's upkeep
+	## different from a soldier's.
 	for member in party:
 		member.hp = CharacterDataScript.VITALS_FULL
 		member.mana = CharacterDataScript.VITALS_FULL
-		member.ammo = CharacterDataScript.VITALS_FULL
 
 
 func take_last_result() -> Dictionary:

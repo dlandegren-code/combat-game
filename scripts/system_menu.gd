@@ -82,16 +82,29 @@ func _build() -> void:
 func _on_pressed(id: String) -> void:
 	match id:
 		"town":
-			if _quest() == null:
+			var quest := _quest()
+			if quest == null:
 				_show_toast("Nothing to leave — this is not a quest")
 				return
+			# Leaving a won dungeon and abandoning one are the same act and should not read
+			# the same: one is a decision to stop searching, the other is giving up.
+			var held: bool = quest.has_method("field_is_held") and quest.field_is_held()
+			if held:
+				_leave.title = "Leave Victorious"
+				_leave.dialog_text = "Nothing left alive down here. Head back to town?"
+			else:
+				_leave.title = "Abandon the Quest"
+				_leave.dialog_text = "March back to town with the dungeon unfinished? " \
+					+ "Everything your party is carrying comes with them."
 			_leave.popup_centered()
 		"quit":
 			_confirm.popup_centered()
 		"options":
 			_show_toast("Options screen not built yet")
 		"save":
-			_show_toast("Saving not implemented yet")
+			# Not a missing feature — a decision. See SaveGame: town is the checkpoint, and a
+			# quest that could be saved mid-turn would also be a quest you could re-roll.
+			_show_toast("The party is saved when they reach town")
 
 
 func _quest() -> Node:
@@ -105,12 +118,14 @@ func _quest() -> Node:
 
 
 func _do_leave() -> void:
-	## Walking out is one of the three ways a quest ends, and the only one wired up yet.
-	## Phase 1 adds the other two — victory and defeat — as a signal out of the combat layer,
-	## and a results screen in front of the town. All three land on finish_quest.
+	## Walking out is one of the three ways a quest ends. Defeat is reported by the combat
+	## layer and needs no button (CombatManager.party_wiped); victory is this same walk out
+	## of a dungeon with nothing left alive in it, which is why it is one function.
 	var quest := _quest()
-	if quest != null:
-		quest.finish_quest("retreat")
+	if quest == null:
+		return
+	var held: bool = quest.has_method("field_is_held") and quest.field_is_held()
+	quest.finish_quest("victory" if held else "retreat")
 
 
 func _show_toast(text: String) -> void:
