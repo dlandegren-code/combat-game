@@ -1,0 +1,24 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
+[ext_resource type="Script" path="res://scripts/inventory_component.gd" id="2_inv"]
+[ext_resource type="BoxShape3D" path="res://resources/shapes/character_box.tres" id="3_shape"]
+
+[node name="Hero" type="CharacterBody3D"]
+wall_min_slide_angle = 0.0
+floor_stop_on_slope = false
+floor_block_on_wall = false
+floor_snap_length = 0.0
+script = ExtResource("1_player")
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+shape = ExtResource("3_shape")
+
+[node name="HealthBar" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
+billboard = 2
+text = "20/20"
+font_size = 36
+
+[node name="Inventory" type="Node" parent="."]
+script = ExtResource("2_inv")

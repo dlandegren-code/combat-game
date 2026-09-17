@@ -58,7 +58,16 @@ func _ready() -> void:
 	turn_label = get_parent().get_node("HUD/TurnLabel")
 	order_list = get_parent().get_node("InitiativePanel/Panel/OrderList")
 	initiative_panel = get_parent().get_node_or_null("InitiativePanel")
+	# Deferred, because who is IN this fight is no longer settled by the time this node is
+	# ready. _ready runs bottom-up — every child before its parent — so the scene root has not
+	# had its turn yet, and the root is what assembles the party now: QuestScene spawns a body
+	# for each member of GameState.party and retires the hand-placed ones. Collecting here
+	# would deal the old test scenario's heroes into the order and miss the real party.
+	# Phase 4's generated rooms will place their enemies from the same hook.
+	call_deferred("_boot")
 
+
+func _boot() -> void:
 	_collect_combatants()
 	_spawn_ground_items()
 	if combatants.is_empty():
@@ -586,8 +595,9 @@ func _spawn_ground_items() -> void:
 func _spawn_item(path: String, at: Vector3) -> void:
 	var item: ItemResource = load(path)
 	if item:
-		# Duplicate so runtime changes (durability, pickup) don't mutate the cached .tres.
-		_spawn_gi(item.duplicate(), at)
+		# An instance, so runtime changes (durability, pickup) don't mutate the cached .tres,
+		# and so the item can be saved once picked up (ItemResource.make_instance).
+		_spawn_gi(item.make_instance(), at)
 
 
 func _spawn_gi(item: ItemResource, at: Vector3) -> void:

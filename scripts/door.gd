@@ -6,7 +6,7 @@ class_name Door
 ##
 ## Built in code by room_builder.gd rather than saved as a scene, for the same reason the walls
 ## and props are — the doorway's position is derived from DOOR_X0 and the module size, and a
-## door placed by hand in main.tscn would silently drift the moment either changed.
+## door placed by hand in quest_scene.tscn would silently drift the moment either changed.
 ##
 ## --- What a door is, to the rest of the game ---
 ##

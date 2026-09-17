@@ -477,7 +477,7 @@ func _ready() -> void:
 	# After both the stat block and the subclass hook have had their say, so it derives from
 	# the attributes this character actually ended up with.
 	_derive_stats()
-	# Put each side on its own physics layer. main.tscn only ever set layer 2 on the
+	# Put each side on its own physics layer. quest_scene.tscn only ever set layer 2 on the
 	# enemies, leaving the heroes on the default layer 1 — the same layer as the floor,
 	# which both broke AI line-of-sight (see LAYER_LOS_BLOCKERS) and let a click on a
 	# party member register as a ground hit. _pre_setup is where enemies force
@@ -3405,7 +3405,7 @@ func _gather_spare_arrows() -> void:
 	# Duplicated, because a .tres is a shared cached object: written to directly, the arrow
 	# bundle in the crates would quietly become however many arrows the last archer died with.
 	# The same reason CombatManager._spawn_item duplicates before dropping one.
-	var spare := bundle.duplicate() as ItemResource
+	var spare := bundle.make_instance()
 	spare.ammo_amount = ammo
 	contents.append(spare)
 	# The quiver is empty now — they are in the pile. Nothing reads a corpse's ammo today, and
@@ -3447,7 +3447,7 @@ func _place_floating_labels() -> void:
 	## height this particular character turns out to be.
 	##
 	## Overrides the y the scene's Label3D was placed at: it is the same rule for all seven
-	## combatants in main.tscn, and nobody should have to keep seven transforms agreeing.
+	## combatants in quest_scene.tscn, and nobody should have to keep seven transforms agreeing.
 	var crown: float = _model_crown_y()
 	# A centimetre of slack, so an animation frame that nudges a bounding box does not set the
 	# labels twitching.

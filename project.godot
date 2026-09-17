@@ -11,9 +11,13 @@ config_version=5
 [application]
 
 config/name="CombatGame"
-run/main_scene="res://main.tscn"
+run/main_scene="res://scenes/bootstrap.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+GameState="*res://scripts/game_state.gd"
 
 [dotnet]
 

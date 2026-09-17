@@ -167,7 +167,7 @@ var _look_tween: Tween = null
 
 
 func _pre_setup() -> void:
-	# main.tscn does not store is_player_controlled on enemy nodes; enforce it.
+	# quest_scene.tscn does not store is_player_controlled on enemy nodes; enforce it.
 	# All numeric stats (including move_speed/move_range) come from the assigned
 	# `stats` resource, applied by the base before this hook runs.
 	is_player_controlled = false

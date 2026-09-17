@@ -15,6 +15,7 @@ const MARGIN := 12.0
 
 ## Each entry becomes one round plate, left to right.
 const BUTTONS := [
+	{"id": "town", "glyph": "⌂", "caption": "Town"},
 	{"id": "options", "glyph": "⚙", "caption": "Options"},
 	{"id": "save", "glyph": "▣", "caption": "Save"},
 	{"id": "quit", "glyph": "✕", "caption": "Quit"},
@@ -22,6 +23,7 @@ const BUTTONS := [
 
 var _root: Control
 var _confirm: ConfirmationDialog
+var _leave: ConfirmationDialog
 var _toast: Label
 var _toast_tween: Tween = null
 
@@ -58,6 +60,12 @@ func _build() -> void:
 	_confirm.confirmed.connect(func(): get_tree().quit())
 	_root.add_child(_confirm)
 
+	_leave = ConfirmationDialog.new()
+	_leave.dialog_text = "March back to town? Everything your party is carrying comes with them."
+	_leave.title = "Leave the Dungeon"
+	_leave.confirmed.connect(_do_leave)
+	_root.add_child(_leave)
+
 	# Feedback for the two controls that have no system behind them yet. Sits just above the
 	# cluster so it reads as a response to the click.
 	_toast = Label.new()
@@ -73,12 +81,36 @@ func _build() -> void:
 
 func _on_pressed(id: String) -> void:
 	match id:
+		"town":
+			if _quest() == null:
+				_show_toast("Nothing to leave — this is not a quest")
+				return
+			_leave.popup_centered()
 		"quit":
 			_confirm.popup_centered()
 		"options":
 			_show_toast("Options screen not built yet")
 		"save":
 			_show_toast("Saving not implemented yet")
+
+
+func _quest() -> Node:
+	## The quest this menu is sitting in, or null on any screen that is not one. Asked of the
+	## scene root by capability rather than by name, so a second kind of quest scene needs no
+	## change here.
+	var root := get_tree().current_scene
+	if root != null and root.has_method("finish_quest"):
+		return root
+	return null
+
+
+func _do_leave() -> void:
+	## Walking out is one of the three ways a quest ends, and the only one wired up yet.
+	## Phase 1 adds the other two — victory and defeat — as a signal out of the combat layer,
+	## and a results screen in front of the town. All three land on finish_quest.
+	var quest := _quest()
+	if quest != null:
+		quest.finish_quest("retreat")
 
 
 func _show_toast(text: String) -> void:

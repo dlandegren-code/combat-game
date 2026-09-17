@@ -24,6 +24,18 @@ enum Handedness { ONE_HANDED, TWO_HANDED }
 ## so nothing else can be asked to tell us.
 enum WeaponSound { SWORD, AXE, DAGGER, HAMMER, STICK }
 
+## Which .tres under resources/items this item was stamped from — its identity, and the only
+## thing about it a save file needs to name.
+##
+## `resource_path` cannot do this job: every item in play is a per-character duplicate (see
+## make_instance) and Resource.duplicate() hands back a copy with no path at all. An exported
+## field survives duplication, so a sword knows what kind of sword it is for as long as it
+## exists.
+##
+## Empty on a template itself, and on anything built in code rather than from a file. Such an
+## item cannot be saved — see CharacterData._item_to_dict.
+@export var template_path: String = ""
+
 @export var item_name: String = "Item"
 @export var item_type: int = ItemType.WEAPON
 @export var equip_slot: int = EquipSlot.ANY_HAND
@@ -139,6 +151,23 @@ const DEFAULT_THROW_RANGE := 2
 ## Ignored unless use_two_handed_grip is on; one-handers use model_hand_rotation instead.
 @export var model_grip_roll: float = 0.0
 @export var model_ground_rotation: Vector3 = Vector3(-90, 0, 0)  ## rotation when dropped on the ground (degrees)
+
+
+func make_instance() -> ItemResource:
+	## Stamp a real item out of a template. Every item that enters play — starting gear, a
+	## ground pickup, the contents of a chest — comes through here.
+	##
+	## The duplicate is what makes mutation safe: durability, the "Broken " prefix and a split
+	## ammo bundle all write into the item, and without a copy per character every sword in
+	## the game would break at once. That was already the rule; what is new is that the copy
+	## remembers where it came from (template_path), because an item with no identity cannot
+	## be written to a save file.
+	var copy := duplicate() as ItemResource
+	if copy.template_path == "":
+		# resource_path is empty when this is itself an instance rather than a template, in
+		# which case duplicate() has already carried the original's template_path across.
+		copy.template_path = resource_path
+	return copy
 
 
 func has_model() -> bool:

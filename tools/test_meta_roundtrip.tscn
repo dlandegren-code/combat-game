@@ -1,0 +1,6 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://tools/test_meta_roundtrip.gd" id="1_test"]
+
+[node name="TestMetaRoundTrip" type="Node3D"]
+script = ExtResource("1_test")

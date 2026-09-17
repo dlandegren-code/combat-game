@@ -3,7 +3,7 @@ extends RefCounted
 ##
 ## Six voices from the Medieval Fantasy 2 bundle, picked per character by the `voice` export on
 ## Combatant. Keyed by STRING rather than by an enum ordinal on purpose — the value is set on
-## nodes in main.tscn, and "male_d" in a scene diff says what an anonymous `4` never would.
+## nodes in quest_scene.tscn, and "male_d" in a scene diff says what an anonymous `4` never would.
 ## An unknown key is a warning and silence, not a crash mid-fight.
 ##
 ## Every character in the arena is currently a man or an orc, so only the male voices are

@@ -276,7 +276,7 @@ func _roll_contents() -> Array:
 		if template == null:
 			push_warning("Loot missing: " + path)
 			continue
-		out.append(template.duplicate())
+		out.append(template.make_instance())
 	return out
 
 

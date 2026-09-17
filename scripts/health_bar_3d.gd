@@ -11,7 +11,7 @@ extends Node3D
 ## whether they are in trouble.
 ##
 ## Built in code and hung on the combatant at runtime (Combatant._ready), not placed in the
-## scene: there are seven combatants in main.tscn and no reason for seven copies of this to be
+## scene: there are seven combatants in quest_scene.tscn and no reason for seven copies of this to be
 ## maintained by hand.
 
 const PortraitSlot := preload("res://scripts/portrait_slot.gd")

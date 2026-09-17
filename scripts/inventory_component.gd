@@ -38,8 +38,9 @@ func _ready() -> void:
 	for template in [starting_item_1, starting_item_2, starting_item_3, starting_item_4]:
 		if template == null:
 			continue
-		# Duplicate so each character has its own instance (durability, bonuses).
-		_add_starting_item(template.duplicate())
+		# An instance of its own, so durability and bonuses are this character's — and so the
+		# item remembers which template it came from (see ItemResource.make_instance).
+		_add_starting_item(template.make_instance())
 
 
 func _add_starting_item(item: ItemResource) -> void:
@@ -271,6 +272,39 @@ func _equip_to(slot: int, item: ItemResource) -> void:
 			legs = item
 
 	_apply_item_bonuses(item)
+
+
+func equip_into(slot: int, item: ItemResource) -> void:
+	## Put a KNOWN item into a KNOWN slot. For restoring a loadout that was already decided —
+	## a character walking back into a quest wearing what they wore out of town.
+	##
+	## Deliberately not equip(), which works out a target slot from the item's type and from
+	## which hand happens to be free. That inference is right for a player clicking Equip and
+	## wrong here: it would put a saved off-hand sword back in the main hand, and a hero who
+	## chose to hold their shield on the right would find it moved every time they travelled.
+	if item == null or get_item_slot(item) < 0:
+		return
+	_equip_to(slot, item)
+
+
+func clear_all() -> void:
+	## Strip the character back to nothing: every slot unequipped, the bag emptied.
+	##
+	## Unequip first, and through unequip_slot, so each item's armour and resistance bonuses
+	## come back off the character as they go. Emptying `items` on its own would leave the
+	## body permanently wearing gear it is no longer holding.
+	##
+	## A two-handed weapon fills both hands with the SAME object and had its bonuses applied
+	## once (see _equip_to), so it has to come off once: the second reference is dropped here
+	## rather than unequipped, which would subtract the same bonus twice.
+	if right_hand != null and right_hand == left_hand:
+		left_hand = null
+	for slot in [ItemResource.EquipSlot.RIGHT_HAND, ItemResource.EquipSlot.LEFT_HAND,
+			ItemResource.EquipSlot.ARMOR, ItemResource.EquipSlot.HELMET,
+			ItemResource.EquipSlot.LEGS]:
+		unequip_slot(slot)
+	for i in range(items.size()):
+		items[i] = null
 
 
 func get_equipped_weapon() -> ItemResource:

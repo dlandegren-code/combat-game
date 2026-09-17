@@ -1,45 +1,45 @@
-[gd_scene format=4 uid="uid://mqe576j05ua8"]
+[gd_scene format=4 uid="uid://bpmq1l7vv5cbs"]
 
-[ext_resource type="Script" uid="uid://bt71cq16le8s7" path="res://scripts/player.gd" id="1_player"]
-[ext_resource type="Script" uid="uid://cqq8m3hh3yh7e" path="res://scripts/enemy.gd" id="2_enemy"]
-[ext_resource type="Texture2D" uid="uid://gcvw5xawgvyf" path="res://assets/images/Sample.png" id="2_vivmo"]
-[ext_resource type="Script" uid="uid://by7c3x5cgidj7" path="res://scripts/combat_manager.gd" id="3_turn"]
-[ext_resource type="Script" uid="uid://cgx1c6je2dbjs" path="res://scripts/grid.gd" id="4_1bvp3"]
-[ext_resource type="Script" uid="uid://ce8bhcvhdkt2m" path="res://scripts/camera_controller.gd" id="5_camera"]
-[ext_resource type="Script" uid="uid://cthubpsntwfxy" path="res://scripts/inventory_component.gd" id="6_inv"]
-[ext_resource type="Resource" uid="uid://6splfx088ds6" path="res://resources/items/rusty_sword.tres" id="6_qsp4k"]
-[ext_resource type="Script" uid="uid://bdvlysmli3u5i" path="res://scripts/inventory_ui.gd" id="7_inv_ui"]
-[ext_resource type="Resource" uid="uid://d2hdiisulhr7q" path="res://resources/items/leather_armor.tres" id="8_kq58d"]
-[ext_resource type="Script" uid="uid://beuvdl0vwtots" path="res://scripts/ground_item.gd" id="9_ground"]
-[ext_resource type="Resource" path="res://resources/items/short_bow.tres" id="9_seu75"]
-[ext_resource type="Resource" path="res://resources/items/wooden_shield.tres" id="10_shield"]
-[ext_resource type="PackedScene" uid="uid://opvjw5on7r3a" path="res://scenes/characters/soldier_model.tscn" id="11_soldier_wrapper"]
-[ext_resource type="PackedScene" uid="uid://ca2d2euqix8my" path="res://scenes/characters/orc_model.tscn" id="12_orc_wrapper"]
-[ext_resource type="Resource" path="res://resources/items/goblin_dagger.tres" id="13_htxhm"]
-[ext_resource type="PackedScene" path="res://scenes/characters/male_d_model.tscn" id="13_maled_wrapper"]
-[ext_resource type="Script" uid="uid://l5mteh6g25ar" path="res://scripts/dungeon_floor.gd" id="14_floor"]
-[ext_resource type="Script" uid="uid://bj17a31dxfh1g" path="res://scripts/column_obstacle.gd" id="16_2cqfq"]
-[ext_resource type="Resource" path="res://resources/items/goblin_short_bow.tres" id="16_jq2sk"]
-[ext_resource type="PackedScene" path="res://scenes/pillar_visual.tscn" id="17_yaehf"]
-[ext_resource type="Resource" path="res://resources/items/boss_cleaver.tres" id="18_4k2k6"]
-[ext_resource type="Resource" path="res://resources/stats/goblin_stats.tres" id="18_goblin_stats"]
-[ext_resource type="Resource" uid="uid://ckt6pwwf2cpua" path="res://resources/stats/archer_stats.tres" id="19_archer_stats"]
-[ext_resource type="Resource" path="res://resources/stats/boss_stats.tres" id="20_boss_stats"]
-[ext_resource type="Resource" path="res://resources/items/ranger_dagger.tres" id="20_ok6jj"]
-[ext_resource type="Resource" uid="uid://c4u8ewwrdl3t4" path="res://resources/items/reinforced_leather_armor.tres" id="21_facbu"]
-[ext_resource type="Script" uid="uid://bp8qfogtdois4" path="res://scripts/room_builder.gd" id="30_kq58d"]
-[ext_resource type="PackedScene" path="res://scenes/party_panel.tscn" id="31_party"]
-[ext_resource type="PackedScene" path="res://scenes/characters/wizard_model.tscn" id="32_wizard_wrapper"]
-[ext_resource type="Resource" path="res://resources/items/gemstone_staff.tres" id="33_staff"]
-[ext_resource type="Resource" path="res://resources/items/quiver.tres" id="34_quiver"]
-[ext_resource type="Script" uid="uid://c0158ruvojo6t" path="res://scripts/action_toolbar.gd" id="35_toolbar"]
-[ext_resource type="Script" uid="uid://bimm2jro0lsmj" path="res://scripts/system_menu.gd" id="36_sysmenu"]
-[ext_resource type="Script" uid="uid://bbw8x7t016iaa" path="res://scripts/character_sheet_ui.gd" id="37_sheet"]
-[ext_resource type="Script" uid="uid://cdj327r1wgiem" path="res://scripts/spell_sheet_ui.gd" id="38_spells"]
-[ext_resource type="Resource" path="res://resources/items/iron_key.tres" id="40_ironkey"]
-[ext_resource type="Script" uid="uid://bsjnh8str1kxk" path="res://scripts/loot_ui.gd" id="41_loot_ui"]
-[ext_resource type="Resource" path="res://resources/items/goblin_leather_armor.tres" id="42_gobleather"]
-[ext_resource type="Resource" path="res://resources/items/reinforced_goblin_leather.tres" id="43_gobreinf"]
+[ext_resource type="Script" uid="uid://ce8bhcvhdkt2m" path="res://scripts/camera_controller.gd" id="1_a01p3"]
+[ext_resource type="Texture2D" uid="uid://gcvw5xawgvyf" path="res://assets/images/Sample.png" id="2_akaov"]
+[ext_resource type="Script" uid="uid://l5mteh6g25ar" path="res://scripts/dungeon_floor.gd" id="3_treno"]
+[ext_resource type="Script" uid="uid://bt71cq16le8s7" path="res://scripts/player.gd" id="4_7y7b0"]
+[ext_resource type="Script" uid="uid://cthubpsntwfxy" path="res://scripts/inventory_component.gd" id="5_p48p4"]
+[ext_resource type="Resource" uid="uid://6splfx088ds6" path="res://resources/items/rusty_sword.tres" id="6_ulvtp"]
+[ext_resource type="Resource" path="res://resources/items/wooden_shield.tres" id="7_ctdon"]
+[ext_resource type="Resource" uid="uid://d2hdiisulhr7q" path="res://resources/items/leather_armor.tres" id="8_bm5mk"]
+[ext_resource type="PackedScene" uid="uid://opvjw5on7r3a" path="res://scenes/characters/soldier_model.tscn" id="9_5lheh"]
+[ext_resource type="Script" uid="uid://cqq8m3hh3yh7e" path="res://scripts/enemy.gd" id="10_5g4sr"]
+[ext_resource type="Resource" path="res://resources/stats/goblin_stats.tres" id="11_pnngg"]
+[ext_resource type="Resource" path="res://resources/items/goblin_dagger.tres" id="12_a0tai"]
+[ext_resource type="Resource" path="res://resources/items/goblin_leather_armor.tres" id="13_rrrb8"]
+[ext_resource type="PackedScene" uid="uid://ca2d2euqix8my" path="res://scenes/characters/orc_model.tscn" id="14_34upe"]
+[ext_resource type="Resource" uid="uid://ckt6pwwf2cpua" path="res://resources/stats/archer_stats.tres" id="15_t1e1h"]
+[ext_resource type="Resource" path="res://resources/items/goblin_short_bow.tres" id="16_x6qxo"]
+[ext_resource type="Resource" path="res://resources/stats/boss_stats.tres" id="17_agcnk"]
+[ext_resource type="Resource" path="res://resources/items/reinforced_goblin_leather.tres" id="18_i6juq"]
+[ext_resource type="Resource" path="res://resources/items/boss_cleaver.tres" id="19_iyjjt"]
+[ext_resource type="Resource" path="res://resources/items/iron_key.tres" id="20_0m8uf"]
+[ext_resource type="Resource" path="res://resources/items/ranger_dagger.tres" id="21_lcjc0"]
+[ext_resource type="Resource" uid="uid://c4u8ewwrdl3t4" path="res://resources/items/reinforced_leather_armor.tres" id="22_xwxap"]
+[ext_resource type="Resource" path="res://resources/items/short_bow.tres" id="23_3p6h5"]
+[ext_resource type="Resource" path="res://resources/items/quiver.tres" id="24_fxxhj"]
+[ext_resource type="PackedScene" path="res://scenes/characters/male_d_model.tscn" id="25_qpqg8"]
+[ext_resource type="Resource" path="res://resources/items/gemstone_staff.tres" id="26_dj21u"]
+[ext_resource type="PackedScene" path="res://scenes/characters/wizard_model.tscn" id="27_s44wp"]
+[ext_resource type="Script" uid="uid://by7c3x5cgidj7" path="res://scripts/combat_manager.gd" id="28_50tkx"]
+[ext_resource type="Script" uid="uid://cgx1c6je2dbjs" path="res://scripts/grid.gd" id="29_uiivk"]
+[ext_resource type="Script" uid="uid://c0158ruvojo6t" path="res://scripts/action_toolbar.gd" id="30_wuxff"]
+[ext_resource type="Script" uid="uid://bimm2jro0lsmj" path="res://scripts/system_menu.gd" id="31_6crl5"]
+[ext_resource type="Script" uid="uid://bbw8x7t016iaa" path="res://scripts/character_sheet_ui.gd" id="32_leb1r"]
+[ext_resource type="Script" uid="uid://cdj327r1wgiem" path="res://scripts/spell_sheet_ui.gd" id="33_mdw0w"]
+[ext_resource type="Script" uid="uid://bdvlysmli3u5i" path="res://scripts/inventory_ui.gd" id="34_oh2fu"]
+[ext_resource type="Script" uid="uid://bsjnh8str1kxk" path="res://scripts/loot_ui.gd" id="35_gsf45"]
+[ext_resource type="Script" uid="uid://beuvdl0vwtots" path="res://scripts/ground_item.gd" id="36_owquj"]
+[ext_resource type="Script" uid="uid://bj17a31dxfh1g" path="res://scripts/column_obstacle.gd" id="37_8i25a"]
+[ext_resource type="PackedScene" path="res://scenes/pillar_visual.tscn" id="38_s2t0t"]
+[ext_resource type="Script" uid="uid://bp8qfogtdois4" path="res://scripts/room_builder.gd" id="39_85r62"]
+[ext_resource type="PackedScene" path="res://scenes/party_panel.tscn" id="40_ctgds"]
 
 [sub_resource type="StandardMaterial3D" id="mat_ground"]
 albedo_color = Color(0.35, 0.5, 0.25, 1)
@@ -51,7 +51,7 @@ size = Vector3(30, 0.2, 30)
 size = Vector3(30, 0.2, 30)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2cqfq"]
-albedo_texture = ExtResource("2_vivmo")
+albedo_texture = ExtResource("2_akaov")
 texture_filter = 0
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_yaehf"]
@@ -111,7 +111,7 @@ shadow_enabled = true
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1106272685]
 fov = 55.0
-script = ExtResource("5_camera")
+script = ExtResource("1_a01p3")
 
 [node name="Ground" type="StaticBody3D" parent="." unique_id=1034464368]
 
@@ -127,7 +127,7 @@ shape = SubResource("shape_ground")
 visible = false
 material_override = SubResource("StandardMaterial3D_2cqfq")
 mesh = SubResource("ArrayMesh_yaehf")
-script = ExtResource("14_floor")
+script = ExtResource("3_treno")
 floor_y = 0.105
 
 [node name="MoveIndicator" type="MeshInstance3D" parent="." unique_id=1354630385]
@@ -142,7 +142,7 @@ wall_min_slide_angle = 0.0
 floor_stop_on_slope = false
 floor_block_on_wall = false
 floor_snap_length = 0.0
-script = ExtResource("1_player")
+script = ExtResource("4_7y7b0")
 can_guard = true
 agility = 5
 stamina = 4
@@ -162,12 +162,12 @@ text = "20/20"
 font_size = 36
 
 [node name="Inventory" type="Node" parent="Player" unique_id=1062237212]
-script = ExtResource("6_inv")
-starting_item_1 = ExtResource("6_qsp4k")
-starting_item_2 = ExtResource("10_shield")
-starting_item_3 = ExtResource("8_kq58d")
+script = ExtResource("5_p48p4")
+starting_item_1 = ExtResource("6_ulvtp")
+starting_item_2 = ExtResource("7_ctdon")
+starting_item_3 = ExtResource("8_bm5mk")
 
-[node name="CharacterModel" parent="Player" unique_id=1087090325 instance=ExtResource("11_soldier_wrapper")]
+[node name="CharacterModel" parent="Player" unique_id=1087090325 instance=ExtResource("9_5lheh")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 
 [node name="Enemy" type="CharacterBody3D" parent="." unique_id=750982114]
@@ -177,10 +177,10 @@ wall_min_slide_angle = 0.0
 floor_stop_on_slope = false
 floor_block_on_wall = false
 floor_snap_length = 0.0
-script = ExtResource("2_enemy")
+script = ExtResource("10_5g4sr")
 idle_role = 2
 patrol_route = Array[Vector3]([Vector3(9, 0, -9), Vector3(9, 0, 9), Vector3(-9, 0, 9), Vector3(-9, 0, -9)])
-stats = ExtResource("18_goblin_stats")
+stats = ExtResource("11_pnngg")
 voice = "male_d"
 
 [node name="Mesh" type="MeshInstance3D" parent="Enemy" unique_id=1490164396]
@@ -198,12 +198,12 @@ text = "10/10"
 font_size = 36
 
 [node name="Inventory" type="Node" parent="Enemy" unique_id=2002346694]
-script = ExtResource("6_inv")
-starting_item_1 = ExtResource("13_htxhm")
-starting_item_2 = ExtResource("13_htxhm")
-starting_item_3 = ExtResource("42_gobleather")
+script = ExtResource("5_p48p4")
+starting_item_1 = ExtResource("12_a0tai")
+starting_item_2 = ExtResource("12_a0tai")
+starting_item_3 = ExtResource("13_rrrb8")
 
-[node name="CharacterModel" parent="Enemy" unique_id=126384533 instance=ExtResource("12_orc_wrapper")]
+[node name="CharacterModel" parent="Enemy" unique_id=126384533 instance=ExtResource("14_34upe")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 
 [node name="Enemy2" type="CharacterBody3D" parent="." unique_id=411220731]
@@ -213,9 +213,9 @@ wall_min_slide_angle = 0.0
 floor_stop_on_slope = false
 floor_block_on_wall = false
 floor_snap_length = 0.0
-script = ExtResource("2_enemy")
+script = ExtResource("10_5g4sr")
 idle_role = 1
-stats = ExtResource("18_goblin_stats")
+stats = ExtResource("11_pnngg")
 voice = "male_d"
 
 [node name="Mesh" type="MeshInstance3D" parent="Enemy2" unique_id=411220732]
@@ -233,12 +233,12 @@ text = "10/10"
 font_size = 36
 
 [node name="Inventory" type="Node" parent="Enemy2" unique_id=411220735]
-script = ExtResource("6_inv")
-starting_item_1 = ExtResource("13_htxhm")
-starting_item_2 = ExtResource("13_htxhm")
-starting_item_3 = ExtResource("42_gobleather")
+script = ExtResource("5_p48p4")
+starting_item_1 = ExtResource("12_a0tai")
+starting_item_2 = ExtResource("12_a0tai")
+starting_item_3 = ExtResource("13_rrrb8")
 
-[node name="CharacterModel" parent="Enemy2" unique_id=411220736 instance=ExtResource("12_orc_wrapper")]
+[node name="CharacterModel" parent="Enemy2" unique_id=411220736 instance=ExtResource("14_34upe")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 
 [node name="ArcherEnemy" type="CharacterBody3D" parent="." unique_id=1733349018]
@@ -248,9 +248,9 @@ wall_min_slide_angle = 0.0
 floor_stop_on_slope = false
 floor_block_on_wall = false
 floor_snap_length = 0.0
-script = ExtResource("2_enemy")
+script = ExtResource("10_5g4sr")
 enemy_type = 1
-stats = ExtResource("19_archer_stats")
+stats = ExtResource("15_t1e1h")
 voice = "male_d"
 
 [node name="Mesh" type="MeshInstance3D" parent="ArcherEnemy" unique_id=1443505065]
@@ -268,12 +268,12 @@ text = "8/8"
 font_size = 36
 
 [node name="Inventory" type="Node" parent="ArcherEnemy" unique_id=1010040196]
-script = ExtResource("6_inv")
-starting_item_1 = ExtResource("13_htxhm")
-starting_item_2 = ExtResource("16_jq2sk")
-starting_item_3 = ExtResource("42_gobleather")
+script = ExtResource("5_p48p4")
+starting_item_1 = ExtResource("12_a0tai")
+starting_item_2 = ExtResource("16_x6qxo")
+starting_item_3 = ExtResource("13_rrrb8")
 
-[node name="CharacterModel" parent="ArcherEnemy" unique_id=942337605 instance=ExtResource("12_orc_wrapper")]
+[node name="CharacterModel" parent="ArcherEnemy" unique_id=942337605 instance=ExtResource("14_34upe")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 
 [node name="BossEnemy" type="CharacterBody3D" parent="." unique_id=2118022327]
@@ -283,9 +283,9 @@ wall_min_slide_angle = 0.0
 floor_stop_on_slope = false
 floor_block_on_wall = false
 floor_snap_length = 0.0
-script = ExtResource("2_enemy")
+script = ExtResource("10_5g4sr")
 enemy_type = 2
-stats = ExtResource("20_boss_stats")
+stats = ExtResource("17_agcnk")
 voice = "male_d"
 
 [node name="Mesh" type="MeshInstance3D" parent="BossEnemy" unique_id=217558937]
@@ -303,13 +303,13 @@ text = "30/30"
 font_size = 36
 
 [node name="Inventory" type="Node" parent="BossEnemy" unique_id=100771442]
-script = ExtResource("6_inv")
-starting_item_1 = ExtResource("13_htxhm")
-starting_item_2 = ExtResource("43_gobreinf")
-starting_item_3 = ExtResource("18_4k2k6")
-starting_item_4 = ExtResource("40_ironkey")
+script = ExtResource("5_p48p4")
+starting_item_1 = ExtResource("12_a0tai")
+starting_item_2 = ExtResource("18_i6juq")
+starting_item_3 = ExtResource("19_iyjjt")
+starting_item_4 = ExtResource("20_0m8uf")
 
-[node name="CharacterModel" parent="BossEnemy" unique_id=1141627769 instance=ExtResource("12_orc_wrapper")]
+[node name="CharacterModel" parent="BossEnemy" unique_id=1141627769 instance=ExtResource("14_34upe")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 
 [node name="Player2" type="CharacterBody3D" parent="." unique_id=1766136452]
@@ -318,7 +318,7 @@ wall_min_slide_angle = 0.0
 floor_stop_on_slope = false
 floor_block_on_wall = false
 floor_snap_length = 0.0
-script = ExtResource("1_player")
+script = ExtResource("4_7y7b0")
 initiative = 8
 character_name = "Archer"
 voice = "male_b"
@@ -348,13 +348,13 @@ text = "20/20"
 font_size = 36
 
 [node name="Inventory" type="Node" parent="Player2" unique_id=342301566]
-script = ExtResource("6_inv")
-starting_item_1 = ExtResource("20_ok6jj")
-starting_item_2 = ExtResource("21_facbu")
-starting_item_3 = ExtResource("9_seu75")
-starting_item_4 = ExtResource("34_quiver")
+script = ExtResource("5_p48p4")
+starting_item_1 = ExtResource("21_lcjc0")
+starting_item_2 = ExtResource("22_xwxap")
+starting_item_3 = ExtResource("23_3p6h5")
+starting_item_4 = ExtResource("24_fxxhj")
 
-[node name="CharacterModel" parent="Player2" unique_id=2132221886 instance=ExtResource("13_maled_wrapper")]
+[node name="CharacterModel" parent="Player2" unique_id=2132221886 instance=ExtResource("25_qpqg8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 show_quiver = true
 
@@ -364,7 +364,7 @@ wall_min_slide_angle = 0.0
 floor_stop_on_slope = false
 floor_block_on_wall = false
 floor_snap_length = 0.0
-script = ExtResource("1_player")
+script = ExtResource("4_7y7b0")
 initiative = 8
 character_name = "Wizard"
 voice = "male_c"
@@ -392,15 +392,15 @@ text = "20/20"
 font_size = 36
 
 [node name="Inventory" type="Node" parent="Wizard" unique_id=1739299797]
-script = ExtResource("6_inv")
-starting_item_1 = ExtResource("20_ok6jj")
-starting_item_2 = ExtResource("33_staff")
+script = ExtResource("5_p48p4")
+starting_item_1 = ExtResource("21_lcjc0")
+starting_item_2 = ExtResource("26_dj21u")
 
-[node name="CharacterModel" parent="Wizard" unique_id=897400905 instance=ExtResource("32_wizard_wrapper")]
+[node name="CharacterModel" parent="Wizard" unique_id=897400905 instance=ExtResource("27_s44wp")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 
 [node name="CombatManager" type="Node" parent="." unique_id=1411475820]
-script = ExtResource("3_turn")
+script = ExtResource("28_50tkx")
 
 [node name="InitiativePanel" type="CanvasLayer" parent="." unique_id=1909950055]
 
@@ -445,16 +445,16 @@ text = "Your Turn"
 horizontal_alignment = 1
 
 [node name="Grid" type="MeshInstance3D" parent="." unique_id=1678629236]
-script = ExtResource("4_1bvp3")
+script = ExtResource("29_uiivk")
 
 [node name="Toolbar" type="CanvasLayer" parent="." unique_id=501745713]
-script = ExtResource("35_toolbar")
+script = ExtResource("30_wuxff")
 
 [node name="SystemMenu" type="CanvasLayer" parent="." unique_id=501745714]
-script = ExtResource("36_sysmenu")
+script = ExtResource("31_6crl5")
 
 [node name="CharacterSheetPanel" type="CanvasLayer" parent="." unique_id=501745715]
-script = ExtResource("37_sheet")
+script = ExtResource("32_leb1r")
 
 [node name="Panel" type="Panel" parent="CharacterSheetPanel" unique_id=501745716]
 anchors_preset = 8
@@ -488,7 +488,7 @@ offset_bottom = -10.0
 theme_override_constants/separation = 1
 
 [node name="SpellSheetPanel" type="CanvasLayer" parent="." unique_id=501745720]
-script = ExtResource("38_spells")
+script = ExtResource("33_mdw0w")
 
 [node name="Panel" type="Panel" parent="SpellSheetPanel" unique_id=501745721]
 anchors_preset = 8
@@ -512,7 +512,7 @@ text = "Spells"
 horizontal_alignment = 1
 
 [node name="InventoryPanel" type="CanvasLayer" parent="." unique_id=1727708808]
-script = ExtResource("7_inv_ui")
+script = ExtResource("34_oh2fu")
 
 [node name="Panel" type="Panel" parent="InventoryPanel" unique_id=1202592604]
 anchors_preset = 8
@@ -536,7 +536,7 @@ text = "Inventory"
 horizontal_alignment = 1
 
 [node name="LootPanel" type="CanvasLayer" parent="." unique_id=501745730]
-script = ExtResource("41_loot_ui")
+script = ExtResource("35_gsf45")
 
 [node name="Panel" type="Panel" parent="LootPanel" unique_id=501745731]
 anchors_preset = 8
@@ -561,90 +561,90 @@ horizontal_alignment = 1
 
 [node name="GroundShield" type="MeshInstance3D" parent="." unique_id=999999999]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.2, 4)
-script = ExtResource("9_ground")
-item_resource = ExtResource("10_shield")
+script = ExtResource("36_owquj")
+item_resource = ExtResource("7_ctdon")
 
 [node name="Column" type="StaticBody3D" parent="." unique_id=911618751]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 3)
 collision_layer = 4
-script = ExtResource("16_2cqfq")
+script = ExtResource("37_8i25a")
 
 [node name="Collision" type="CollisionShape3D" parent="Column" unique_id=2053796698]
 shape = SubResource("CylinderShape3D_yaehf")
 
-[node name="ColumnGLB" parent="Column" unique_id=1817778999 instance=ExtResource("17_yaehf")]
+[node name="ColumnGLB" parent="Column" unique_id=1817778999 instance=ExtResource("38_s2t0t")]
 
 [node name="Column2" type="StaticBody3D" parent="." unique_id=944597145]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 5)
 collision_layer = 4
-script = ExtResource("16_2cqfq")
+script = ExtResource("37_8i25a")
 
 [node name="Collision" type="CollisionShape3D" parent="Column2" unique_id=1604950420]
 shape = SubResource("CylinderShape3D_074og")
 
-[node name="Mesh" parent="Column2" unique_id=1627473322 instance=ExtResource("17_yaehf")]
+[node name="Mesh" parent="Column2" unique_id=1627473322 instance=ExtResource("38_s2t0t")]
 
 [node name="Column3" type="StaticBody3D" parent="." unique_id=1691701743]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, 5)
 collision_layer = 4
-script = ExtResource("16_2cqfq")
+script = ExtResource("37_8i25a")
 
 [node name="Collision" type="CollisionShape3D" parent="Column3" unique_id=897122528]
 shape = SubResource("CylinderShape3D_cegan")
 
-[node name="Mesh" parent="Column3" unique_id=611739140 instance=ExtResource("17_yaehf")]
+[node name="Mesh" parent="Column3" unique_id=611739140 instance=ExtResource("38_s2t0t")]
 
 [node name="Column4" type="StaticBody3D" parent="." unique_id=1417252002]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 3)
 collision_layer = 4
-script = ExtResource("16_2cqfq")
+script = ExtResource("37_8i25a")
 
 [node name="Collision" type="CollisionShape3D" parent="Column4" unique_id=1550967187]
 shape = SubResource("CylinderShape3D_82xsv")
 
-[node name="Mesh" parent="Column4" unique_id=893100138 instance=ExtResource("17_yaehf")]
+[node name="Mesh" parent="Column4" unique_id=893100138 instance=ExtResource("38_s2t0t")]
 
 [node name="Column5" type="StaticBody3D" parent="." unique_id=998038785]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, -3)
 collision_layer = 4
-script = ExtResource("16_2cqfq")
+script = ExtResource("37_8i25a")
 
 [node name="Collision" type="CollisionShape3D" parent="Column5" unique_id=1612720617]
 shape = SubResource("CylinderShape3D_getpj")
 
-[node name="Mesh" parent="Column5" unique_id=291195072 instance=ExtResource("17_yaehf")]
+[node name="Mesh" parent="Column5" unique_id=291195072 instance=ExtResource("38_s2t0t")]
 
 [node name="Column6" type="StaticBody3D" parent="." unique_id=1271293864]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -5)
 collision_layer = 4
-script = ExtResource("16_2cqfq")
+script = ExtResource("37_8i25a")
 
 [node name="Collision" type="CollisionShape3D" parent="Column6" unique_id=424571942]
 shape = SubResource("CylinderShape3D_ryguw")
 
-[node name="Mesh" parent="Column6" unique_id=2120995780 instance=ExtResource("17_yaehf")]
+[node name="Mesh" parent="Column6" unique_id=2120995780 instance=ExtResource("38_s2t0t")]
 
 [node name="Column7" type="StaticBody3D" parent="." unique_id=395500848]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, -5)
 collision_layer = 4
-script = ExtResource("16_2cqfq")
+script = ExtResource("37_8i25a")
 
 [node name="Collision" type="CollisionShape3D" parent="Column7" unique_id=927918569]
 shape = SubResource("CylinderShape3D_d13ii")
 
-[node name="Mesh" parent="Column7" unique_id=1867901106 instance=ExtResource("17_yaehf")]
+[node name="Mesh" parent="Column7" unique_id=1867901106 instance=ExtResource("38_s2t0t")]
 
 [node name="Column8" type="StaticBody3D" parent="." unique_id=1374330567]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -3)
 collision_layer = 4
-script = ExtResource("16_2cqfq")
+script = ExtResource("37_8i25a")
 
 [node name="Collision" type="CollisionShape3D" parent="Column8" unique_id=943143732]
 shape = SubResource("CylinderShape3D_1u8w0")
 
-[node name="Mesh" parent="Column8" unique_id=1065881390 instance=ExtResource("17_yaehf")]
+[node name="Mesh" parent="Column8" unique_id=1065881390 instance=ExtResource("38_s2t0t")]
 
 [node name="DungeonRoom" type="Node3D" parent="." unique_id=2131157186]
-script = ExtResource("30_kq58d")
+script = ExtResource("39_85r62")
 
-[node name="PartyPanel" parent="." unique_id=1774300112 instance=ExtResource("31_party")]
+[node name="PartyPanel" parent="." unique_id=1774300112 instance=ExtResource("40_ctgds")]

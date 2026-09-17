@@ -3,7 +3,7 @@ class_name Stance
 ## Catalogue of defensive stances: what the stance selector lists, and how each one reads.
 ##
 ## `id` is the value Combatant.defensive_option stores, so these numbers are load-bearing —
-## 0 = Parry and 1 = Dodge are baked into main.tscn and every stat block in resources/stats.
+## 0 = Parry and 1 = Dodge are baked into quest_scene.tscn and every stat block in resources/stats.
 ## Append new stances rather than renumbering.
 ##
 ## IMPORTANT: adding an entry here puts it in the selector immediately, but the selector is
