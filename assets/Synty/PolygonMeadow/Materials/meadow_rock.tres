@@ -1,0 +1,18 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+; Rocks. Triplanar because the original blends rock and grass by world normal.
+; Written by hand: the Synty source uses Unity shaders (wind, triplanar, tree cards)
+; that mean nothing to Godot, so each material slot in the pack gets a plain Godot
+; equivalent here. Wind is a vertex shader applied separately - see wind_sway.gdshader.
+
+[ext_resource type="Texture2D" path="res://assets/Synty/PolygonMeadow/Textures/Rock_Texture_01.png" id="1_tex"]
+
+[resource]
+resource_name = "meadow_rock"
+albedo_texture = ExtResource("1_tex")
+roughness = 0.85
+metallic_specular = 0.0
+specular_mode = 1
+uv1_scale = Vector3(1, 1, 0)
+uv1_triplanar = true
+uv1_scale = Vector3(0.25, 0.25, 0.25)

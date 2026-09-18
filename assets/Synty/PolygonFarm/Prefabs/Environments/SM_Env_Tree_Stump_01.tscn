@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://412sqeo381yx"]
+
+[ext_resource type="ArrayMesh" uid="uid://dpt28nfc1y225" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Env_Tree_Stump_01.res" id="1_v3hh5"]
+[ext_resource type="Material" uid="uid://gb6y2qqungai" path="res://assets/Synty/PolygonFarm/Materials/PolygonFarm_01_A_mat.tres" id="2_jelf4"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_m74jm"]
+points = PackedVector3Array(1.1634871, -0.22957963, 0.24333048, 0.69942856, 0.7449019, 0.15733457, 1.06118, -0.49855092, 0.58133876, 0.6658164, -0.48661262, -0.73228455, 0.71812534, -0.0044779778, -0.5167616, 0.4206574, 0.7686347, 0.48936808, 0.117307186, 0.7644634, -0.6514101, -0.5648105, 0.8470247, -0.014016867, 0.2902, -0.42059237, 0.984004, -0.1207093, -0.6223928, 0.12276554, -0.3339367, -0.4972564, -1.1959791, -0.29129124, 0.027021885, -1.072, -0.3977999, 0.74849784, 0.5371672, -0.95555246, -0.49423587, -0.35885364, -0.9826523, -0.4555443, 0.606092, -0.8404307, -0.41829103, 0.77402914)
+
+[node name="SM_Env_Tree_Stump_01" type="MeshInstance3D" unique_id=824233338]
+gi_mode = 2
+mesh = ExtResource("1_v3hh5")
+surface_material_override/0 = ExtResource("2_jelf4")
+
+[node name="MeshCollider" type="StaticBody3D" parent="." unique_id=449235361]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider" unique_id=1338827417]
+shape = SubResource("ConvexPolygonShape3D_m74jm")

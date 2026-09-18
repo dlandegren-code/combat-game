@@ -1,0 +1,72 @@
+[gd_scene format=3 uid="uid://b5uyuv6fgglqg"]
+
+[ext_resource type="ArrayMesh" uid="uid://cn263n78k032r" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Env_Tree_Large_01.res" id="1_yy151"]
+[ext_resource type="Material" uid="uid://gb6y2qqungai" path="res://assets/Synty/PolygonFarm/Materials/PolygonFarm_01_A_mat.tres" id="2_iw4n7"]
+[ext_resource type="ArrayMesh" uid="uid://bpwu80wnk5q01" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Env_Tree_Large_Swing_01.res" id="3_iw4n7"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_hsa5v"]
+points = PackedVector3Array(0.1697411, -0.37208346, 0.98415637, 0.36056, 2.628088, 0.36261153, -0.05894196, 2.6102598, 0.35737014, -0.7702341, -0.47266102, 0.88347745, 1.0344157, -0.47434294, 0.6096134, -0.29233134, 2.8127604, 0.16125381, 0.62625164, 2.620015, 0.16955268, -0.9824452, -0.49587125, 0.6198778, -0.14707798, -0.62369555, 0.14356399, 1.2029865, -0.54599184, 0.27394426, 0.3389538, 2.7438025, -0.5889241, -0.2536114, 2.63347, -0.32772678, -0.9638339, -0.46896082, -0.33100265, -0.34666765, -0.50158966, -1.1748708, 0.67010576, -0.446087, -0.71318936, 0.09251517, -0.29908904, -1.2469404)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_mbjhj"]
+points = PackedVector3Array(-1.3884873, 11.667658, -0.71248865, -1.0593133, 8.460826, -0.67114884, -3.633801, 8.890475, -0.24114099, -2.2963147, 11.432539, 0.016863763, 1.1097703, 12.1547165, 1.0197233, 3.7899404, 10.430999, -0.66081387, 4.8450294, 9.000174, -0.70436835, -0.48325872, 8.419141, 0.9743233, -3.4025128, 8.4739895, 1.0599557, -2.5717816, 10.349822, 1.7793424, 2.2696757, 11.910456, 2.1395893, 5.2157836, 10.310697, 1.8228967, 4.9879603, 9.342065, 1.946178, -0.8955927, 9.388138, 2.98521, 1.4692631, 10.989361, 3.0579236, 4.5141234, 9.710284, 2.5817776)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_xmccg"]
+points = PackedVector3Array(-0.1958096, 3.8950617, -0.67136335, 0.46239662, 3.8950617, 0.35696208, 0.5823481, 3.8821619, 0.08617771, -0.028106451, 3.8789077, -0.6287647, -0.113677025, 2.7438307, -0.5477379, -2.2922893, 3.8540378, -0.30108276, -2.908856, 3.8952942, 0.809759, 0.5032718, 2.7438307, 0.35696208, -3.3202825, 3.7718732, 2.3719082, -3.1968927, 3.6484523, 2.3719082, 0.4295435, 2.7542899, -0.4014726, -0.25502133, 2.7080362, 0.06383574, -2.251796, 3.2375143, 1.4669101, -3.0326276, 3.6484523, 0.6036172, -3.1147602, 3.8540378, 0.562806, 0.3798821, 2.7438307, 0.3980713)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_w0yw5"]
+points = PackedVector3Array(7.2886667, 5.910321, -2.069623, 7.7406473, 5.910321, -0.9172013, 7.330197, 5.869236, -1.9458824, 3.383185, 4.8823256, -0.3008331, 2.2311192, 4.8412404, -0.2597419, 4.8626404, 5.9516234, -1.4523209, 5.0266047, 5.9446673, 2.5083113, 5.74341, 5.9337983, 2.2678347, 6.6090775, 5.5742497, 1.5832922, 6.918668, 5.2115493, 0.8492539, 4.739667, 5.2525253, 2.7006931, 3.8270755, 5.5760975, 2.5965643, 2.2311192, 5.457733, -0.09537709, 2.2311192, 5.4169745, -0.46566486, 4.5115194, 5.9312983, -1.1875627, 3.9705443, 5.924451, 2.0385642)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_tfmfp"]
+points = PackedVector3Array(0.05000758, 9.60073, -5.2328463, 1.3915656, 10.782338, -4.3435006, 0.9558015, 9.077627, -4.906753, -1.2014179, 9.312174, -4.01608, -2.0781608, 10.959072, -3.8656433, -1.480754, 11.072415, -4.175808, 2.1044314, 11.141131, -3.409909, 4.9030066, 9.283268, -1.6997991, 4.8791695, 9.085487, -0.7268286, -0.2434814, 9.109323, -1.4918427, -2.4044254, 9.952169, -0.7728443, -2.7068532, 10.47299, -2.451982, -2.40666, 11.203255, -0.7458544, -1.3474176, 11.668037, -0.71266985, 1.1569233, 11.328008, -2.7820575, 3.8750494, 10.433941, -0.7954097)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_w3hrb"]
+points = PackedVector3Array(8.701502, 6.822902, -1.8822143, 5.639702, 8.264484, 1.8435354, 5.5605116, 5.967808, 2.4113297, 8.645753, 6.303565, -2.0366032, 8.285913, 6.664444, -2.9993012, 6.1205435, 8.386469, -3.357203, 2.776826, 8.395889, 1.1825976, 2.2313657, 7.1031027, 0.9318752, 3.637146, 5.9830256, 0.9682398, 4.4518523, 5.951865, -1.206603, 7.6580954, 6.055491, -2.7313533, 5.5592446, 6.468545, -3.5830445, 5.197505, 7.548283, -4.1061807, 2.245303, 8.4132805, -3.701069, 2.229465, 8.419561, -2.1118836, 3.3564966, 6.988607, -2.8806386)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_rxeg4"]
+points = PackedVector3Array(-3.1974046, 5.5814962, -1.5761199, -2.110683, 5.620468, 1.9936409, -4.043682, 5.6134586, 1.3994658, -4.957516, 5.6423373, -1.5496719, -1.8818612, 6.2395315, -1.5761199, 0.0068264008, 6.980277, -1.5235862, 0.17535543, 5.6140194, -0.4084208, -2.8276577, 6.198597, 2.1251564, 0.43904543, 5.6266365, 0.19481182, 2.2311192, 7.1028, 0.93209624, -4.4061646, 7.257566, 0.51182604, -5.18997, 5.72701, -0.97868407, -3.9623232, 7.26093, -1.3725063, -0.23725033, 8.418591, -1.4938774, 1.1611052, 8.418591, 0.84985375, -1.5949259, 8.445786, 0.8607228)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_m20sw"]
+points = PackedVector3Array(0.14132833, 7.2540627, -6.705401, 1.3662338, 8.392506, -5.625757, 0.3014922, 7.253725, -6.704367, -3.1907775, 5.0876765, -5.5285945, -2.807777, 7.015156, -6.2764378, 2.2311192, 8.25396, -2.441092, 1.1329517, 6.0095143, -4.4866786, -3.2708595, 7.3703065, -5.328067, -1.3071105, 8.418863, -4.207594, 0.70816946, 8.418863, -1.7821426, -3.9936862, 4.966702, -2.804419, -3.9372807, 5.37592, -5.3595934, -0.85377693, 5.170128, -2.3175716, 0.009018898, 6.9387865, -1.576447, -4.882944, 5.992956, -1.576447, -3.6072037, 7.2168922, -1.4255347)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_hxe2f"]
+points = PackedVector3Array(-1.2222586, 5.171925, -2.2887974, -1.1418352, 5.581166, -2.2748241, -1.0184126, 5.1288557, -2.2748241, -4.064159, 4.192223, -1.822093, 2.1889772, 5.4988227, -0.21853042, 2.639668, 4.9425526, -0.048057556, -4.915375, 5.5682945, -1.5403936, -3.7599823, 5.560209, 1.6885297, 0.07885218, 3.920441, -0.6293421, -4.1437864, 3.8955235, -0.79478455, -5.4950624, 4.5575695, 0.3655486, -1.1609454, 5.2730803, 3.4212046, -1.3958464, 4.3978333, 3.4128208, 0.3798437, 3.8955235, 0.39796638, -5.129573, 4.959054, 1.1279256, -4.3452435, 4.041233, 1.2849841)
+
+[node name="SM_Env_Tree_Large_01" type="MeshInstance3D" unique_id=1042626983]
+gi_mode = 2
+mesh = ExtResource("1_yy151")
+surface_material_override/0 = ExtResource("2_iw4n7")
+
+[node name="MeshCollider" type="StaticBody3D" parent="." unique_id=109281999]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider" unique_id=1430606580]
+shape = SubResource("ConvexPolygonShape3D_hsa5v")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="MeshCollider" unique_id=210335862]
+shape = SubResource("ConvexPolygonShape3D_mbjhj")
+
+[node name="CollisionShape3D3" type="CollisionShape3D" parent="MeshCollider" unique_id=592073702]
+shape = SubResource("ConvexPolygonShape3D_xmccg")
+
+[node name="CollisionShape3D4" type="CollisionShape3D" parent="MeshCollider" unique_id=453550157]
+shape = SubResource("ConvexPolygonShape3D_w0yw5")
+
+[node name="CollisionShape3D5" type="CollisionShape3D" parent="MeshCollider" unique_id=842976334]
+shape = SubResource("ConvexPolygonShape3D_tfmfp")
+
+[node name="CollisionShape3D6" type="CollisionShape3D" parent="MeshCollider" unique_id=1499216349]
+shape = SubResource("ConvexPolygonShape3D_w3hrb")
+
+[node name="CollisionShape3D7" type="CollisionShape3D" parent="MeshCollider" unique_id=873666459]
+shape = SubResource("ConvexPolygonShape3D_rxeg4")
+
+[node name="CollisionShape3D8" type="CollisionShape3D" parent="MeshCollider" unique_id=1369770671]
+shape = SubResource("ConvexPolygonShape3D_m20sw")
+
+[node name="CollisionShape3D9" type="CollisionShape3D" parent="MeshCollider" unique_id=369432249]
+shape = SubResource("ConvexPolygonShape3D_hxe2f")
+
+[node name="SM_Env_Tree_Large_Swing_01" type="MeshInstance3D" parent="." unique_id=895742949]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5492218, 5.101226, -0.23982665)
+gi_mode = 2
+mesh = ExtResource("3_iw4n7")
+surface_material_override/0 = ExtResource("2_iw4n7")

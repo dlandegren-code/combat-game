@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://dwvy6kfyb02iv"]
+
+[ext_resource type="ArrayMesh" uid="uid://b4a3io8dknpg6" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Prop_Hay_Bale_Round_01.res" id="1_vioy3"]
+[ext_resource type="Material" uid="uid://gb6y2qqungai" path="res://assets/Synty/PolygonFarm/Materials/PolygonFarm_01_A_mat.tres" id="2_b2p6t"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_p1161"]
+points = PackedVector3Array(-0.18505126, 0.62768185, 0.6335173, -0.26048672, 0.8035586, 0.030961394, -0.51377815, 0.55280054, -0.16247591, -0.5139008, 0.32170653, 0.12055212, -0.6369281, -0.55232865, 0.030961394, -0.3326104, -0.4865715, 0.42275184, 0.2670709, -0.50198823, 0.60832375, 0.20782644, 0.5293608, 0.5111136, 0.5188904, 0.5273156, 0.1255908, -0.21031907, 0.6526947, -0.6219817, 0.37869084, 0.5326643, -0.45447528, -0.39455333, -0.5306194, -0.452509, -0.36057672, -0.8035587, -0.044496357, 0.6161592, -0.5285742, -0.2102822, 0.19175804, -0.75337565, -0.34546712, 0.13558012, -0.5529579, -0.5472613)
+
+[node name="SM_Prop_Hay_Bale_Round_01" type="MeshInstance3D" unique_id=206079879]
+gi_mode = 2
+mesh = ExtResource("1_vioy3")
+surface_material_override/0 = ExtResource("2_b2p6t")
+
+[node name="MeshCollider" type="StaticBody3D" parent="." unique_id=1153203470]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider" unique_id=890932530]
+shape = SubResource("ConvexPolygonShape3D_p1161")

@@ -1,0 +1,70 @@
+[gd_scene format=3 uid="uid://btc0eel4s1jbc"]
+
+[ext_resource type="ArrayMesh" uid="uid://dmkhggrko2ja3" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Farmhouse_01.res" id="1_yxf7o"]
+[ext_resource type="ArrayMesh" uid="uid://b6ige1h7ojlnf" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Farmhouse_01_Door_01.res" id="2_8vfb7"]
+[ext_resource type="Material" uid="uid://gb6y2qqungai" path="res://assets/Synty/PolygonFarm/Materials/PolygonFarm_01_A_mat.tres" id="2_u1qac"]
+[ext_resource type="ArrayMesh" uid="uid://cdi2blv5vfrmf" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Farmhouse_01_Door_02.res" id="3_iepto"]
+[ext_resource type="Shape3D" uid="uid://cypxtcucc517m" path="res://assets/Synty/PolygonFarm/Models/Collision/extracted/SM_Bld_Farmhouse_01_Collision.res" id="3_u1qac"]
+[ext_resource type="ArrayMesh" uid="uid://1fmbiv0w2xaw" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Farmhouse_01_Door_03.res" id="4_u1qac"]
+[ext_resource type="ArrayMesh" uid="uid://dp3xo282x2s1y" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Farmhouse_01_Glass.res" id="5_n0eu1"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_q2nrw"]
+size = Vector3(1.0252985, 2.2243483, 0.23754394)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6fccu"]
+size = Vector3(1.0252985, 2.2028518, 0.23754394)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_jvbrb"]
+size = Vector3(0.23754577, 2.272401, 1.050039)
+
+[node name="SM_Bld_Farmhouse_01" type="MeshInstance3D" unique_id=1359190805]
+gi_mode = 2
+mesh = ExtResource("1_yxf7o")
+surface_material_override/0 = ExtResource("2_u1qac")
+
+[node name="MeshCollider" type="StaticBody3D" parent="." unique_id=499192553]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider" unique_id=1730119362]
+shape = ExtResource("3_u1qac")
+
+[node name="SM_Bld_Farmhouse_01_Door_01" type="MeshInstance3D" parent="." unique_id=631513539]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.27780426, 0.8543756, 2.9059253)
+gi_mode = 2
+mesh = ExtResource("2_8vfb7")
+surface_material_override/0 = ExtResource("2_u1qac")
+
+[node name="BoxCollider" type="StaticBody3D" parent="SM_Bld_Farmhouse_01_Door_01" unique_id=1220281533]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_Bld_Farmhouse_01_Door_01/BoxCollider" unique_id=1981890328]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5126489, 1.1121742, 0)
+shape = SubResource("BoxShape3D_q2nrw")
+
+[node name="SM_Bld_Farmhouse_01_Door_02" type="MeshInstance3D" parent="." unique_id=155637268]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.277804, 0.8543756, 0.40592527)
+gi_mode = 2
+mesh = ExtResource("3_iepto")
+surface_material_override/0 = ExtResource("2_u1qac")
+
+[node name="BoxCollider" type="StaticBody3D" parent="SM_Bld_Farmhouse_01_Door_02" unique_id=153350025]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_Bld_Farmhouse_01_Door_02/BoxCollider" unique_id=1672880438]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.51264864, 1.1014259, 0)
+shape = SubResource("BoxShape3D_6fccu")
+
+[node name="SM_Bld_Farmhouse_01_Door_03" type="MeshInstance3D" parent="." unique_id=1541421064]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.17656, 0.8652829, -1.5495214)
+gi_mode = 2
+mesh = ExtResource("4_u1qac")
+surface_material_override/0 = ExtResource("2_u1qac")
+
+[node name="BoxCollider" type="StaticBody3D" parent="SM_Bld_Farmhouse_01_Door_03" unique_id=2074206507]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_Bld_Farmhouse_01_Door_03/BoxCollider" unique_id=514641527]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1362005, 0.5250195)
+shape = SubResource("BoxShape3D_jvbrb")
+
+[node name="SM_Bld_Farmhouse_01_Glass" type="MeshInstance3D" parent="." unique_id=1558841497]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0418042, 3.7906334, -1.0434692)
+gi_mode = 2
+mesh = ExtResource("5_n0eu1")
+surface_material_override/0 = ExtResource("2_u1qac")

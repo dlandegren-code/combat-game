@@ -1,0 +1,13 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dlkhomthdfafr"]
+
+[ext_resource type="Texture2D" uid="uid://n78k4uc8a26u" path="res://assets/Synty/PolygonFarm/Textures/PolygonFarm_01_A.png" id="1_dtktq"]
+
+[resource]
+resource_name = "PolygonFarm_01_Water_mat"
+transparency = 1
+depth_draw_mode = 1
+albedo_color = Color(0.568, 0.55891204, 0, 0.497)
+albedo_texture = ExtResource("1_dtktq")
+metallic = 0.12999997
+roughness = 0.335
+uv1_scale = Vector3(1, 1, 0)

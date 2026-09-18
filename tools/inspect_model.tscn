@@ -1,0 +1,6 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://tools/inspect_model.gd" id="1_i"]
+
+[node name="InspectModel" type="Node3D"]
+script = ExtResource("1_i")

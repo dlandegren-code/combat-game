@@ -286,7 +286,7 @@ func _run_screen_checks() -> void:
 	GameState.award_xp(400)
 
 	# --- Training hall ---
-	var training := await _mount("res://scenes/training.tscn")
+	var training: Node = await _mount("res://scenes/training.tscn")
 	var before_skill: int = int(GameState.party[0].stats.attack_skill)
 	var before_xp: int = GameState.party[0].xp
 	var before_gold: int = GameState.gold
@@ -303,7 +303,7 @@ func _run_screen_checks() -> void:
 	_free(training)
 
 	# --- Market ---
-	var shop := await _mount("res://scenes/shop.tscn")
+	var shop: Node = await _mount("res://scenes/shop.tscn")
 	before_gold = GameState.gold
 	var before_bag: int = _bag_count(GameState.party[0])
 	_check(_press(shop, "Health Potion"), "the market sells potions")
@@ -317,9 +317,10 @@ func _run_screen_checks() -> void:
 
 	# --- Town, including the bed ---
 	GameState.party[0].hp = 4
-	var town := await _mount("res://scenes/town.tscn")
+	var town: Node = await _mount("res://scenes/town.tscn")
 	before_gold = GameState.gold
-	_check(_press(town, "Rest"), "town has a bed when somebody is hurt")
+	# The bed is the healer's house now, not a button in a list — the town is a place.
+	_check(_press(town, "Healer"), "the healer's house takes a wounded party in")
 	_check(GameState.gold < before_gold, "which is not free")
 	_check(GameState.party[0].hp == CharacterDataScript.VITALS_FULL, "and mends them")
 	_free(town)
@@ -327,12 +328,12 @@ func _run_screen_checks() -> void:
 	# --- The screens that only report ---
 	GameState.last_result = {"outcome": "victory", "kills": 3, "xp": 60, "gold": 45,
 		"loot": ["Health Potion"], "fallen": []}
-	var results := await _mount("res://scenes/results_screen.tscn")
+	var results: Node = await _mount("res://scenes/results_screen.tscn")
 	_check(_has_buttons(results), "the results screen draws")
 	_check(GameState.last_result.is_empty(), "and consumes the result so it is not shown twice")
 	_free(results)
 
-	var creation := await _mount("res://scenes/character_creation.tscn")
+	var creation: Node = await _mount("res://scenes/character_creation.tscn")
 	_check(_has_buttons(creation), "character creation draws")
 	_check(_press(creation, "Wizard"), "and a class can be chosen")
 	# Choosing a class must not COMMIT one. An earlier run of this test left a brand-new
@@ -344,18 +345,21 @@ func _run_screen_checks() -> void:
 			% [GameState.party.size(), GameState.party[0].character_name])
 	_free(creation)
 
-	var title := await _mount("res://scenes/title_screen.tscn")
+	var title: Node = await _mount("res://scenes/title_screen.tscn")
 	_check(_has_buttons(title), "the title screen draws")
 	_free(title)
 
 	_restore_real_save()
 
 
-func _mount(path: String) -> Control:
-	var screen := (load(path) as PackedScene).instantiate() as Control
-	# A size, because these screens anchor to their parent and a zero-sized parent gives a
-	# zero-sized screen with nothing laid out in it.
-	screen.size = Vector2(1280, 720)
+func _mount(path: String) -> Node:
+	var screen := (load(path) as PackedScene).instantiate()
+	# A size for the flat screens, which anchor to their parent: a zero-sized parent gives a
+	# zero-sized screen with nothing laid out in it. The town is a Node3D and has no size — it
+	# builds its own camera and puts its buttons in a CanvasLayer.
+	var as_control := screen as Control
+	if as_control != null:
+		as_control.size = Vector2(1280, 720)
 	add_child(screen)
 	await get_tree().process_frame
 	return screen

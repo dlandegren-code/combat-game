@@ -1,0 +1,68 @@
+[gd_scene format=3 uid="uid://0apmlhn7e7ol"]
+
+[ext_resource type="ArrayMesh" uid="uid://b2tikqm508vif" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Greenhouse_01.res" id="1_oshkc"]
+[ext_resource type="Material" uid="uid://gb6y2qqungai" path="res://assets/Synty/PolygonFarm/Materials/PolygonFarm_01_A_mat.tres" id="2_wl3co"]
+[ext_resource type="Shape3D" uid="uid://csqwa8pgndwug" path="res://assets/Synty/PolygonFarm/Models/Collision/extracted/SM_Bld_Greenhouse_01_Collision.res" id="3_7nff8"]
+[ext_resource type="ArrayMesh" uid="uid://d2gpw3344uw3r" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Greenhouse_01_Glass.res" id="3_wl3co"]
+[ext_resource type="Material" uid="uid://cndlk3icw13x1" path="res://assets/Synty/PolygonFarm/Materials/Misc/PolygonFarm_01_Glass_mat.tres" id="4_lxnsi"]
+[ext_resource type="ArrayMesh" uid="uid://nessgymj2ipq" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Greenhouse_Door_01.res" id="5_7nff8"]
+[ext_resource type="ArrayMesh" uid="uid://cqm5858t6efmr" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Greenhouse_Door_01_Glass.res" id="6_lxnsi"]
+[ext_resource type="ArrayMesh" uid="uid://dptdtv4ja8r77" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Greenhouse_Door_02.res" id="7_s5vap"]
+[ext_resource type="ArrayMesh" uid="uid://dlbsdodpugvue" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Greenhouse_Door_02_Glass.res" id="8_46ix0"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bgvfp"]
+size = Vector3(1.2995498, 2.6476336, 0.15034789)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hli12"]
+size = Vector3(1.2995498, 2.6476336, 0.15034789)
+
+[node name="SM_Bld_Greenhouse_01" type="MeshInstance3D" unique_id=1071600942]
+gi_mode = 2
+mesh = ExtResource("1_oshkc")
+surface_material_override/0 = ExtResource("2_wl3co")
+
+[node name="MeshCollider" type="StaticBody3D" parent="." unique_id=1411715613]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider" unique_id=1822518775]
+shape = ExtResource("3_7nff8")
+
+[node name="SM_Bld_Greenhouse_01_Glass" type="MeshInstance3D" parent="." unique_id=993365964]
+gi_mode = 2
+mesh = ExtResource("3_wl3co")
+surface_material_override/0 = ExtResource("4_lxnsi")
+
+[node name="SM_Bld_Greenhouse_Door_01" type="MeshInstance3D" parent="." unique_id=1634764056]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25121987, 3.8416588)
+gi_mode = 2
+mesh = ExtResource("5_7nff8")
+surface_material_override/0 = ExtResource("2_wl3co")
+
+[node name="BoxCollider" type="StaticBody3D" parent="SM_Bld_Greenhouse_Door_01" unique_id=1554740632]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_Bld_Greenhouse_Door_01/BoxCollider" unique_id=1045374002]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6523793, 1.3238168, -1.527369e-07)
+shape = SubResource("BoxShape3D_bgvfp")
+
+[node name="SM_Bld_Greenhouse_Door_01_Glass" type="MeshInstance3D" parent="SM_Bld_Greenhouse_Door_01" unique_id=1745125453]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.65237945, 0.14424741, 0.020124912)
+gi_mode = 2
+mesh = ExtResource("6_lxnsi")
+surface_material_override/0 = ExtResource("4_lxnsi")
+
+[node name="SM_Bld_Greenhouse_Door_02" type="MeshInstance3D" parent="." unique_id=334590449]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25121987, 3.8416588)
+gi_mode = 2
+mesh = ExtResource("7_s5vap")
+surface_material_override/0 = ExtResource("2_wl3co")
+
+[node name="BoxCollider" type="StaticBody3D" parent="SM_Bld_Greenhouse_Door_02" unique_id=1682340636]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_Bld_Greenhouse_Door_02/BoxCollider" unique_id=2127913518]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6497749, 1.3238168, -1.527369e-07)
+shape = SubResource("BoxShape3D_hli12")
+
+[node name="SM_Bld_Greenhouse_Door_02_Glass" type="MeshInstance3D" parent="SM_Bld_Greenhouse_Door_02" unique_id=1812865606]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.65238005, 0.14424741, 0.020124912)
+gi_mode = 2
+mesh = ExtResource("8_46ix0")
+surface_material_override/0 = ExtResource("4_lxnsi")

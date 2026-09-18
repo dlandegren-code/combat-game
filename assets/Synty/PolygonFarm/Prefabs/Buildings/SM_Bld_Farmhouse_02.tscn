@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://dhvqh7jgt3h6x"]
+
+[ext_resource type="ArrayMesh" uid="uid://cl0urgreua4s" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Farmhouse_02.res" id="1_yfjoa"]
+[ext_resource type="Material" uid="uid://gb6y2qqungai" path="res://assets/Synty/PolygonFarm/Materials/PolygonFarm_01_A_mat.tres" id="2_qrkux"]
+[ext_resource type="ArrayMesh" uid="uid://dp4xjsurb31s8" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Farmhouse_02_Door_01.res" id="3_qrkux"]
+[ext_resource type="Shape3D" uid="uid://bnqbxwkycbgxg" path="res://assets/Synty/PolygonFarm/Models/Collision/extracted/SM_Bld_Farmhouse_02_Collision.res" id="3_rsir1"]
+[ext_resource type="ArrayMesh" uid="uid://dupbuo5gwbkjq" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Farmhouse_02_Glass.res" id="4_rsir1"]
+[ext_resource type="Material" uid="uid://cndlk3icw13x1" path="res://assets/Synty/PolygonFarm/Materials/Misc/PolygonFarm_01_Glass_mat.tres" id="5_38xud"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_awudm"]
+size = Vector3(1.0252979, 2.2243483, 0.23754394)
+
+[node name="SM_Bld_Farmhouse_02" type="MeshInstance3D" unique_id=1068176970]
+gi_mode = 2
+mesh = ExtResource("1_yfjoa")
+surface_material_override/0 = ExtResource("2_qrkux")
+
+[node name="MeshCollider" type="StaticBody3D" parent="." unique_id=444355733]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider" unique_id=587560367]
+shape = ExtResource("3_rsir1")
+
+[node name="SM_Bld_Farmhouse_02_Door_01" type="MeshInstance3D" parent="." unique_id=938108278]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.32503876, 0.87027425, 1.2806774)
+gi_mode = 2
+mesh = ExtResource("3_qrkux")
+surface_material_override/0 = ExtResource("2_qrkux")
+
+[node name="BoxCollider" type="StaticBody3D" parent="SM_Bld_Farmhouse_02_Door_01" unique_id=1428009229]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_Bld_Farmhouse_02_Door_01/BoxCollider" unique_id=201310848]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.51264894, 1.1121742, -1.2218952e-06)
+shape = SubResource("BoxShape3D_awudm")
+
+[node name="SM_Bld_Farmhouse_02_Glass" type="MeshInstance3D" parent="." unique_id=2088850137]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.160961, 2.3065321, -1.4187194)
+gi_mode = 2
+mesh = ExtResource("4_rsir1")
+surface_material_override/0 = ExtResource("5_38xud")

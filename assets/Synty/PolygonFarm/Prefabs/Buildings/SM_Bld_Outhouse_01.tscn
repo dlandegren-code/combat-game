@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://ctjjajnh2eoeo"]
+
+[ext_resource type="ArrayMesh" uid="uid://cam1x3sgb6i2b" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Outhouse_01.res" id="1_f62jy"]
+[ext_resource type="Material" uid="uid://gb6y2qqungai" path="res://assets/Synty/PolygonFarm/Materials/PolygonFarm_01_A_mat.tres" id="2_bor0a"]
+[ext_resource type="Shape3D" uid="uid://l2ug3728sar8" path="res://assets/Synty/PolygonFarm/Models/Collision/extracted/SM_Bld_Outhouse_01_Collision.res" id="3_6wgj4"]
+[ext_resource type="ArrayMesh" uid="uid://cduan8ke452l8" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Outhouse_Door_01.res" id="3_bor0a"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ytsam"]
+size = Vector3(1.120388, 2.1335006, 0.14881545)
+
+[node name="SM_Bld_Outhouse_01" type="MeshInstance3D" unique_id=2113272145]
+gi_mode = 2
+mesh = ExtResource("1_f62jy")
+surface_material_override/0 = ExtResource("2_bor0a")
+
+[node name="MeshCollider" type="StaticBody3D" parent="." unique_id=625699004]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider" unique_id=1050294582]
+shape = ExtResource("3_6wgj4")
+
+[node name="SM_Bld_Outhouse_Door_01" type="MeshInstance3D" parent="." unique_id=756145646]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5464609, 0.002383422, 0.9073754)
+gi_mode = 2
+mesh = ExtResource("3_bor0a")
+surface_material_override/0 = ExtResource("2_bor0a")
+
+[node name="BoxCollider" type="StaticBody3D" parent="SM_Bld_Outhouse_Door_01" unique_id=1145780936]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_Bld_Outhouse_Door_01/BoxCollider" unique_id=1052838924]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5326072, 1.0667503, 0.006228391)
+shape = SubResource("BoxShape3D_ytsam")

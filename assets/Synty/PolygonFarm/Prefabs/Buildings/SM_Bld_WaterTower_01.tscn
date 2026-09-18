@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://8befye7pd4qe"]
+
+[ext_resource type="ArrayMesh" uid="uid://b6ugmi07wg5tw" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_WaterTower_01.res" id="1_m6mm5"]
+[ext_resource type="Material" uid="uid://gb6y2qqungai" path="res://assets/Synty/PolygonFarm/Materials/PolygonFarm_01_A_mat.tres" id="2_4uu0b"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_q8ccr"]
+points = PackedVector3Array(-0.06246829, 1.5375904, 1.4492023, -1.3992066, 0.60244346, 1.3150699, -0.06246829, -0.066101074, 1.4492023, 1.4078064, 0.4687345, 1.3150699, 0.6054888, 7.6841235, 1.1818011, -0.5966141, 7.6841235, 1.1818011, -1.3992066, 0.4687345, -1.4913471, -1.2849039, 0.28203124, -1.3716066, -1.2653954, 7.6841235, 0.5128665, -1.2653954, 7.6841235, -0.6891436, 1.4078064, 0.4687345, -1.4913471, 1.2739952, 7.6841235, 0.5128665, 0.19388866, 8.262985, -0.27436948, -0.5966141, 7.6841235, -1.3577905, 0.6054888, 7.6841235, -1.3577905, 1.2739952, 7.6841235, -0.6891436)
+
+[node name="SM_Bld_WaterTower_01" type="MeshInstance3D" unique_id=1430730081]
+gi_mode = 2
+mesh = ExtResource("1_m6mm5")
+surface_material_override/0 = ExtResource("2_4uu0b")
+
+[node name="MeshCollider" type="StaticBody3D" parent="." unique_id=784836925]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider" unique_id=2143070166]
+shape = SubResource("ConvexPolygonShape3D_q8ccr")

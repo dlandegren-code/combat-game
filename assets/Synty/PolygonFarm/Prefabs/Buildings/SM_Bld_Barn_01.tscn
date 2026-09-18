@@ -1,0 +1,111 @@
+[gd_scene format=3 uid="uid://b3r75rl706lcm"]
+
+[ext_resource type="ArrayMesh" uid="uid://bicde2prqx5be" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Barn_01.res" id="1_vwm67"]
+[ext_resource type="Material" uid="uid://gb6y2qqungai" path="res://assets/Synty/PolygonFarm/Materials/PolygonFarm_01_A_mat.tres" id="2_vfklb"]
+[ext_resource type="Shape3D" uid="uid://csttv8x8n2axu" path="res://assets/Synty/PolygonFarm/Models/Collision/extracted/SM_Bld_Barn_01_Collision.res" id="3_3qbkb"]
+[ext_resource type="ArrayMesh" uid="uid://dguxqdj10e8ja" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Barn_01_Door_01.res" id="3_vfklb"]
+[ext_resource type="ArrayMesh" uid="uid://3b6lcnv1wxys" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Barn_01_Door_02.res" id="4_3qbkb"]
+[ext_resource type="ArrayMesh" uid="uid://diwudxc2el1ce" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Barn_01_Door_03.res" id="5_lhonn"]
+[ext_resource type="ArrayMesh" uid="uid://b2onsi4tq18la" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Barn_01_Door_04.res" id="6_rtyg2"]
+[ext_resource type="ArrayMesh" uid="uid://dsagh3a6lodtm" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Barn_01_Shutter_01.res" id="7_kvys8"]
+[ext_resource type="ArrayMesh" uid="uid://d2xg3aor4du07" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Bld_Barn_01_Shutter_02.res" id="8_c6x1x"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_obpj7"]
+size = Vector3(0.20248291, 3.5162807, 1.8942089)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rjb66"]
+size = Vector3(0.20248291, 3.5162807, 1.8942137)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ftf00"]
+size = Vector3(0.20248291, 3.5162807, 1.8942089)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_n2sbn"]
+size = Vector3(0.20248291, 3.5162807, 1.8942137)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_x2qr1"]
+size = Vector3(0.18706053, 2.0175645, 1.433505)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_q0no4"]
+size = Vector3(0.18706116, 2.0175645, 1.433505)
+
+[node name="SM_Bld_Barn_01" type="MeshInstance3D" unique_id=1666480691]
+gi_mode = 2
+mesh = ExtResource("1_vwm67")
+surface_material_override/0 = ExtResource("2_vfklb")
+
+[node name="MeshCollider" type="StaticBody3D" parent="." unique_id=1324670939]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider" unique_id=459754743]
+shape = ExtResource("3_3qbkb")
+
+[node name="SM_Bld_Barn_01_Door_01" type="MeshInstance3D" parent="." unique_id=1675040713]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.8309684, -1.1608123e-05, 0.9491305)
+gi_mode = 2
+mesh = ExtResource("3_vfklb")
+surface_material_override/0 = ExtResource("2_vfklb")
+
+[node name="BoxCollider" type="StaticBody3D" parent="SM_Bld_Barn_01_Door_01" unique_id=247247222]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_Bld_Barn_01_Door_01/BoxCollider" unique_id=999218237]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.427267e-07, 1.7581403, -5.364418e-07)
+shape = SubResource("BoxShape3D_obpj7")
+
+[node name="SM_Bld_Barn_01_Door_02" type="MeshInstance3D" parent="." unique_id=1364319055]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.8309684, -1.1608123e-05, -0.94508284)
+gi_mode = 2
+mesh = ExtResource("4_3qbkb")
+surface_material_override/0 = ExtResource("2_vfklb")
+
+[node name="BoxCollider" type="StaticBody3D" parent="SM_Bld_Barn_01_Door_02" unique_id=153973639]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_Bld_Barn_01_Door_02/BoxCollider" unique_id=2121341511]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.427267e-07, 1.7581403, 1.3411045e-06)
+shape = SubResource("BoxShape3D_rjb66")
+
+[node name="SM_Bld_Barn_01_Door_03" type="MeshInstance3D" parent="." unique_id=567133119]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.8266516, -1.1608123e-05, 0.9491305)
+gi_mode = 2
+mesh = ExtResource("5_lhonn")
+surface_material_override/0 = ExtResource("2_vfklb")
+
+[node name="BoxCollider" type="StaticBody3D" parent="SM_Bld_Barn_01_Door_03" unique_id=1496742580]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_Bld_Barn_01_Door_03/BoxCollider" unique_id=1623442842]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8626451e-08, 1.7581403, -5.364418e-07)
+shape = SubResource("BoxShape3D_ftf00")
+
+[node name="SM_Bld_Barn_01_Door_04" type="MeshInstance3D" parent="." unique_id=1118429343]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.8266516, -1.1608123e-05, -0.94508284)
+gi_mode = 2
+mesh = ExtResource("6_rtyg2")
+surface_material_override/0 = ExtResource("2_vfklb")
+
+[node name="BoxCollider" type="StaticBody3D" parent="SM_Bld_Barn_01_Door_04" unique_id=620106027]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_Bld_Barn_01_Door_04/BoxCollider" unique_id=316800869]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8626451e-08, 1.7581403, 1.3411045e-06)
+shape = SubResource("BoxShape3D_n2sbn")
+
+[node name="SM_Bld_Barn_01_Shutter_01" type="MeshInstance3D" parent="." unique_id=53763376]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.7360983, 5.179363, 0.70615774)
+gi_mode = 2
+mesh = ExtResource("7_kvys8")
+surface_material_override/0 = ExtResource("2_vfklb")
+
+[node name="BoxCollider" type="StaticBody3D" parent="SM_Bld_Barn_01_Shutter_01" unique_id=1311656330]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_Bld_Barn_01_Shutter_01/BoxCollider" unique_id=563950578]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0602096, 0, -0.6957766)
+shape = SubResource("BoxShape3D_x2qr1")
+
+[node name="SM_Bld_Barn_01_Shutter_02" type="MeshInstance3D" parent="." unique_id=1697626787]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.7585826, 5.179363, -0.6853938)
+gi_mode = 2
+mesh = ExtResource("8_c6x1x")
+surface_material_override/0 = ExtResource("2_vfklb")
+
+[node name="BoxCollider" type="StaticBody3D" parent="SM_Bld_Barn_01_Shutter_02" unique_id=1417127779]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_Bld_Barn_01_Shutter_02/BoxCollider" unique_id=217341215]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.061193332, 0, 0.6957749)
+shape = SubResource("BoxShape3D_q0no4")

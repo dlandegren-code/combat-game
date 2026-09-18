@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://d3j0vyxbauss8"]
+
+[ext_resource type="ArrayMesh" uid="uid://c608jocbkqxju" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Env_Tree_Cherry_Grown_01.res" id="1_amrb8"]
+[ext_resource type="Material" uid="uid://gb6y2qqungai" path="res://assets/Synty/PolygonFarm/Materials/PolygonFarm_01_A_mat.tres" id="2_5g58r"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_uf72u"]
+points = PackedVector3Array(1.2122059, 3.6210442, -1.2684251, 1.4206834, 4.019639, -0.95155096, 1.5874655, 3.1012256, -0.40887505, 1.1778147, 3.550421, -1.2204314, -0.27818048, 3.234401, -1.0877259, -1.0743517, 3.7709832, -0.5895743, 1.3908575, 3.2954009, 1.2703267, 1.614248, 2.875231, 0.7886549, 0.7867291, 4.1850996, -0.52047485, 0.02890551, 2.599412, -0.5895743, -1.3150901, 2.78117, 0.04475236, -1.4946547, 2.8278902, 0.7019192, -0.26570225, 3.9122298, 1.1552576, 0.4160347, 3.1082103, 1.6259428, 0.02890551, 3.7709832, 1.6852123, -1.0031345, 2.646132, 1.0806648)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_ttb8m"]
+points = PackedVector3Array(-0.45376304, -0.22768074, 0.30645475, -0.040145844, -0.22768074, -0.38302192, 0.37355235, -0.22768074, 0.16851488, -0.24699493, -0.08967337, 0.3754247, -0.38475934, -0.08967337, 0.3754247, -0.17799124, 0.8755143, 0.09954494, -0.45376304, -0.08967337, 0.16851488, -0.17799124, -0.08967337, -0.24508204, -0.10890657, 0.8755143, -0.1761121, 0.16670325, -0.08967337, -0.38302192, 0.16670325, -0.22768074, -0.38302192, 0.37355235, -0.22768074, 0.03050077, 0.37355235, -0.020777673, 0.16851488, 0.09761855, 0.8755143, 0.16851488, 0.16670325, 0.8755143, -0.10714215, 0.16670325, 0.8755143, 0.09954494)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_sdtse"]
+points = PackedVector3Array(0.71838176, 1.8407156, 0.3064345, 0.64937806, 1.4958389, 0.37539774, 0.64937806, 1.4270713, 0.09963271, 0.16659522, 1.8407156, -0.3830219, 0.0289523, 1.8407156, 0.5133241, -0.17793724, 1.5647954, 0.5133241, 0.09783453, 0.8757976, 0.1683327, 0.58037436, 1.2893474, 0.16850817, 0.23559892, 0.8757976, -0.03820595, 0.09783453, 0.8757976, -0.17613232, 0.0289523, 1.7715702, -0.3830219, -0.5227127, 1.8407156, 0.099457204, -0.5227127, 1.8407156, 0.1683327, -0.453709, 1.6336573, 0.3064345, -0.17793724, 0.8757976, 0.099457204, -0.10893357, 0.8757976, -0.17613232)
+
+[node name="SM_Env_Tree_Cherry_Grown_01" type="MeshInstance3D" unique_id=1285876733]
+gi_mode = 2
+mesh = ExtResource("1_amrb8")
+surface_material_override/0 = ExtResource("2_5g58r")
+
+[node name="MeshCollider" type="StaticBody3D" parent="." unique_id=453625078]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider" unique_id=1365834393]
+shape = SubResource("ConvexPolygonShape3D_uf72u")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="MeshCollider" unique_id=1908539896]
+shape = SubResource("ConvexPolygonShape3D_ttb8m")
+
+[node name="CollisionShape3D3" type="CollisionShape3D" parent="MeshCollider" unique_id=1558538210]
+shape = SubResource("ConvexPolygonShape3D_sdtse")

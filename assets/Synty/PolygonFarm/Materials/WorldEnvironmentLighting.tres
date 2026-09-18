@@ -1,0 +1,32 @@
+[gd_resource type="Environment" format=3 uid="uid://cp1i4080dpifs"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_hbon4"]
+resource_name = "Default-Skybox"
+sky_top_color = Color(0.39328548, 0.4993347, 0.59637463, 1)
+sky_horizon_color = Color(0.6962053, 0.8122368, 0.8830941, 1)
+sky_curve = 0.0731028
+ground_horizon_color = Color(0.69803923, 0.8117647, 0.88235295, 1)
+sun_angle_max = 13.01
+energy_multiplier = 1.5
+
+[sub_resource type="Sky" id="Sky_cr5hq"]
+sky_material = SubResource("ProceduralSkyMaterial_hbon4")
+
+[resource]
+background_mode = 2
+sky = SubResource("Sky_cr5hq")
+ambient_light_color = Color(0.7711487, 0.78258145, 0.691964, 1)
+ambient_light_sky_contribution = 0.0
+ssao_enabled = true
+ssao_radius = 3.85
+ssao_intensity = 1.5
+ssao_power = 1.66
+ssao_detail = 1.24
+ssao_horizon = 0.08
+ssao_sharpness = 1.0
+fog_depth_begin = 23.8
+fog_depth_end = 266.6
+adjustment_enabled = true
+adjustment_brightness = 0.92
+adjustment_contrast = 0.935
+adjustment_saturation = 0.79

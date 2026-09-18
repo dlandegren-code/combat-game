@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://ctqfijwnpyad3"]
+
+[ext_resource type="ArrayMesh" uid="uid://mjx7duuxx4il" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Env_Flowers_01.res" id="1_buv0m"]
+[ext_resource type="Material" uid="uid://gb6y2qqungai" path="res://assets/Synty/PolygonFarm/Materials/PolygonFarm_01_A_mat.tres" id="2_m465m"]
+
+[node name="SM_Env_Flowers_01" type="MeshInstance3D" unique_id=2093370682]
+gi_mode = 2
+mesh = ExtResource("1_buv0m")
+surface_material_override/0 = ExtResource("2_m465m")

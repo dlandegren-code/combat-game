@@ -1,0 +1,21 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+; Leaf and debris ground cards.
+; Written by hand: the Synty source uses Unity shaders (wind, triplanar, tree cards)
+; that mean nothing to Godot, so each material slot in the pack gets a plain Godot
+; equivalent here. Wind is a vertex shader applied separately - see wind_sway.gdshader.
+
+[ext_resource type="Texture2D" path="res://assets/Synty/PolygonMeadow/Textures/GroundCover_01.png" id="1_tex"]
+
+[resource]
+resource_name = "meadow_groundcover"
+albedo_texture = ExtResource("1_tex")
+roughness = 0.85
+metallic_specular = 0.0
+specular_mode = 1
+uv1_scale = Vector3(1, 1, 0)
+; A card with holes in it: scissor rather than blended alpha so there is nothing to
+; depth-sort, and two-sided so a blade of grass is not invisible from behind.
+transparency = 2
+alpha_scissor_threshold = 0.4
+cull_mode = 2

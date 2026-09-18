@@ -1,0 +1,6 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://tools/compare_tree_materials.gd" id="1_t"]
+
+[node name="CompareTreeMaterials" type="Node3D"]
+script = ExtResource("1_t")

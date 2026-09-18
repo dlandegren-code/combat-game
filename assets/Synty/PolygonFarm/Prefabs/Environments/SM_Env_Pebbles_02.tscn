@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://bmh6jg0vessm5"]
+
+[ext_resource type="ArrayMesh" uid="uid://b38xqoo2r4hic" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Env_Pebbles_02.res" id="1_pn1so"]
+[ext_resource type="Material" uid="uid://gb6y2qqungai" path="res://assets/Synty/PolygonFarm/Materials/PolygonFarm_01_A_mat.tres" id="2_q5hmn"]
+
+[node name="SM_Env_Pebbles_02" type="MeshInstance3D" unique_id=1219494644]
+gi_mode = 2
+mesh = ExtResource("1_pn1so")
+surface_material_override/0 = ExtResource("2_q5hmn")

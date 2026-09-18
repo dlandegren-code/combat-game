@@ -427,3 +427,62 @@ without a mouse. It logs every press into the report, because a button-walking
 test that matches the wrong button passes just as happily as one that does not.
 Those screens save as they go, so the test backs up the player's save file and
 puts it back, and asserts at the end that it left it as it found it.
+
+## The town became a place (2026-09-17)
+
+Phase 1 deliberately built the town as flat UI, with a note that a proper town would
+"replace this file and nothing else". That is what happened: `scenes/town.tscn` is
+now a 3D clearing in a birch wood, and the buttons, flow and save behaviour came
+across untouched.
+
+- `scripts/town_layout.gd` — every position, as data, because the roster is meant
+  to vary. Written against measured model sizes (`tools/measure_prefabs.gd`).
+- `scripts/town.gd` — builds the clearing, the buildings and the buttons. The
+  buttons float over the buildings they belong to, projected through a fixed camera.
+- `scripts/town_ambience.gd` — the mill turning, washing on the line, chimney smoke,
+  a flickering campfire, falling leaves, butterflies.
+- `assets/shaders/wind_sway.gdshader` — the pack's Unity wind shader, rewritten for
+  Godot: height-weighted sway with a gust and a flutter, phase-offset by world
+  position so the clearing moves like air is passing through it.
+- `scripts/synty_model.gd` — instancing raw Synty FBX: prunes the baked LOD meshes
+  (a birch arrives as four stacked trees) and paints each mesh from the pack's
+  material list.
+
+ASSETS: a dependency-resolved 6.3 MB subset of the Farm pack (47 prefabs, Godot-ready)
+and 43 MB of the Meadow pack (52 FBX, TGAs converted to PNG). Paths normalised to
+lowercase `res://assets/` so this does not inherit the dungeon pack's case-sensitivity
+trap.
+
+WHAT THE PACKS CANNOT DO: there is one real house across both (the meadow Stone Cabin).
+The farm pack's buildings are a modern American farm — clapboard houses, red barns, a
+steel water tower — which would clash with a game about goblins and warhammers, so none
+of them are placed. The magician's is a 38 cm ornament mushroom scaled to cottage size;
+the three shops are market stalls; the soldiers' fort is a tent. A Synty fantasy village
+pack would make this a five-minute change: swap `model` on the SERVICES entries.
+
+TOOLS ADDED, all dev-only: `measure_prefabs` (footprints, so the layout is written from
+numbers), `inspect_model` (mesh names, surfaces and UV bounds — how the material mapping
+was established), `compare_tree_materials` (four canopy treatments side by side, which is
+what settled the foliage), `capture_town` (screenshots the town into
+.summer/local/town_preview.png, the only way to see visual work here).
+
+### Forest depth and clearance (2026-09-18)
+
+- Nothing is scattered within a clearance radius of a placed object, read from the layout
+  rather than from the scene (the wood is grown before the buildings are placed). The
+  windmill asks for 13 m, because its sails sweep nearly ten.
+- The wood is FIVE bands rather than one ring, each cheaper than the one in front: near
+  birches at Synty's LOD0, then LOD1 and LOD2 bands behind, and a skyline band of the big
+  meadow trees scaled half again.
+- The skyline band is the only one that actually hides the horizon, and the reason is
+  geometry: the camera stands 13.5 m up and looks down, so its eye line runs ABOVE every
+  ten-metre birch on flat ground no matter how many are planted. Only a tree taller than the
+  camera crosses that line. A deep wood of ordinary birches still showed sky at the frame
+  edges; 44 big trees at 60-112 m closed it.
+- `max_z` on a band drops its trees behind the camera, which never sees them.
+- The distant bands do not cast shadows and are not swayed by the wind shader — both are
+  invisible at that range. With the shadow range pulled to 48 m that took the scene from
+  2.19M primitives and 491 draw calls to 1.24M and 306, for an identical picture.
+- `tools/capture_town.gd` now writes .summer/local/town_stats.txt beside the screenshot
+  (fps, frame time, primitives, draw calls), because a forest is easy to overbuild and "it
+  looked fine in a screenshot" is not the same as "it runs".

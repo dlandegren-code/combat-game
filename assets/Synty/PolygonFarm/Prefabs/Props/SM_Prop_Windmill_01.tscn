@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://dv4t1kre1r1kb"]
+
+[ext_resource type="ArrayMesh" uid="uid://bgy6pug2m1gfc" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Prop_Windmill_01.res" id="1_pu3lc"]
+[ext_resource type="Material" uid="uid://gb6y2qqungai" path="res://assets/Synty/PolygonFarm/Materials/PolygonFarm_01_A_mat.tres" id="2_nvxuy"]
+[ext_resource type="ArrayMesh" uid="uid://cewfjjcb4d8ft" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Prop_Windmill_Top_01.res" id="3_nvxuy"]
+[ext_resource type="ArrayMesh" uid="uid://bkecwceq86y0h" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Prop_Windmill_Blades_01.res" id="4_afx4w"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_e26qw"]
+points = PackedVector3Array(-1.0549223, -0.052960396, 0.94792056, -1.0474944, -0.021041315, -1.0454607, 1.0484214, -0.033808947, -1.0485379, 1.0447073, -0.017393418, 1.0463895, -0.98249996, -0.019217368, 1.0472101, -0.334, 9.208133, 0.3281815, -0.334, 9.208133, -0.32068807, 0.0751555, 9.226373, -0.32212406, 1.0529606, -0.011009604, -0.9463763, 0.3159443, 9.226373, -0.32212406, 0.31511903, 9.216341, 0.3285917, -0.10579729, 9.263763, 0.023953319, -0.07072091, 9.263763, -0.06938702, 0.045650005, 9.263763, -0.004971862)
+
+[node name="SM_Prop_Windmill_01" type="MeshInstance3D" unique_id=2086662311]
+gi_mode = 2
+mesh = ExtResource("1_pu3lc")
+surface_material_override/0 = ExtResource("2_nvxuy")
+
+[node name="MeshCollider" type="StaticBody3D" parent="." unique_id=1210464184]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider" unique_id=126118638]
+shape = SubResource("ConvexPolygonShape3D_e26qw")
+
+[node name="SM_Prop_Windmill_Top_01" type="MeshInstance3D" parent="." unique_id=811720127]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.019638062, 9.543158, -0.011484138)
+gi_mode = 2
+mesh = ExtResource("3_nvxuy")
+surface_material_override/0 = ExtResource("2_nvxuy")
+
+[node name="SM_Prop_Windmill_Blades_01" type="MeshInstance3D" parent="SM_Prop_Windmill_Top_01" unique_id=128580099]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.015723418, -0.0071105957, 0.98234665)
+gi_mode = 2
+mesh = ExtResource("4_afx4w")
+surface_material_override/0 = ExtResource("2_nvxuy")

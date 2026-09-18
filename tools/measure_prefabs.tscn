@@ -1,0 +1,6 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://tools/measure_prefabs.gd" id="1_m"]
+
+[node name="MeasurePrefabs" type="Node3D"]
+script = ExtResource("1_m")

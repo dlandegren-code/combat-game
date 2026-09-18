@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://ddvr3hn8ceuld"]
+
+[ext_resource type="ArrayMesh" uid="uid://b5uxn2st4u2jn" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Env_Reeds_01.res" id="1_f710k"]
+[ext_resource type="Material" uid="uid://gb6y2qqungai" path="res://assets/Synty/PolygonFarm/Materials/PolygonFarm_01_A_mat.tres" id="2_btkdm"]
+
+[node name="SM_Env_Reeds_01" type="MeshInstance3D" unique_id=524663589]
+gi_mode = 2
+mesh = ExtResource("1_f710k")
+surface_material_override/0 = ExtResource("2_btkdm")

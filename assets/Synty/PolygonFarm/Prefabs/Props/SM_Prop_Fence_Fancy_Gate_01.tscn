@@ -1,0 +1,57 @@
+[gd_scene format=3 uid="uid://cdlny0ihqu8iq"]
+
+[ext_resource type="ArrayMesh" uid="uid://ydb2v3dketph" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Prop_Fence_Fancy_Gate_01.res" id="1_f0q41"]
+[ext_resource type="Material" uid="uid://gb6y2qqungai" path="res://assets/Synty/PolygonFarm/Materials/PolygonFarm_01_A_mat.tres" id="2_hfmy0"]
+[ext_resource type="ArrayMesh" uid="uid://cbsbacq1mlaft" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Prop_Fence_Fancy_Gate_01_Door_01.res" id="2_ponlp"]
+[ext_resource type="ArrayMesh" uid="uid://bacmikb5wokkg" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Prop_Fence_Fancy_Gate_01_Door_02.res" id="3_hfmy0"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ponlp"]
+size = Vector3(0.8296509, 1.6815796, 0.18432617)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hfmy0"]
+size = Vector3(0.8130493, 1.6566772, 0.16033936)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_sk120"]
+size = Vector3(1.6916281, 1.2496822, 0.21453398)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ijt0v"]
+size = Vector3(1.7146788, 1.2496822, 0.21453398)
+
+[node name="SM_Prop_Fence_Fancy_Gate_01" type="MeshInstance3D" unique_id=918714635]
+gi_mode = 2
+mesh = ExtResource("1_f0q41")
+surface_material_override/0 = ExtResource("2_hfmy0")
+
+[node name="MeshCollider" type="StaticBody3D" parent="." unique_id=64838206]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider" unique_id=1646623285]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.41342163, 0.49014282, 0.004760742)
+shape = SubResource("BoxShape3D_ponlp")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="MeshCollider" unique_id=603084212]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.6111755, 0.49673462, -0.009735107)
+shape = SubResource("BoxShape3D_hfmy0")
+
+[node name="SM_Prop_Fence_Fancy_Gate_01_Door_01" type="MeshInstance3D" parent="." unique_id=55811235]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.84058815, 0.65870595, 0.021905517)
+gi_mode = 2
+mesh = ExtResource("2_ponlp")
+surface_material_override/0 = ExtResource("2_hfmy0")
+
+[node name="MeshCollider" type="StaticBody3D" parent="SM_Prop_Fence_Fancy_Gate_01_Door_01" unique_id=1105523280]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7976078, 0.00700438, 0.0012062043)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_Prop_Fence_Fancy_Gate_01_Door_01/MeshCollider" unique_id=277880545]
+shape = SubResource("BoxShape3D_sk120")
+
+[node name="SM_Prop_Fence_Fancy_Gate_01_Door_02" type="MeshInstance3D" parent="." unique_id=976818062]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.185062, 0.63253146, 0.021905517)
+gi_mode = 2
+mesh = ExtResource("3_hfmy0")
+surface_material_override/0 = ExtResource("2_hfmy0")
+
+[node name="MeshCollider" type="StaticBody3D" parent="SM_Prop_Fence_Fancy_Gate_01_Door_02" unique_id=2089733348]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.814309, 0.033178866, 0.0012062043)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SM_Prop_Fence_Fancy_Gate_01_Door_02/MeshCollider" unique_id=25714332]
+shape = SubResource("BoxShape3D_ijt0v")

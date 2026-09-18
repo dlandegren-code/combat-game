@@ -1,0 +1,13 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://cndlk3icw13x1"]
+
+[ext_resource type="Texture2D" uid="uid://n78k4uc8a26u" path="res://assets/Synty/PolygonFarm/Textures/PolygonFarm_01_A.png" id="1_3ic6p"]
+
+[resource]
+resource_name = "PolygonFarm_01_Glass_mat"
+transparency = 1
+depth_draw_mode = 1
+albedo_color = Color(1, 1, 1, 0.403)
+albedo_texture = ExtResource("1_3ic6p")
+metallic = 0.11399997
+roughness = 0.493
+uv1_scale = Vector3(1, 1, 0)

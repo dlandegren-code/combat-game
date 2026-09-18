@@ -1,0 +1,16 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+; Buildings and props. One flat atlas does the whole pack's hard surfaces.
+; Written by hand: the Synty source uses Unity shaders (wind, triplanar, tree cards)
+; that mean nothing to Godot, so each material slot in the pack gets a plain Godot
+; equivalent here. Wind is a vertex shader applied separately - see wind_sway.gdshader.
+
+[ext_resource type="Texture2D" path="res://assets/Synty/PolygonMeadow/Textures/PolygonNatureBiomes_Meadow_Texture_01.png" id="1_tex"]
+
+[resource]
+resource_name = "meadow_atlas"
+albedo_texture = ExtResource("1_tex")
+roughness = 0.85
+metallic_specular = 0.0
+specular_mode = 1
+uv1_scale = Vector3(1, 1, 0)

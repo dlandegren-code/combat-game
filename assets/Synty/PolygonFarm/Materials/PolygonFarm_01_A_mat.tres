@@ -1,0 +1,10 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://gb6y2qqungai"]
+
+[ext_resource type="Texture2D" uid="uid://n78k4uc8a26u" path="res://assets/Synty/PolygonFarm/Textures/PolygonFarm_01_A.png" id="1_3a7p4"]
+
+[resource]
+resource_name = "PolygonFarm_01_A_mat"
+depth_draw_mode = 1
+albedo_texture = ExtResource("1_3a7p4")
+roughness = 0.8
+uv1_scale = Vector3(1, 1, 0)

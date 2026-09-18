@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://d0jn7y4js0f05"]
+
+[ext_resource type="ArrayMesh" uid="uid://b3sho0xur3vax" path="res://assets/Synty/PolygonFarm/Models/extracted/SM_Prop_Fence_Painted_01.res" id="1_mrw5s"]
+[ext_resource type="Material" uid="uid://gb6y2qqungai" path="res://assets/Synty/PolygonFarm/Materials/PolygonFarm_01_A_mat.tres" id="2_rmga0"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_mrw5s"]
+size = Vector3(2.5019484, 1.0820098, 0.0491272)
+
+[node name="SM_Prop_Fence_Painted_01" type="MeshInstance3D" unique_id=1367366433]
+gi_mode = 2
+mesh = ExtResource("1_mrw5s")
+surface_material_override/0 = ExtResource("2_rmga0")
+
+[node name="MeshCollider" type="StaticBody3D" parent="." unique_id=1473455892]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeshCollider" unique_id=1410249305]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2500942, 0, 0)
+shape = SubResource("BoxShape3D_mrw5s")
