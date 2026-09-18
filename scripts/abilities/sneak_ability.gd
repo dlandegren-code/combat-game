@@ -67,3 +67,9 @@ func get_description(actor) -> String:
 
 func execute(actor, _target) -> void:
 	actor.set_sneaking(not actor.sneaking)
+
+## Empty on purpose. Stealth is earned on each sneaking STEP, where the roll actually happens
+## (Combatant.roll_stealth) — awarding it here as well would pay twice for the click that
+## merely starts sneaking.
+func trains_skill() -> String:
+	return ""

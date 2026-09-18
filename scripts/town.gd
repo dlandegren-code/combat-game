@@ -32,6 +32,8 @@ const CREATION_SCENE := "res://scenes/character_creation.tscn"
 const TITLE_SCENE := "res://scenes/title_screen.tscn"
 const TRAINING_SCENE := "res://scenes/training.tscn"
 const SHOP_SCENE := "res://scenes/shop.tscn"
+const BOARD_SCENE := "res://scenes/quest_board.tscn"
+const CAMP_SCENE := "res://scenes/hire_camp.tscn"
 
 var _camera: Camera3D
 var _world: Node3D
@@ -318,6 +320,10 @@ func _build_ambience() -> void:
 	ambience.add_chimney_smoke(Vector3(-12.2, 4.6, -5.4))
 	ambience.add_chimney_smoke(Vector3(12.0, 4.4, -9.0), 9)
 	ambience.add_campfire(Vector3(3.0, 0.0, 11.0))
+	# The mercenaries' fire. Its stones and cook tripod are laid out with the rest of the
+	# scenery; this is the flame in them, so the camp reads as occupied from across the
+	# clearing rather than as an empty tent.
+	ambience.add_campfire(TownLayoutScript.MERC_FIRE)
 	ambience.add_falling_leaves(Vector3(0.0, 9.0, -2.0), Vector3(26.0, 4.0, 18.0))
 	ambience.add_butterflies(Vector3(0.0, 0.0, 2.0), 14.0)
 
@@ -446,6 +452,10 @@ func _service_text(entry: Dictionary) -> String:
 	var label: String = entry["label"]
 	if String(entry.get("action", "")) == "rest" and _anyone_hurt():
 		return "%s — %d gold" % [label, _rest_price()]
+	if String(entry.get("action", "")) == "hire" and GameState.has_party():
+		# How many are following you, on the sign, because that is the number the camp is
+		# there to change and the one thing a player wants to know before walking over.
+		return "%s — %d/%d" % [label, GameState.party.size(), GameState.PARTY_MAX]
 	return label
 
 
@@ -463,6 +473,8 @@ func _on_service(entry: Dictionary) -> void:
 			get_tree().change_scene_to_file(SHOP_SCENE)
 		"training":
 			get_tree().change_scene_to_file(TRAINING_SCENE)
+		"hire":
+			get_tree().change_scene_to_file(CAMP_SCENE)
 		"adventure":
 			get_tree().change_scene_to_file(QUEST_SCENE)
 		"rest":
@@ -484,8 +496,10 @@ func _on_rest() -> void:
 
 
 func _on_quest_board() -> void:
-	ScreenPanelScript.toast(_toast_host(),
-		"The board is empty — random quests are Phase 4. The gate runs the one dungeon.")
+	if not GameState.has_party():
+		ScreenPanelScript.toast(_toast_host(), "There is nobody here to take a job.")
+		return
+	get_tree().change_scene_to_file(BOARD_SCENE)
 
 
 func _on_create() -> void:

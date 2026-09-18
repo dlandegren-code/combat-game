@@ -39,6 +39,7 @@ const CLASSES := {
 			"res://resources/items/wooden_shield.tres",
 			"res://resources/items/leather_armor.tres",
 		],
+		"growth": ["attack_skill", "parry_skill", "shove_skill"],
 	},
 	"archer": {
 		"display_name": "Archer",
@@ -64,6 +65,7 @@ const CLASSES := {
 			"res://resources/items/short_bow.tres",
 			"res://resources/items/quiver.tres",
 		],
+		"growth": ["ranged_skill", "stealth_skill", "lockpick_skill", "trip_skill"],
 	},
 	"wizard": {
 		"display_name": "Wizard",
@@ -85,6 +87,7 @@ const CLASSES := {
 			"res://resources/items/ranger_dagger.tres",
 			"res://resources/items/gemstone_staff.tres",
 		],
+		"growth": ["parry_skill", "attack_skill", "perception_skill"],
 	},
 }
 
@@ -109,6 +112,26 @@ static func make(class_id: String, character_name: String):
 	data.bag = _starting_bag(spec)
 	data.equipped = _starting_loadout(data.bag)
 	return data
+
+
+static func growth_for(class_id: String) -> Array:
+	## What this class gets BETTER at with experience, best first.
+	##
+	## Read when an EXPERIENCED character has to be created from nothing — a hireling who was
+	## adventuring for years before you met them (see hireling.gd) — and spent one skill level
+	## at a time down the list and round again. A character who earned their levels at the
+	## table never comes through here; they raised whatever they actually used.
+	##
+	## Skills only, because skills are the only thing experience buys in this game (see
+	## Progression). That leaves the wizard's list looking thin, and it honestly is: a wizard
+	## gets stronger through spell power, which comes off willpower, which is an attribute —
+	## and attributes have no currency yet. A veteran wizard is therefore a modest hire rather
+	## than a secretly cheap one, because the asking price is derived from the skill levels
+	## actually handed out and not from the number on their badge. When attributes get a
+	## currency of their own, this is where a wizard's share of it goes.
+	if not CLASSES.has(class_id):
+		return []
+	return CLASSES[class_id].get("growth", [])
 
 
 static func display_name(class_id: String) -> String:

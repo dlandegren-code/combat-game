@@ -34,3 +34,6 @@ func get_cursor_icon(_actor, _target) -> String:
 	## An axe: a weapon you can picture leaving somebody's hand. Better than the spear it used
 	## to use, which now belongs to Trip.
 	return CURSOR_AXE
+
+func trains_skill() -> String:
+	return "throw_skill"

@@ -46,6 +46,19 @@ func _build() -> void:
 		ScreenPanelScript.heading(column, "%d slain      +%d xp      +%d gold" % [
 			result.get("kills", 0), result.get("xp", 0), result.get("gold", 0),
 		])
+		# The contract, said separately from the totals above, because the party needs to see
+		# WHY a cleared job was worth so much more than the bodies in it — and, when they
+		# walked out early, exactly what they left on the table.
+		var quest: String = result.get("quest", "")
+		if quest != "":
+			if result.get("quest_paid", false):
+				ScreenPanelScript.label(column, "Contract settled — %s: +%d gold, +%d xp." % [
+					quest, result.get("quest_gold", 0), result.get("quest_xp", 0)],
+					ScreenPanelScript.BODY_SIZE, ScreenPanelScript.GOOD)
+			else:
+				ScreenPanelScript.label(column,
+					"Contract unfinished — %s. The job pays nothing until it is done." % quest,
+					ScreenPanelScript.BODY_SIZE, ScreenPanelScript.BAD)
 		var loot: Array = result.get("loot", [])
 		if loot.is_empty():
 			ScreenPanelScript.label(column, "Carried out: nothing you did not walk in with.",

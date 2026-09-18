@@ -20,3 +20,6 @@ func get_cursor_icon(_actor, _target) -> String:
 	## A polearm, as in sweeping the shaft low through somebody's ankles. Had the staff until
 	## Firebolt needed it more. Still one of the two loosest fits in the set — see Shove.
 	return CURSOR_SPEAR
+
+func trains_skill() -> String:
+	return "trip_skill"

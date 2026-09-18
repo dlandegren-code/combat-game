@@ -64,12 +64,12 @@ todos:
     content: >-
       Phase 4: QuestDef resource (seed, difficulty tier, theme, enemy budget,
       loot budget, reward gold)
-    status: pending
+    status: completed
   - id: quest-board
     content: >-
       Phase 4: Quest Board UI generating 3-5 random QuestDefs each visit with
       name / difficulty / reward
-    status: pending
+    status: completed
   - id: enemy-templates
     content: >-
       Phase 4: enemy template data files (stats, model scene, abilities,
@@ -89,7 +89,7 @@ todos:
     content: >-
       Phase 5: GameState.party becomes multi-member; hire screen in town; quest
       scene spawns all members as player-controlled combatants
-    status: pending
+    status: completed
 ---
 ## Goal
 
@@ -486,3 +486,178 @@ what settled the foliage), `capture_town` (screenshots the town into
 - `tools/capture_town.gd` now writes .summer/local/town_stats.txt beside the screenshot
   (fps, frame time, primitives, draw calls), because a forest is easy to overbuild and "it
   looked fine in a screenshot" is not the same as "it runs".
+
+## Progression redesigned: two experiences (2026-09-18)
+
+Skills no longer rise off a shared pool. Each keeps its own.
+
+- **SKILL XP** belongs to a skill and is earned BY that skill. Using it pays 1, a
+  critical — a natural 5 or 1 on the game's d5 — pays 3. An ordinary use stops
+  paying after 3 in one quest; a critical ignores that roof. So swinging a sword
+  teaches swordsmanship, and standing in a cleared room shoving a wall teaches
+  nothing, which is the point of having a roof at all.
+- **GENERAL XP** comes from quests and kills and may be pushed into a skill ONE
+  point per skill per quest. It is a trickle for nudging along something you did
+  not get to use, not a pool to buy skills with.
+- **Levelling** a skill spends that skill's own xp: 4 + 2 x current, so the first
+  level costs 4 and the fifteenth 32.
+- **Training** buys skill xp with gold (8 + 3 x current per point) and does NOT
+  raise the skill. Deliberately a poor rate: a quest where a skill is used and
+  crits once is worth about 200 gold of tuition.
+- **Attributes** are raised by neither and are off the training screen until they
+  have a currency of their own. An honest gap beats an undecided system.
+
+Where it hooks into combat, all of it through code that was already there:
+`Ability.trains_skill()` names the skill an action teaches and `Player._use()`
+awards it centrally, so a new skill declares itself in one line. The attacker's
+die is rolled by the DEFENDER (`_attempt_defense`), so the defender hands it back
+via `note_skill_die` and the attacker reads it once the swing resolves. Parrying
+awards itself where the parry die is rolled, sneaking on every step in
+`roll_stealth`, lockpicking on every lock in `LootContainer._try_unlock`. The
+ledger lives on the body and is handed to the character at the end of the quest,
+like every other quest result; a goblin keeps one and it dies with it.
+
+Verified: 712 checks. The roof is tested directly (40 uses of one skill in a
+quest banks 3 xp), as is a crit paying over it, one skill's roof not being
+another's, the one-per-quest assignment refusing a second and refunding nothing,
+the allowance refreshing when a quest ends, and every pot surviving the save
+format. Two checks go through REAL combat rather than calling the award: a blow
+aimed at the hero earns parry, and the attacker is told what their die came up.
+
+`QuestScene.capture_party()` was extracted while doing this. The test had its own
+copy of what leaving a dungeon does to a party, and that copy silently stopped
+matching the moment skills began earning experience — so there is now one
+definition and the test calls it.
+
+## Phase 4 begins: a quest is a thing you can be offered (2026-09-18)
+
+Two of Phase 4's five pieces: quests can now be DESCRIBED and TAKEN. What they
+cannot yet do is build the place they describe — that is the spawner, the loot
+tables and the parameterised room builder, and until those land every accepted
+job runs the one authored dungeon.
+
+- `scripts/quest_def.gd` — a quest is a SEED and a TIER, and everything else is
+  derived from those two integers: its name, its theme, its enemy and loot
+  budgets, what it pays. That is what makes the rest cheap. A board stores one
+  number and re-derives its offers; a save stores two; the generator, when it
+  arrives, is handed the same two and has everything it needs. Verification for
+  the phase is written against exactly this property — "the same seed reproduces
+  the same quest" — so it is tested directly rather than inferred from a screen.
+  The draws come off one generator seeded once, which makes the ORDER of those
+  draws part of the contract: new rolls go at the end, the same discipline the
+  item enums are kept under.
+- `scripts/quest_board.gd` + `scenes/quest_board.tscn` — four jobs, hardest
+  last, coloured against the party's level so a tier number means something on a
+  first read. Tiers are spread AROUND the party, one below and two above: a board
+  with nothing safe on it and a board with nothing dangerous on it are the same
+  broken board in opposite directions.
+- `GameState.board_seed` — the board itself, as one integer. Closing the screen
+  and opening it again shows the same notices; the list changes when the party
+  comes back from a quest (`reroll_board`, called from the settlement), which is
+  also what stops a contract being cleared twice by walking straight back out of
+  town. It is saved, so the jobs a player walked away from are still there when
+  they come back.
+- `GameState.current_quest` is now a QuestDef (or null) rather than the Phase 0
+  placeholder dictionary. Null is a real state and a used one: a trip through the
+  gate on the party's own account has no contract, which is what the gate is for.
+- The contract pays on CLEARING and only on clearing. Kills pay for the fighting
+  (unchanged), the contract pays for finishing the job, and a party that walks
+  back out keeps the first and forfeits the second. The results screen says which
+  it was, by name.
+
+TIER NUMBERS: tier 1 is sized to about the five-enemy dungeon's kill income, so
+taking a contract for a room you were going to clear anyway roughly doubles the
+trip. Rewards carry a 15% wobble so two tier-3 jobs on one board are not visibly
+the same job twice — narrow enough that it can never reorder the tiers, which is
+checked across 40 seeded pairs, because a lucky Simple job out-paying an unlucky
+Steady one would make the labels on the board lie.
+
+`QuestScene.settle()` was extracted while doing this, for the third time and the
+same reason: the round-trip test cannot call `finish_quest` (it ends by changing
+scene, which would free the test), so the test had its own idea of what leaving a
+dungeon means — and that copy had already gone stale once when skills started
+earning experience. It would have gone stale again the moment a quest could be
+worth a contract. There is one definition, it returns the settlement, and the
+test calls it. `capture_party` stays separate because it is the half that has to
+stay symmetrical with hydration.
+
+Verified: 759 checks, up from 712. The new ones cover determinism both ways (the
+same seed gives the same quest; 24 seeds give a spread), the tier ladder rising
+in pay and in danger with no overlap between adjacent tiers, clamping past both
+ends, a quest surviving being written down, a board being stable under re-reading
+and changing under a reroll, a level-1 party always being offered level-1 work,
+and the board surviving a save with the same jobs on it. Payment goes through the
+REAL settlement path three times over: a contract cleared pays, one walked out of
+pays nothing and says so, and an uncontracted trip through the gate settles with
+no job attached. The board screen is mounted and read but not pressed — every
+button on it changes scene, and a scene change would free the test — so the
+taking is covered against settle() instead.
+
+## Phase 5: the mercenary camp (2026-09-18)
+
+Taken out of order, and on purpose: the user asked for it because being one
+character is hard, which is a better reason to build something than its position
+in a list. Phase 4's remaining three pieces (the spawner, loot tables, the
+parameterised room builder) are untouched.
+
+It was cheap because Phase 0 paid for it in advance. `GameState.party` has been
+an array since the first day and `QuestScene` has always spawned one body per
+member, so this is a screen, a price and a generator rather than a refactor.
+
+- `scripts/hireling.gd` — a camp is ONE seed and the people at it are derived
+  from it, exactly as a quest board is. A candidate stays a plain Dictionary
+  until somebody pays: minting an id and building a bag of gear four times over
+  on every redraw, for people who will never be hired, is work nobody asked for.
+  `make_character` is the moment a candidate becomes a person.
+- `CharacterClasses.growth_for` — what a class gets better at, best first. A
+  hireling's levels are spent down that list rather than at random, so a level 4
+  archer is reliably an ARCHER. Their xp pools are left EMPTY: they bring what
+  they have learned, not a pot for their new employer to cash in.
+- `scripts/hire_camp.gd` + `scenes/hire_camp.tscn` — the company and the fire on
+  one screen, because "can I afford this, and who would I be replacing" is one
+  question. Parting company asks twice, in place, on the button itself.
+- `Progression.hire_cost` — a fee plus a price per skill level they already have.
+  Priced off what they BRING, not the level on their badge, so a class whose
+  experience does not currently buy many skill levels is cheap rather than
+  quietly a bad deal. A raw recruit is 40 gold — half a cleared tier-1 dungeon,
+  so a lone hero can afford company after one trip, which is the whole point.
+  ONE-OFF, no upkeep: a wage per quest is a second economy to balance, and what
+  actually costs money is keeping them alive and armed.
+- `GameState.PARTY_MAX = 4`, `add_member` now refuses and reports rather than
+  silently overfilling, `remove_member` refuses to dismiss the main character.
+  `GameState.hire()` is the ONE place hiring happens, so paying and joining
+  cannot come apart.
+- Dismissal takes their gear with them. That is the honest reading of paying
+  somebody off, and it stops the camp being a way to launder a cheap recruit into
+  a free set of leather armour. If it ever needs softening it softens in
+  `remove_member`.
+- The town gained a second tent and a lit fire at (-10, -12.5); its sign shows
+  `Mercenary Camp — 1/4`, because party size is the number the camp exists to
+  change. `TownAmbience` kept its campfire light in a single variable, so adding
+  a second fire would have left the first frozen — it is an array now, each fire
+  phase-offset so two fires in one clearing do not pulse in unison.
+
+REAL BUG FOUND AND FIXED: `QuestScene._spare_mark` — the square a party member
+gets when the authored scenario has no hand-placed body for them — stepped +x
+from the last mark and hoped. That was harmless while it was never called, and
+the moment a fourth body could be hired it became a way to stand somebody inside
+a wall. It now SEARCHES outward in rings for a square with floor under it and
+nobody on it, asking `DungeonRoom.is_floor_at` — the same authority
+`Combatant._is_in_arena` uses — so it keeps working when Phase 4's generator
+starts building the room.
+
+Verified: 816 checks, up from 759. The camp gets the same treatment the board
+does (same seed, same people; stable under re-reading; re-rolled on return from a
+quest; survives a save), plus what is particular to hiring: price rising with
+experience, a purse that cannot cover it buying NOTHING rather than half, the cap
+turning a fifth away without charging for them, the hero being undismissable, and
+a hireling being better at their trade than a fresh recruit without any skill
+going over the cap even when handed 400 levels. The camp screen is walked by
+pressing its real buttons, including that parting company does nothing until it
+is confirmed. It ends underground: a party of three, every one of them with a
+body, on real floor, no two on a square, all dealt into the turn order, and a
+hireling's wounds written back like anybody else's.
+
+STILL MISSING: hirelings cannot be equipped from town — the shop's party picker
+reaches them, but there is no screen that moves an item from one member's pack to
+another's. They fight with what their class gave them plus whatever they pick up.

@@ -25,6 +25,8 @@ const CharacterClassesScript := preload("res://scripts/character_classes.gd")
 const CombatantStatsScript := preload("res://scripts/combatant_stats.gd")
 const SaveGameScript := preload("res://scripts/save_game.gd")
 const ProgressionScript := preload("res://scripts/progression.gd")
+const QuestDefScript := preload("res://scripts/quest_def.gd")
+const HirelingScript := preload("res://scripts/hireling.gd")
 
 ## A save path of this test's own. The real one belongs to whoever is playing, and a dev tool
 ## has no business writing to it.
@@ -199,6 +201,12 @@ func _run() -> void:
 	# --- Training and the market ---------------------------------------------------------
 	await _run_economy_checks()
 
+	# --- Quests as described things, and the board they are pinned to --------------------
+	await _run_quest_checks()
+
+	# --- Hiring, and taking the people hired underground ---------------------------------
+	await _run_hire_checks()
+
 	# --- The screens, buttons and all ----------------------------------------------------
 	await _run_screen_checks()
 
@@ -266,6 +274,333 @@ func _run_creation_checks() -> void:
 
 # --- The screens themselves -------------------------------------------------
 
+func _run_quest_checks() -> void:
+	## A quest is a seed and a tier, and everything else about it is derived. That claim is
+	## what the whole of Phase 4 is built on — the board stores one integer, a save stores two,
+	## and the generator will be handed the same two — so it is checked directly rather than
+	## inferred from a quest looking plausible on a screen.
+
+	# --- The same two numbers give the same quest, every time -----------------------------
+	var a = QuestDefScript.generate(918_273, 3)
+	var b = QuestDefScript.generate(918_273, 3)
+	_check(a.title == b.title, "the same seed names the same quest (%s)" % a.title)
+	_check(a.theme == b.theme, "and puts it in the same kind of place")
+	_check(a.reward_gold == b.reward_gold and a.reward_xp == b.reward_xp,
+		"and pays the same for it")
+	_check(a.enemy_budget == b.enemy_budget and a.loot_budget == b.loot_budget,
+		"and fills it with the same amount of trouble")
+
+	# --- Different seeds give different quests --------------------------------------------
+	# A sweep rather than one comparison: two quests CAN legitimately come out with the same
+	# name, and a single unlucky pair would fail a test that was right about the code.
+	var titles := {}
+	for i in range(24):
+		titles[QuestDefScript.generate(5_000 + i * 7, 2).title] = true
+	_check(titles.size() > 12, "24 seeds give a spread of quests (%d distinct names)"
+		% titles.size())
+
+	# --- A tier means something ------------------------------------------------------------
+	var previous_gold := 0
+	var previous_xp := 0
+	var previous_enemies := 0
+	var ladder_rises := true
+	for tier in range(1, QuestDefScript.MAX_TIER + 1):
+		var rung = QuestDefScript.generate(4_242 + tier, tier)
+		_check(rung.tier == tier, "tier %d comes back as tier %d" % [tier, rung.tier])
+		if rung.reward_gold <= previous_gold or rung.reward_xp <= previous_xp \
+				or rung.enemy_budget <= previous_enemies:
+			ladder_rises = false
+		previous_gold = rung.reward_gold
+		previous_xp = rung.reward_xp
+		previous_enemies = rung.enemy_budget
+	_check(ladder_rises,
+		"every rung of the ladder pays more and is worse than the one below it")
+	# The variance must never be wide enough to reorder the tiers, which is the one thing that
+	# would make the labels on the board lie. Checked across seeds, not just the ladder above.
+	var overlap := false
+	for i in range(40):
+		if QuestDefScript.generate(700 + i, 1).reward_gold \
+				>= QuestDefScript.generate(9_000 + i, 2).reward_gold:
+			overlap = true
+	_check(not overlap, "and no lucky Simple job out-pays an unlucky Steady one")
+
+	_check(QuestDefScript.generate(1, 99).tier == QuestDefScript.MAX_TIER,
+		"a tier past the end of the ladder is clamped to it")
+	_check(QuestDefScript.generate(1, -3).tier == 1, "and one below the bottom to the bottom")
+
+	# --- A quest survives being written down ----------------------------------------------
+	var written = QuestDefScript.from_dict(a.to_dict())
+	_check(written != null, "a quest can be written down and read back")
+	_check(written.title == a.title and written.tier == a.tier
+			and written.reward_gold == a.reward_gold,
+		"and comes back as the same quest")
+	_check(QuestDefScript.from_dict({}) == null, "and an empty record is no quest at all")
+
+	# --- The board -------------------------------------------------------------------------
+	var board: Array = QuestDefScript.offers(555, 3, 4)
+	_check(board.size() == 4, "the board puts up as many jobs as it is asked for")
+	var sorted := true
+	var in_range := true
+	for i in range(board.size()):
+		if board[i].tier < 1 or board[i].tier > QuestDefScript.MAX_TIER:
+			in_range = false
+		if i > 0 and board[i].tier < board[i - 1].tier:
+			sorted = false
+	_check(sorted, "hardest last")
+	_check(in_range, "and nothing off the ladder")
+	var again: Array = QuestDefScript.offers(555, 3, 4)
+	var identical := true
+	for i in range(board.size()):
+		if board[i].title != again[i].title or board[i].quest_seed != again[i].quest_seed:
+			identical = false
+	_check(identical, "the same board seed puts up the same board")
+	var other: Array = QuestDefScript.offers(556, 3, 4)
+	_check(other[0].quest_seed != board[0].quest_seed, "and a different seed a different one")
+
+	# A board is sized to the party. A fresh hero must never be shown nothing but work that
+	# would kill them, which is the failure this spread exists to prevent.
+	var beginners_luck := false
+	for i in range(20):
+		for offer in QuestDefScript.offers(3_000 + i, 1, 4):
+			if offer.tier == 1:
+				beginners_luck = true
+				break
+	_check(beginners_luck, "a level 1 party is offered work a level 1 party can do")
+
+	# --- The board as GameState keeps it ---------------------------------------------------
+	GameState.clear()
+	GameState.add_member(CharacterClassesScript.make("soldier", "Contractor"))
+	_check(GameState.board_seed == 0, "a new game has no board yet")
+	var pinned: Array = GameState.quest_board()
+	_check(GameState.board_seed != 0, "reading the board rolls one")
+	_check(pinned.size() == GameState.BOARD_OFFERS, "with the town's usual number of jobs")
+	_check(GameState.quest_board()[0].title == pinned[0].title,
+		"and reading it again shows the same jobs")
+	var was := GameState.board_seed
+	GameState.reroll_board()
+	_check(GameState.board_seed != was and GameState.board_seed != 0,
+		"rerolling puts up a different board")
+
+	# --- Taking a job, and being paid for it -----------------------------------------------
+	# Through the real settlement path (QuestScene.settle), because the question is not whether
+	# the arithmetic is right but whether the contract reaches it.
+	var job = QuestDefScript.generate(31_337, 3)
+	GameState.accept_quest(job)
+	_check(GameState.current_quest == job, "a job taken off the board is the job the party is on")
+	var gold_before: int = GameState.gold
+	var xp_before: int = GameState.party[0].xp
+	var board_before: int = GameState.board_seed
+
+	var quest := await _enter_quest()
+	var settlement: Dictionary = await _leave_quest(quest, "victory")
+	_check(GameState.gold == gold_before + job.reward_gold,
+		"clearing it pays the contract in gold (%d -> %d, contract %d)"
+			% [gold_before, GameState.gold, job.reward_gold])
+	_check(GameState.party[0].xp == xp_before + job.reward_xp, "and in experience")
+	_check(settlement.get("quest_paid", false), "and the results screen is told it was settled")
+	_check(String(settlement.get("quest", "")) == job.title, "and which job it was")
+	_check(GameState.current_quest == null, "the party is not on a quest any more")
+	_check(GameState.board_seed != board_before, "and the board has gone up fresh")
+
+	# --- Walking out of a job you took -----------------------------------------------------
+	var abandoned = QuestDefScript.generate(4_711, 2)
+	GameState.accept_quest(abandoned)
+	gold_before = GameState.gold
+	xp_before = GameState.party[0].xp
+	quest = await _enter_quest()
+	settlement = await _leave_quest(quest, "retreat")
+	_check(GameState.gold == gold_before, "walking out of a contract pays nothing")
+	_check(GameState.party[0].xp == xp_before, "and teaches nothing")
+	_check(not settlement.get("quest_paid", true), "and the results screen says so")
+	_check(String(settlement.get("quest", "")) == abandoned.title,
+		"while still naming the job that was dropped")
+
+	# --- A trip through the gate on the party's own account --------------------------------
+	_check(GameState.current_quest == null, "no contract after the last one was dropped")
+	gold_before = GameState.gold
+	quest = await _enter_quest()
+	settlement = await _leave_quest(quest, "victory")
+	_check(String(settlement.get("quest", "")) == "",
+		"an uncontracted trip settles with no job attached")
+	_check(GameState.gold == gold_before, "and pays only for what was killed")
+
+
+func _run_hire_checks() -> void:
+	## The mercenary camp. A camp is a seed and the people at it are derived from it, exactly as
+	## a quest board is — so the same properties are worth the same checks — but hiring differs
+	## from taking a contract in one way that matters: it produces a PERSON, and that person has
+	## to survive everything a person has to survive. So this ends by taking one underground.
+
+	GameState.clear()
+	GameState.add_member(CharacterClassesScript.make("soldier", "Chief"))
+	GameState.gold = 2_000
+
+	# --- Who is at the fire ---------------------------------------------------------------
+	_check(GameState.camp_seed == 0, "a new game has no camp yet")
+	var roster: Array = GameState.hire_roster()
+	_check(GameState.camp_seed != 0, "walking up to the fire rolls one")
+	_check(roster.size() == GameState.CAMP_HIRELINGS,
+		"with the usual number of sell-swords at it (%d)" % roster.size())
+	var second: Array = GameState.hire_roster()
+	_check(second.size() == roster.size()
+			and String(second[0]["character_name"]) == String(roster[0]["character_name"]),
+		"and looking again shows the same people")
+
+	var cheapest_first := true
+	var named := true
+	var classes_known := true
+	for i in range(roster.size()):
+		if i > 0 and int(roster[i]["price"]) < int(roster[i - 1]["price"]):
+			cheapest_first = false
+		if String(roster[i]["character_name"]).strip_edges() == "":
+			named = false
+		if not CharacterClassesScript.CLASSES.has(String(roster[i]["class_id"])):
+			classes_known = false
+	_check(cheapest_first, "cheapest first, so the list reads as a price board")
+	_check(named, "everybody has a name")
+	_check(classes_known, "and a class the game knows how to build")
+
+	# The same seed gives the same people, and a different one different people. The property
+	# the whole seed-derived approach rests on, checked here as it is for quests.
+	var a: Array = HirelingScript.roster(24_601, 2, 3)
+	var b: Array = HirelingScript.roster(24_601, 2, 3)
+	var same := true
+	for i in range(a.size()):
+		if String(a[i]["character_name"]) != String(b[i]["character_name"]) \
+				or int(a[i]["price"]) != int(b[i]["price"]):
+			same = false
+	_check(same, "the same camp seed sits the same people round the fire")
+	var faces := {}
+	for i in range(30):
+		for who in HirelingScript.roster(80_000 + i * 13, 2, 3):
+			faces[String(who["character_name"])] = true
+	_check(faces.size() > 40, "and 30 camps give a spread of people (%d distinct names)"
+		% faces.size())
+
+	# Experience costs money, and a raw recruit is affordable after one dungeon. The camp
+	# existing at all is only useful if a lone hero can afford the first one.
+	_check(ProgressionScript.hire_cost(0) == ProgressionScript.HIRE_GOLD_BASE,
+		"a green recruit asks the base fee (%d gold)" % ProgressionScript.hire_cost(0))
+	_check(ProgressionScript.hire_cost(6) > ProgressionScript.hire_cost(2),
+		"and every year behind them puts the price up")
+
+	# --- What a hireling actually is -------------------------------------------------------
+	var veteran = HirelingScript.make_character(
+		{"class_id": "archer", "character_name": "Test Hire", "level": 4, "bonus": 6})
+	_check(veteran.character_name == "Test Hire", "a hireling is made with the name advertised")
+	_check(veteran.level == 4, "and the level advertised (%d)" % veteran.level)
+	_check(veteran.stats != null and veteran.id != "", "with a stat block and an id of their own")
+	_check(not veteran.bag.is_empty(), "and their class's kit in their pack")
+	_check(veteran.xp == 0, "they bring no unspent experience for their employer to cash in")
+	var raw = CharacterClassesScript.make("archer", "Raw")
+	var grew := false
+	for field in CharacterClassesScript.growth_for("archer"):
+		if int(veteran.stats.get(field)) > int(raw.stats.get(field)):
+			grew = true
+	_check(grew, "but they ARE better at their trade than a fresh recruit")
+	_check(int(veteran.stats.get("ranged_skill")) > int(raw.stats.get("ranged_skill")),
+		"starting with the thing their class is best at (archery %d vs %d)"
+			% [int(veteran.stats.get("ranged_skill")), int(raw.stats.get("ranged_skill"))])
+	# The cap has to hold even when somebody is handed more levels than there are skills to
+	# put them in, which is the one input that could spin the round-robin forever.
+	var maxed = HirelingScript.make_character(
+		{"class_id": "soldier", "character_name": "Maxed", "level": 6, "bonus": 400})
+	var capped := true
+	for field in CharacterClassesScript.growth_for("soldier"):
+		if int(maxed.stats.get(field)) > ProgressionScript.SKILL_CAP:
+			capped = false
+	_check(capped, "and no amount of experience takes a skill past the cap")
+
+	# --- Paying for one --------------------------------------------------------------------
+	roster = GameState.hire_roster()
+	var candidate: Dictionary = roster[0]
+	var price := int(candidate["price"])
+	var purse: int = GameState.gold
+	var camp_before: int = GameState.camp_seed
+	_check(GameState.hire(candidate), "a sell-sword can be hired")
+	_check(GameState.gold == purse - price, "which costs what they asked (%d gold)" % price)
+	_check(GameState.party.size() == 2, "and puts them in the party")
+	_check(GameState.party[1].character_name == String(candidate["character_name"]),
+		"the one who was asked, by name")
+	_check(GameState.camp_seed != camp_before,
+		"and the camp rolls again, so the same person cannot be hired twice")
+
+	# A purse that cannot cover it buys nothing at all — neither the body nor half the gold.
+	GameState.gold = 0
+	var dear: Dictionary = GameState.hire_roster()[0]
+	_check(not GameState.hire(dear), "somebody who cannot be paid does not come along")
+	_check(GameState.party.size() == 2, "and the party is unchanged")
+	_check(GameState.gold == 0, "and so is the purse")
+	GameState.gold = 2_000
+
+	# --- The cap ---------------------------------------------------------------------------
+	while not GameState.party_is_full():
+		_check(GameState.hire(GameState.hire_roster()[0]), "another one signs on")
+	_check(GameState.party.size() == GameState.PARTY_MAX,
+		"the company fills up at %d" % GameState.PARTY_MAX)
+	purse = GameState.gold
+	_check(not GameState.hire(GameState.hire_roster()[0]), "and a fifth is turned away")
+	_check(GameState.gold == purse, "without being paid for")
+
+	# --- Parting company -------------------------------------------------------------------
+	var leaving: String = GameState.party[1].character_name
+	_check(GameState.remove_member(1), "a hireling can be let go")
+	_check(GameState.party.size() == GameState.PARTY_MAX - 1, "which shortens the company")
+	_check(GameState.party[0].character_name == "Chief", "the hero stays at the head of it")
+	var still_here := false
+	for member in GameState.party:
+		if member.character_name == leaving:
+			still_here = true
+	_check(not still_here, "and the one let go is gone")
+	_check(not GameState.remove_member(0), "the hero cannot be dismissed")
+	_check(not GameState.remove_member(99), "nor can somebody who is not in the party")
+	_check(GameState.party.size() == GameState.PARTY_MAX - 1, "and neither attempt changed it")
+
+	# --- Underground with the hired help ---------------------------------------------------
+	# The point of the whole feature, and the part that was never exercised before: a party
+	# bigger than the authored scenario's three hand-placed heroes.
+	_check(GameState.party.size() > 2, "the party is now bigger than a lone hero")
+	var expected := _data_names(GameState.party)
+	var quest := await _enter_quest()
+	var views: Array = quest._party_views
+	_check(views.size() == GameState.party.size(),
+		"every one of them gets a body in the quest (%d of %d)"
+			% [views.size(), GameState.party.size()])
+	_check(_names_of(views) == expected, "and they are the right people, in party order")
+
+	# Nobody inside a wall and nobody standing on anybody. The authored scene has three marks
+	# and the party is bigger than that, so at least one of these squares was SEARCHED for —
+	# which is the thing that would silently go wrong.
+	var room := quest.get_node_or_null("DungeonRoom")
+	var on_floor := true
+	var apart := true
+	for i in range(views.size()):
+		var here: Vector3 = views[i].position
+		if room != null and room.has_method("is_floor_at") \
+				and not room.is_floor_at(here.x, here.z):
+			on_floor = false
+		for j in range(i + 1, views.size()):
+			if here.distance_to(views[j].position) < 1.0:
+				apart = false
+	_check(on_floor, "every one of them is standing on dungeon floor")
+	_check(apart, "and no two of them on the same square")
+	# They are real combatants, not decoration: the turn order has to know about them.
+	var in_order := 0
+	for c in get_tree().get_nodes_in_group("combatants"):
+		if is_instance_valid(c) and c.get("is_player_controlled") == true:
+			in_order += 1
+	_check(in_order == views.size(),
+		"and all %d are dealt into the fight as player-controlled" % views.size())
+
+	var hire_hp: int = views[-1].hp
+	views[-1].hp = maxi(1, hire_hp - 3)
+	await _leave_quest(quest, "retreat")
+	_check(GameState.party.size() == expected.size(), "everybody comes back out")
+	_check(_data_names(GameState.party) == expected, "as the same people")
+	_check(GameState.party[-1].hp == maxi(1, hire_hp - 3),
+		"and a hireling's wounds are written back like anybody else's")
+
+
 func _run_screen_checks() -> void:
 	## Mount each town screen with a real party in memory and press the buttons that DO
 	## something, rather than the ones that change scene.
@@ -290,16 +625,17 @@ func _run_screen_checks() -> void:
 	var before_skill: int = int(GameState.party[0].stats.attack_skill)
 	var before_xp: int = GameState.party[0].xp
 	var before_gold: int = GameState.gold
-	_check(_press(training, "Melee"), "the training hall offers Melee")
-	_check(int(GameState.party[0].stats.attack_skill) == before_skill + 1,
-		"pressing it trained the skill")
-	_check(GameState.party[0].xp < before_xp, "it cost xp")
-	_check(GameState.gold < before_gold, "and gold")
+	_check(_press(training, "Train"), "the training hall sells an hour of practice")
+	_check(GameState.gold < before_gold, "which costs gold")
+	_check(GameState.party[0].skill_xp_for("attack_skill") > 0, "and is worth skill xp")
+	_check(int(GameState.party[0].stats.attack_skill) == before_skill,
+		"but does not raise the skill on its own")
+	_check(_press(training, "Assign"), "general xp can be pushed into a skill")
+	_check(GameState.party[0].xp < before_xp, "which spends it")
 	# The second party member is reachable, which is what the picker is for.
 	_check(_press(training, "Second"), "the training hall can switch to the other hero")
-	_check(_press(training, "Archery"), "and train them instead")
-	_check(int(GameState.party[1].stats.ranged_skill) > 3, "which raised THEIR skill")
-	_check(int(GameState.party[0].stats.ranged_skill) == 3, "and not the other one's")
+	_check(_press(training, "Assign"), "and spend on them instead")
+	_check(GameState.party[1].xp < 400, "which came out of THEIR general xp")
 	_free(training)
 
 	# --- Market ---
@@ -314,6 +650,44 @@ func _run_screen_checks() -> void:
 	_check(GameState.gold > before_gold, "for money")
 	_check(_bag_count(GameState.party[0]) == before_bag, "out of the pack")
 	_free(shop)
+
+	# --- The notice board ---
+	# Mounted and read, NOT pressed. Every button on this screen changes scene, and a scene
+	# change here would free the test along with the board — so what it can honestly check is
+	# that the board draws the jobs GameState says are pinned up, one takeable button each.
+	# The taking itself is covered against the real settlement path in _run_quest_checks.
+	GameState.reroll_board()
+	var offers: Array = GameState.quest_board()
+	var board_screen: Node = await _mount("res://scenes/quest_board.tscn")
+	_check(_has_buttons(board_screen), "the notice board draws")
+	var all_pinned := true
+	for offer in offers:
+		if _find_button(board_screen, "Take: %s" % offer.title) == null:
+			all_pinned = false
+	_check(all_pinned, "with a button for every one of the %d jobs going" % offers.size())
+	_check(_find_button(board_screen, "Back to town") != null, "and a way to walk away")
+	_free(board_screen)
+
+	# --- The mercenary camp ---
+	# Pressed for real, unlike the notice board: hiring and dismissing both stay on this screen,
+	# so the buttons that matter here can be walked the way the training hall's are.
+	GameState.camp_seed = 0
+	var camp_offer: Dictionary = GameState.hire_roster()[0]
+	GameState.gold = 2_000
+	var company: int = GameState.party.size()
+	var camp: Node = await _mount("res://scenes/hire_camp.tscn")
+	before_gold = GameState.gold
+	_check(_press(camp, "Hire %s" % camp_offer["character_name"]),
+		"the camp signs somebody on")
+	_check(GameState.party.size() == company + 1, "who joins the company")
+	_check(GameState.gold < before_gold, "for money")
+	# Parting company asks twice, in place, so the first press must NOT remove anybody.
+	var newcomer: String = GameState.party[-1].character_name
+	_check(_press(camp, "Part ways with %s" % newcomer), "parting company asks first")
+	_check(GameState.party.size() == company + 1, "and changes nothing until it is confirmed")
+	_check(_press(camp, "Really part with %s" % newcomer), "confirming it goes through")
+	_check(GameState.party.size() == company, "and the company is back to what it was")
+	_free(camp)
 
 	# --- Town, including the bed ---
 	GameState.party[0].hp = 4
@@ -431,119 +805,162 @@ func _restore_real_save() -> void:
 # --- Training and the market, standing in for those screens -----------------
 
 func _run_economy_checks() -> void:
-	## Everything the training hall and the market do, minus the buttons — and then a quest, to
-	## check that a trained skill and a bought sword actually reach the dungeon. A stat that
-	## can be paid for but never arrives is the worst kind of bug: the receipt says it worked.
+	## The two experience economies, and the rules that keep them apart.
+	##
+	## The one worth the most care is the ROOF: a skill earns only so much from ordinary use in
+	## one quest. A game where the best way to train is to stand in a cleared room shoving a
+	## wall is a bad game, and nothing else in the code would notice that it had become one.
 	GameState.clear()
 	var hero = CharacterClassesScript.make("soldier", "Coin")
 	GameState.add_member(hero)
 
-	# --- Levels come off lifetime xp, not the spendable pool ---
-	_check(ProgressionScript.level_for(0) == 1, "a new character is level 1")
-	_check(ProgressionScript.level_for(100) == 2, "100 lifetime xp is level 2")
-	_check(ProgressionScript.level_for(299) == 2, "and 299 is still level 2")
-	_check(ProgressionScript.level_for(300) == 3, "300 is level 3 — each level costs more")
-	_check(ProgressionScript.xp_for_next_level(0) == 100, "the screen can say what is left")
+	# --- A skill levels on its OWN experience ---
+	var melee := "attack_skill"
+	var start_level: int = int(hero.stats.get(melee))
+	_check(hero.skill_xp_for(melee) == 0, "a new character has banked no skill xp")
+	_check(not ProgressionScript.can_level(hero, melee), "and so cannot level anything")
+	_check(ProgressionScript.level_refusal(hero, melee).contains("skill xp"),
+		"the refusal says what is missing")
 
-	GameState.award_xp(500)
-	_check(hero.xp == 500 and hero.xp_total == 500, "earned xp lands in both counters")
-	_check(hero.level == ProgressionScript.level_for(500), "and the level follows it")
+	var cost: int = ProgressionScript.xp_to_level(start_level)
+	hero.add_skill_xp(melee, cost)
+	_check(ProgressionScript.can_level(hero, melee), "with the xp banked, it can")
+	_check(ProgressionScript.level_up(hero, melee), "and the level is bought")
+	_check(int(hero.stats.get(melee)) == start_level + 1,
+		"the skill went up by one (%d)" % int(hero.stats.get(melee)))
+	_check(hero.skill_xp_for(melee) == 0, "and the xp was spent")
+	_check(hero.xp == 0, "levelling a skill costs no general xp")
 
-	# --- Training spends both, and refuses when it cannot ---
-	var entry: Dictionary = ProgressionScript.entry_for("attack_skill")
-	var before_skill: int = int(hero.stats.attack_skill)
-	var xp_price: int = ProgressionScript.xp_cost("skill", before_skill)
-	var gold_price: int = ProgressionScript.gold_cost("skill", before_skill)
+	# Each skill keeps its own pot, which is the whole point of levelling them separately.
+	hero.add_skill_xp("ranged_skill", 99)
+	_check(hero.skill_xp_for(melee) == 0, "xp banked for archery is not xp for melee")
+	_check(not ProgressionScript.can_level(hero, melee), "and cannot level melee")
+	_check(ProgressionScript.can_level(hero, "ranged_skill"), "but can level archery")
 
+	# --- Training buys skill xp with gold, and does NOT raise the skill ---
+	GameState.clear()
+	var archer = CharacterClassesScript.make("archer", "Tutor")
+	GameState.add_member(archer)
+	var before_level: int = int(archer.stats.get("ranged_skill"))
+	var price: int = ProgressionScript.train_gold_cost(before_level)
 	GameState.gold = 0
-	_check(not ProgressionScript.can_train(hero, entry, GameState.gold),
+	_check(not ProgressionScript.can_train(archer, "ranged_skill", GameState.gold),
 		"training is refused with no gold")
-	_check(ProgressionScript.refusal(hero, entry, GameState.gold).contains("gold"),
-		"and the refusal says it is the money")
-	_check(int(hero.stats.attack_skill) == before_skill, "a refusal raises nothing")
+	GameState.add_gold(price)
+	_check(ProgressionScript.can_train(archer, "ranged_skill", GameState.gold),
+		"and allowed with it")
+	_check(GameState.spend_gold(price), "the trainer is paid")
+	archer.add_skill_xp("ranged_skill", ProgressionScript.TRAIN_XP)
+	_check(archer.skill_xp_for("ranged_skill") == ProgressionScript.TRAIN_XP,
+		"an hour of training is worth skill xp")
+	_check(int(archer.stats.get("ranged_skill")) == before_level,
+		"and does NOT raise the skill by itself")
 
-	GameState.add_gold(gold_price)
-	_check(ProgressionScript.can_train(hero, entry, GameState.gold), "with the money, it is on")
-	_check(GameState.spend_gold(gold_price), "the gold is taken")
-	_check(ProgressionScript.train(hero, entry), "the skill is bought")
-	_check(int(hero.stats.attack_skill) == before_skill + 1,
-		"the skill went up by one (%d)" % int(hero.stats.attack_skill))
-	_check(hero.xp == 500 - xp_price, "the xp pool paid for it (%d left)" % hero.xp)
-	_check(hero.xp_total == 500, "and spending it did not undo the character's history")
-	_check(GameState.gold == 0, "and so did the purse")
+	# --- General xp: one point per skill per quest ---
+	GameState.award_xp(20)
+	_check(archer.xp == 20 and archer.xp_total == 20, "general xp lands in both counters")
+	var banked: int = archer.skill_xp_for("throw_skill")
+	_check(archer.may_assign_general("throw_skill"), "a fresh quest allows an assignment")
+	_check(archer.assign_general_xp("throw_skill"), "which moves a point into the skill")
+	_check(archer.skill_xp_for("throw_skill") == banked + 1, "the skill gained it")
+	_check(archer.xp == 19, "and the general pool paid for it")
+	_check(not archer.may_assign_general("throw_skill"), "that skill has had its point")
+	_check(not archer.assign_general_xp("throw_skill"), "and a second is refused")
+	_check(archer.xp == 19, "a refused assignment costs nothing")
+	_check(archer.may_assign_general("trip_skill"), "but another skill may still take one")
+	_check(archer.assign_general_xp("trip_skill"), "and does")
+	archer.refresh_general_allowance()
+	_check(archer.may_assign_general("throw_skill"),
+		"finishing a quest gives every skill its allowance back")
 
-	# The pool is a pool: spend it all and there is nothing left to train with, whatever the
-	# character's level says.
-	var broke = CharacterClassesScript.make("soldier", "Broke")
-	_check(not ProgressionScript.can_train(broke, entry, 99999),
-		"a character with no xp cannot train however rich the party is")
+	var pauper = CharacterClassesScript.make("soldier", "Pauper")
+	_check(not pauper.may_assign_general("attack_skill"),
+		"with no general xp there is nothing to assign")
 
-	# The cap is a real stop, not a slow-down.
-	var capped = CharacterClassesScript.make("soldier", "Capped")
-	capped.stats.attack_skill = ProgressionScript.SKILL_CAP
-	capped.xp = 99999
-	_check(not ProgressionScript.can_train(capped, entry, 99999), "a capped skill refuses")
-	_check(ProgressionScript.refusal(capped, entry, 99999).contains("as high"),
-		"and says that is why")
+	# --- The roof on earning by use ---
+	var body := _ledger_body()
+	for i in range(12):
+		body.award_skill_use("attack_skill", false)
+	_check(body.skill_xp_earned.get("attack_skill", 0) == ProgressionScript.QUEST_USE_CAP,
+		"ordinary use stops paying at the roof (%d xp for twelve swings)"
+			% int(body.skill_xp_earned.get("attack_skill", 0)))
+	body.award_skill_use("attack_skill", true)
+	_check(body.skill_xp_earned.get("attack_skill", 0)
+			== ProgressionScript.QUEST_USE_CAP + ProgressionScript.CRIT_XP,
+		"a critical pays over the roof")
+	body.award_skill_use("parry_skill", false)
+	_check(body.skill_xp_earned.get("parry_skill", 0) == ProgressionScript.USE_XP,
+		"one skill roof is not another")
+	_check(ProgressionScript.is_skill("attack_skill")
+			and not ProgressionScript.is_skill("stamina"),
+		"attributes are not skills and are not trained here")
+	body.free()
 
-	# --- The market ---
-	var potion = load("res://resources/items/health_potion.tres")
-	var armour = load("res://resources/items/heavy_armor.tres")
-	_check(potion.gold_value() > 0, "an item with no price of its own is still worth something")
-	_check(armour.gold_value() > potion.gold_value(),
-		"armour costs more than a potion (%d vs %d)" % [armour.gold_value(), potion.gold_value()])
-	_check(potion.sell_value() < potion.gold_value(),
-		"a shop sells dearer than it buys (%d / %d)" % [potion.gold_value(), potion.sell_value()])
+	# A goblin learns nothing: the ledger exists to be carried home, and it has no home.
+	var goblin := _ledger_body()
+	goblin.is_player_controlled = false
+	goblin.award_skill_use("attack_skill", true)
+	_check(goblin.skill_xp_earned.is_empty(), "an enemy banks no skill xp")
+	goblin.free()
 
-	var bought_armour = armour.make_instance()
-	GameState.gold = armour.gold_value()
-	_check(GameState.spend_gold(armour.gold_value()), "armour can be paid for")
-	_check(hero.bag_add(bought_armour), "and goes in the pack")
-	var armour_idx: int = hero.bag.find(bought_armour)
-	_check(hero.equip_from_bag(armour_idx), "and can be put on")
-	_check(hero.is_equipped(armour_idx), "and reads as worn")
-
-	# Selling something that is being worn has to take it off on the way out, or the character
-	# keeps the armour bonus of a breastplate that belongs to somebody else now.
-	var purse: int = GameState.gold
-	var refund: int = bought_armour.sell_value()
-	var sold = hero.bag_remove_at(armour_idx)
-	GameState.add_gold(refund)
-	_check(sold == bought_armour, "the right item was sold")
-	_check(not hero.is_equipped(armour_idx), "and it is no longer worn")
-	_check(hero.bag[armour_idx] == null, "and no longer carried")
-	_check(GameState.gold == purse + refund, "and the party was paid (%d)" % GameState.gold)
-
-	# A full pack refuses a purchase rather than dropping something.
-	var hoarder = CharacterClassesScript.make("soldier", "Hoarder")
-	var added := 0
-	while hoarder.bag_add(potion.make_instance()):
-		added += 1
-		if added > 20:
-			break
-	_check(not hoarder.bag_has_room(), "a pack fills up")
-	_check(not hoarder.bag_add(potion.make_instance()), "and then refuses more")
-
-	# --- And now the part that matters: does any of it reach the dungeon? ---
-	var trained_skill: int = int(hero.stats.attack_skill)
-	var sword = load("res://resources/items/warhammer.tres").make_instance()
-	hero.bag_add(sword)
-	var sword_idx: int = hero.bag.find(sword)
-	hero.equip_from_bag(sword_idx)
+	# --- Does any of it reach the dungeon and come back? ---
+	GameState.clear()
+	var fighter = CharacterClassesScript.make("soldier", "Blade")
+	GameState.add_member(fighter)
+	var trained_to: int = int(fighter.stats.get(melee))
 	var quest := await _enter_quest()
 	var views: Array = quest._party_views
 	if views.size() == 1:
 		var view: Node = views[0]
-		_check(view.attack_skill == trained_skill,
-			"the trained skill reached the dungeon (%d)" % view.attack_skill)
-		_check(view.inventory.right_hand != null
-				and view.inventory.right_hand.item_name == sword.item_name,
-			"the bought weapon is in the hero's hand")
+		_check(view.attack_skill == trained_to, "the skill level reached the dungeon")
+		_check(view.skill_xp_earned.is_empty(), "and it starts having learned nothing")
+		view.award_skill_use(melee, false)
+		view.award_skill_use(melee, true)
+		_check(view.skill_xp_earned.get(melee, 0)
+				== ProgressionScript.USE_XP + ProgressionScript.CRIT_XP,
+			"using it down there is recorded on the body")
+
+		# And now through the REAL combat path rather than by calling the award directly. A
+		# blow aimed at the hero makes them parry, and parrying is a skill being used; the
+		# attacker's die is rolled by the defender and left on the attacker for whoever awards
+		# their experience. Both of those are wiring that a direct call would never test.
+		var foe: Node = _first_enemy(quest)
+		if foe != null:
+			var parry_before: int = int(view.skill_xp_earned.get("parry_skill", 0))
+			foe.consume_skill_die()
+			view.take_damage(1, 3, false, foe)
+			_check(int(view.skill_xp_earned.get("parry_skill", 0)) > parry_before,
+				"defending against a real blow earned parry (%d)"
+					% int(view.skill_xp_earned.get("parry_skill", 0)))
+			var die: int = foe.consume_skill_die()
+			_check(die >= 1 and die <= 5,
+				"and the attacker was told what their die came up (%d)" % die)
+		else:
+			_check(false, "the quest has an enemy to test the combat hooks with")
 	else:
-		_check(false, "the trained hero took a body into the quest")
+		_check(false, "the fighter took a body into the quest")
 	await _leave_quest(quest)
-	_check(int(GameState.party[0].stats.attack_skill) == trained_skill,
-		"and the training survived the quest")
+	_check(fighter.skill_xp_for(melee) == ProgressionScript.USE_XP + ProgressionScript.CRIT_XP,
+		"and the quest handed it to the character (%d)" % fighter.skill_xp_for(melee))
+	_check(fighter.general_assigned.is_empty(),
+		"finishing the quest refreshed the general allowance")
+
+
+func _first_enemy(quest: Node) -> Node:
+	for child in quest.get_children():
+		if child is CharacterBody3D and child.get("is_player_controlled") == false \
+				and child.get("is_alive") == true:
+			return child
+	return null
+
+
+func _ledger_body() -> Node:
+	## A bare player-controlled combatant, for exercising the experience ledger without
+	## building a whole quest around it. Never enters the tree, so nothing else runs on it.
+	var body := CharacterBody3D.new()
+	body.set_script(load("res://scripts/player.gd"))
+	body.is_player_controlled = true
+	return body
 
 
 # --- The save file, standing in for the town writing one --------------------
@@ -563,6 +980,15 @@ func _run_save_checks() -> void:
 	var before_lockpick: int = GameState.party[0].stats.lockpick_skill
 	var before_attack: int = GameState.party[0].stats.attack_skill
 	var before_total: int = GameState.party[0].xp_total
+	var before_skill_xp: int = GameState.party[0].skill_xp_for("attack_skill")
+	# The board goes in the save so the jobs a player walked away from are still there when
+	# they come back, rather than the game quietly reshuffling the notices overnight.
+	GameState.reroll_board()
+	var before_board: int = GameState.board_seed
+	var before_offers: Array = GameState.quest_board()
+	GameState.reroll_camp()
+	var before_camp: int = GameState.camp_seed
+	var before_roster: Array = GameState.hire_roster()
 
 	SaveGameScript.delete(TEST_SAVE)
 	_check(not SaveGameScript.has_save(TEST_SAVE), "no save file to begin with")
@@ -598,9 +1024,26 @@ func _run_save_checks() -> void:
 	_check(GameState.party[0].stats.attack_skill == before_attack,
 		"including the one that was paid for (%d)" % GameState.party[0].stats.attack_skill)
 	_check(GameState.party[0].xp_total == before_total,
-		"and the character's history came back (%d)" % GameState.party[0].xp_total)
+		"and the character history came back (%d)" % GameState.party[0].xp_total)
+	_check(GameState.party[0].skill_xp_for("attack_skill") == before_skill_xp,
+		"each skill own experience survives the save format")
 	_check(GameState.party[0].stats != null and GameState.party[0].id != "",
 		"the loaded character still has a stat block and an id")
+	_check(GameState.board_seed == before_board, "the notice board came back")
+	var reloaded_offers: Array = GameState.quest_board()
+	var same_jobs := reloaded_offers.size() == before_offers.size()
+	for i in range(reloaded_offers.size()):
+		if i >= before_offers.size() or reloaded_offers[i].title != before_offers[i].title:
+			same_jobs = false
+	_check(same_jobs, "showing the same jobs it was showing when the game was closed")
+	_check(GameState.camp_seed == before_camp, "and the camp came back")
+	var reloaded_roster: Array = GameState.hire_roster()
+	var same_faces := reloaded_roster.size() == before_roster.size()
+	for i in range(reloaded_roster.size()):
+		if i >= before_roster.size() or String(reloaded_roster[i]["character_name"]) \
+				!= String(before_roster[i]["character_name"]):
+			same_faces = false
+	_check(same_faces, "with the same people sitting round its fire")
 
 	# A save from a future version of the game must be refused rather than half-read: loading
 	# a character out of a format we do not understand is how a party quietly loses its gear.
@@ -645,17 +1088,17 @@ func _enter_quest() -> Node:
 	return quest
 
 
-func _leave_quest(quest: Node) -> void:
+func _leave_quest(quest: Node, outcome: String = "retreat") -> Dictionary:
 	## What finish_quest does, minus the change_scene_to_file — a scene change here would free
-	## this test along with the quest. The capture is the part under test.
-	for i in range(quest._party_views.size()):
-		var view: Node = quest._party_views[i]
-		if i < GameState.party.size() and is_instance_valid(view):
-			GameState.party[i].capture_from(view)
+	## this test along with the quest. The settlement itself is the quest's own method, so this
+	## helper cannot drift away from what leaving a dungeon really does: the capture, the pay
+	## for the bodies, the contract, the board going up fresh.
+	var settlement: Dictionary = quest.settle(outcome)
 	remove_child(quest)
 	quest.queue_free()
 	await get_tree().process_frame
 	await get_tree().process_frame
+	return settlement
 
 
 # --- Small helpers ----------------------------------------------------------

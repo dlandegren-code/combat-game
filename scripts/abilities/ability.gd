@@ -46,6 +46,17 @@ func execute(_actor, _target) -> void:
 	pass
 
 
+## Which skill USING this teaches, as a CombatantStats field, or "" for an action that is not
+## a skill. Player.gd awards the experience centrally once the action has resolved, so a new
+## skill only has to name itself here — see Progression for the roof and the crit rule.
+##
+## Not every action is a skill. Walking, standing up and picking things off the floor are
+## things anyone can do; Firebolt would be, but there is no spell skill on the stat block to
+## put its experience into yet.
+func trains_skill() -> String:
+	return ""
+
+
 # --- Cursor art -------------------------------------------------------------
 # What the mouse wears while this action is armed and hovering something it could act on. The
 # whole set lives here rather than one path per ability file, so the pointers can be compared

@@ -17,16 +17,19 @@ extends Node3D
 ## that spawns the party from data and retires the authored bodies. See _seed_party.
 
 const CharacterDataScript := preload("res://scripts/character_data.gd")
+const ProgressionScript := preload("res://scripts/progression.gd")
 const HERO_SCENE := preload("res://scenes/characters/hero.tscn")
 
 ## Where the party goes when the quest ends: the results screen, which reports what happened
 ## and then sends them on to town.
 const RESULTS_SCENE := "res://scenes/results_screen.tscn"
 
-## Placeholders, and marked as such: what a quest PAYS is a property of the quest, and in
-## Phase 4 it comes off QuestDef (reward_gold, difficulty tier) rather than being counted in
-## bodies. Until a quest is a thing that can be described, the only measure of how it went
-## that this scene actually has is how many enemies are down.
+## What a body is worth. This is the pay for FIGHTING, and it is all a trip through the gate
+## on the party's own account ever earns; the pay for finishing a JOB comes off the contract
+## the party took off the board (QuestDef.reward_gold / reward_xp) and is added in
+## finish_quest. Two rates rather than one because they answer different questions — a quest
+## abandoned halfway should still pay for the goblins, and a quest cleared should pay for more
+## than the goblins.
 const XP_PER_KILL := 20
 const GOLD_PER_KILL := 15
 
@@ -58,7 +61,6 @@ func _ready() -> void:
 	else:
 		_party_views = authored
 		_seed_party(authored)
-	GameState.current_quest = {"scene": scene_file_path}
 	_gear_on_arrival = _carried_names()
 	_watch_the_fight()
 
@@ -134,9 +136,14 @@ func _spawn_party(authored: Array) -> Array:
 	for node in authored:
 		_retire(node)
 
+	# Where the party is standing so far, so two hirelings cannot be handed the same square.
+	# Filled as we go rather than computed up front, because each body placed is a square the
+	# next search has to avoid — and the bodies are not in the tree yet to be found by group.
+	var placed: Array = []
 	var views: Array = []
 	for i in range(GameState.party.size()):
-		var at: Vector3 = marks[i] if i < marks.size() else _spare_mark(marks, i)
+		var at: Vector3 = marks[i] if i < marks.size() else _spare_mark(marks, placed)
+		placed.append(at)
 		views.append(_spawn_member(GameState.party[i], at, i))
 	print("[Quest] Party hydrated from GameState: %s" % _view_names_of(views))
 	return views
@@ -178,36 +185,103 @@ func _retire(node: Node) -> void:
 	node.queue_free()
 
 
-func _spare_mark(marks: Array, index: int) -> Vector3:
-	## A square for a party member the old scenario has no hand-placed body for — a hireling,
-	## once Phase 5 arrives. Stepped along x from the last mark, which is flat ground in this
-	## room; a generated quest will supply its own points and never come here.
-	var base: Vector3 = marks[-1] if not marks.is_empty() else Vector3.ZERO
-	return base + Vector3(2.0 * (index - marks.size() + 1), 0.0, 0.0)
+## How far out from the party's own marks a spare square is looked for, in grid squares. Four
+## is the whole entry room and then some; a hireling who cannot be placed within four squares
+## of the party is a hireling in a scene with no room to stand in.
+const SPARE_SEARCH_RINGS := 4
+
+
+func _spare_mark(marks: Array, taken: Array) -> Vector3:
+	## A square for a party member the authored scenario has no hand-placed body for — which,
+	## now that the camp exists, means a hireling.
+	##
+	## This used to step along +x from the last mark and hope. That was fine while the party
+	## was always the authored three and this function was never called; the moment a fourth
+	## body could be hired it became a way to stand somebody inside a wall, because +x from the
+	## last mark is not floor in every room and certainly will not be in a generated one.
+	##
+	## So it SEARCHES: outward from the party's own marks, in rings, taking the first square
+	## that has floor under it and nobody on it. The floor plan is asked for rather than
+	## assumed (DungeonRoom.is_floor_at — the same authority Combatant._is_in_arena uses), so
+	## this keeps working when Phase 4's generator starts building the room.
+	var origin: Vector3 = marks[-1] if not marks.is_empty() else Vector3.ZERO
+	var step := 2.0   # Combatant.GRID_SIZE; play squares sit on odd coordinates.
+	for ring in range(1, SPARE_SEARCH_RINGS + 1):
+		# Nearest ring first, and within a ring the squares beside the party before the ones
+		# behind it, so a hireling falls in with the line rather than appearing in a corner.
+		for dx in range(-ring, ring + 1):
+			for dz in range(-ring, ring + 1):
+				if maxi(absi(dx), absi(dz)) != ring:
+					continue
+				var square := origin + Vector3(dx * step, 0.0, dz * step)
+				if _square_is_free(square, taken):
+					return square
+	# Nowhere in four rings. Standing them on the last mark is wrong, but it is a body in the
+	# room rather than a crash, and it is loud enough in the log to be found.
+	push_warning("QuestScene: no free square for a party member near %s" % origin)
+	return origin
+
+
+func _square_is_free(square: Vector3, taken: Array) -> bool:
+	var room := get_node_or_null("DungeonRoom")
+	if room != null and room.has_method("is_floor_at"):
+		if not room.is_floor_at(square.x, square.z):
+			return false
+	for other in taken:
+		if Vector3(other).distance_to(square) < 1.0:
+			return false
+	# Anything already standing there — the authored bodies are gone by now, but the enemies
+	# are not, and a hireling must not arrive on top of a goblin.
+	for c in get_tree().get_nodes_in_group("combatants"):
+		if is_instance_valid(c) and Vector3(c.position).distance_to(square) < 1.0:
+			return false
+	return true
 
 
 # --- Capture ---------------------------------------------------------------
 
 func finish_quest(outcome: String = "retreat") -> void:
-	## The end of a run, by whatever route: cleared, wiped out, or walked out of.
+	## The end of a run, by whatever route: cleared, wiped out, or walked out of. Settle up and
+	## send the party to the results screen.
 	##
-	## The ONE place a quest writes itself back into the party, which is what makes everything
-	## that happened down here durable. Phase 1 gives victory and defeat their own signal out
-	## of the combat layer and puts a results screen between here and town; both will come
-	## through this function.
+	## Every route out — the Town button, a victory, a wipe — arrives here, and `_finished`
+	## makes sure two of them arriving together do not pay the party twice.
 	if _finished:
 		return
+	settle(outcome)
+	get_tree().change_scene_to_file(RESULTS_SCENE)
+
+
+func settle(outcome: String = "retreat") -> Dictionary:
+	## Everything the end of a run DOES, with nothing about where the player goes next.
+	##
+	## Split out of finish_quest for the same reason capture_party was, and after the same
+	## thing went wrong twice: the round-trip test cannot call finish_quest, because it ends by
+	## changing scene and that would free the test along with the quest. So the test had its
+	## own idea of what leaving a dungeon means, and that copy quietly stopped matching — first
+	## when skills began earning their own experience, and again the moment a quest could be
+	## worth a contract. There is one definition, and the test calls it.
+	##
+	## Returns what was written to GameState.last_result, so a caller can check the settlement
+	## without reading it back out of global state.
 	_finished = true
 
 	var kills := _enemies_slain()
-	for i in range(_party_views.size()):
-		var view: Node = _party_views[i]
-		if i >= GameState.party.size() or not is_instance_valid(view):
-			continue
-		GameState.party[i].capture_from(view)
+	capture_party()
 
 	var xp := kills * XP_PER_KILL
 	var coin := kills * GOLD_PER_KILL
+
+	# The contract, on top of the bodies — and only for finishing the job. A party that walks
+	# back out of a dungeon it was paid to clear keeps what it killed and what it carried, and
+	# gets nothing for the work it did not do. There is no contract at all when the party went
+	# through the gate on its own account, which is what the gate is for.
+	var contract = GameState.current_quest
+	var paid := contract != null and outcome == "victory"
+	if paid:
+		xp += contract.reward_xp
+		coin += contract.reward_gold
+
 	GameState.award_xp(xp)
 	GameState.add_gold(coin)
 	GameState.last_result = {
@@ -217,10 +291,47 @@ func finish_quest(outcome: String = "retreat") -> void:
 		"gold": coin,
 		"loot": _loot_found(),
 		"fallen": _fallen_names(),
+		"skills": _skills_learned(),
+		# What the results screen needs to say "and the contract paid": the title, and whether
+		# it was actually earned. Flattened to plain values rather than handed the QuestDef,
+		# because last_result is read after the quest scene is gone.
+		"quest": contract.title if contract != null else "",
+		"quest_paid": paid,
+		"quest_gold": contract.reward_gold if paid else 0,
+		"quest_xp": contract.reward_xp if paid else 0,
 	}
-	GameState.current_quest = {}
+	GameState.abandon_quest()
+	# A new board for the next visit. The jobs that were pinned up when the party went
+	# underground are not the jobs that are pinned up when they come back — somebody else took
+	# them, or they went stale. This is also what stops a party from clearing the same
+	# contract twice by walking straight back out of town.
+	GameState.reroll_board()
+	# And new faces at the mercenary camp, for the same reason: the sell-swords who were
+	# sitting round that fire took other work while the party was underground.
+	GameState.reroll_camp()
 	print("[Quest] %s — %d slain, +%d xp, +%d gold" % [outcome, kills, xp, coin])
-	get_tree().change_scene_to_file(RESULTS_SCENE)
+	var learned := _skills_learned()
+	if not learned.is_empty():
+		print("[Quest] skills learned: %s" % "; ".join(learned))
+	return GameState.last_result
+
+
+func capture_party() -> void:
+	## Write every body back into the character it stands for.
+	##
+	## Its own function because it is the one thing hydration has to be symmetrical with, and
+	## reading the two side by side is how that stays true. Everything ELSE that the end of a
+	## run does now lives in settle(), which calls this first.
+	for i in range(_party_views.size()):
+		var view: Node = _party_views[i]
+		if i >= GameState.party.size() or not is_instance_valid(view):
+			continue
+		var member = GameState.party[i]
+		member.capture_from(view)
+		# What each skill learned down here, and a fresh allowance of general xp to assign now
+		# that a quest is behind them — see Progression on the two currencies.
+		member.take_quest_skill_xp(view.skill_xp_earned)
+		member.refresh_general_allowance()
 
 
 func field_is_held() -> bool:
@@ -261,6 +372,23 @@ func _loot_found() -> Array:
 			else:
 				found.append(carried)
 	return found
+
+
+func _skills_learned() -> Array:
+	## What each hero's skills picked up down here, as readable lines for the results screen.
+	## Read off the bodies rather than the characters so it reports THIS quest rather than
+	## everything banked so far.
+	var lines: Array = []
+	for i in range(_party_views.size()):
+		var view: Node = _party_views[i]
+		if not is_instance_valid(view) or view.skill_xp_earned.is_empty():
+			continue
+		var parts: Array = []
+		for field in view.skill_xp_earned:
+			parts.append("%s +%d" % [ProgressionScript.label_for(String(field)),
+				int(view.skill_xp_earned[field])])
+		lines.append("%s: %s" % [view.character_name, ", ".join(parts)])
+	return lines
 
 
 func _fallen_names() -> Array:

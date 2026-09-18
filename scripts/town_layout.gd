@@ -129,6 +129,26 @@ const SERVICES := [
 		"action": "shop",
 	},
 	{
+		"id": "camp",
+		"label": "Mercenary Camp",
+		"screen": "",
+		"note": "Sell-swords looking for work, and a fire to wait by.",
+		# A SECOND tent, deliberately the same model as the soldiers' fort: these are the same
+		# kind of people, and a camp that matched nothing else in the clearing would read as a
+		# building rather than as somebody's pitch. Its own fire stands beside it (SCENERY),
+		# which is what tells the two tents apart at a glance.
+		"model": "SM_Prop_Camp_Tent_01",
+		"position": Vector3(-10.0, 0.0, -12.5),
+		"rotation": 26.0,
+		"scale": 2.4,
+		# Flown higher than the shops' signs (4.2) on purpose: the camp sits almost directly
+		# behind the healer's house from this camera, and at the same height the two labels
+		# ended up shoulder to shoulder. Lifting one of them is cheaper than moving a building
+		# into somebody else's plot.
+		"sign_at": Vector3(-10.0, 6.0, -12.5),
+		"action": "hire",
+	},
+	{
 		"id": "adventure",
 		"label": "Go Adventuring",
 		"screen": "",
@@ -149,6 +169,12 @@ const SCENERY := [
 		"clear": 13.0},   ## its sails sweep nearly 10 m across; nothing may grow inside that
 	{"model": "SM_Prop_Camp_Fireplace_01", "position": Vector3(3.0, 0.0, 11.0), "rotation": 0.0, "scale": 1.3},
 	{"model": "SM_Prop_Camp_Tanning_Rack_01", "position": Vector3(-9.5, 0.0, 4.5), "rotation": 24.0, "scale": 1.2},
+	# The mercenaries' fire, in front of their tent, with a cook pot over it and a crate to sit
+	# on. The clearing already has a campfire down by the bench (above); this is a second one,
+	# and it is what makes the second tent read as a camp rather than as a spare fort.
+	{"model": "SM_Prop_Camp_Fireplace_Stones_01", "position": Vector3(-7.0, 0.0, -10.8), "rotation": 0.0, "scale": 1.3},
+	{"model": "SM_Prop_Camp_Fire_Tripod_01", "position": Vector3(-7.0, 0.0, -10.8), "rotation": 14.0, "scale": 1.3},
+	{"model": "SM_Prop_Camp_Crate_01", "position": Vector3(-5.2, 0.0, -12.2), "rotation": -32.0, "scale": 1.1},
 	{"model": "SM_Prop_Bridge_01", "position": Vector3(24.0, 0.0, 8.0), "rotation": 74.0, "scale": 1.2},
 	{"model": "SM_Prop_Birdhouse_01", "position": Vector3(-17.5, 0.0, 1.0), "rotation": 0.0, "scale": 1.0},
 	# Washing on the line, for the wind to move.
@@ -169,6 +195,11 @@ const SCENERY := [
 	{"model": "SM_Prop_Mushroom_Group_03", "position": Vector3(9.0, 0.0, -5.0), "rotation": 40.0, "scale": 5.0},
 	{"model": "SM_Prop_Mushroom_01", "position": Vector3(13.0, 0.0, -4.0), "rotation": 0.0, "scale": 7.0},
 ]
+
+## The mercenaries' fire, lit. The stones and the cook tripod are scenery above; this is where
+## the flame and its light go (Town passes it to TownAmbience.add_campfire), and it is a
+## constant rather than a literal in town.gd so the prop and the fire in it cannot drift apart.
+const MERC_FIRE := Vector3(-7.0, 0.0, -10.8)
 
 ## Fence runs, as [start, end] pairs. Posts are placed along each run at the model's length.
 ## Meadow_Fence_01 measures 2.59 along x with its pivot at one end, so a run is laid out in

@@ -22,6 +22,9 @@ const HEADING_SIZE := 18
 const BODY_SIZE := 15
 
 const WIDTH := 640.0
+## Room beside the column for a scrollbar, so a list that scrolls does not have its right-hand
+## edge clipped by one.
+const SCROLLBAR_ROOM := 14.0
 const BUTTON_WIDTH := 260.0
 const BUTTON_HEIGHT := 34.0
 
@@ -58,19 +61,34 @@ static func mount(host: Control, scrolling: bool = false) -> VBoxContainer:
 		centre.add_child(column)
 		return column
 
+	# Centred by the SAME CenterContainer the short screens use, with the scroll box given an
+	# explicit size.
+	#
+	# Three other arrangements were tried and each put the list against an edge: an
+	# HBoxContainer with ALIGNMENT_CENTER sizes itself to its content rather than to the
+	# window; a ScrollContainer does not stretch its child to its own width even with
+	# horizontal scrolling off; and anchoring the box to the middle depends on the host
+	# resolving its own anchors against the window, which is only true when the screen IS the
+	# current scene. A CenterContainer around a box of known size depends on none of that, and
+	# it is what every other screen in the game already uses.
+	#
+	# The height has to be explicit: a CenterContainer sizes its child to the child's minimum,
+	# and a scroll box as tall as its contents has nothing to scroll.
+	var centre := CenterContainer.new()
+	centre.set_anchors_preset(Control.PRESET_FULL_RECT)
+	host.add_child(centre)
+
+	var available: float = host.size.y
+	if available <= 0.0:
+		# A host that has not been laid out yet — measure the window instead of laying the
+		# screen out to a height of nothing.
+		available = host.get_viewport().get_visible_rect().size.y
 	var scroll := ScrollContainer.new()
-	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
-	# Horizontal scrolling off, which also makes the ScrollContainer size its child to its own
-	# width — that is what lets the row below centre the column instead of jamming it left.
+	scroll.custom_minimum_size = Vector2(WIDTH + SCROLLBAR_ROOM, maxf(240.0, available - 40.0))
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.follow_focus = true
-	host.add_child(scroll)
-
-	var centred_row := HBoxContainer.new()
-	centred_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	centred_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(centred_row)
-	centred_row.add_child(column)
+	centre.add_child(scroll)
+	scroll.add_child(column)
 	# Breathing room at the top and bottom of a scrolling list, so the first and last rows are
 	# not flush against the window edge.
 	spacer(column, 16.0)

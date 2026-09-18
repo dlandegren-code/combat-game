@@ -20,3 +20,6 @@ func get_cursor_icon(_actor, _target) -> String:
 	## A shield, as in bracing behind one and putting your shoulder in. The loosest fit in the
 	## set along with Trip's — swap it the moment there is art that actually means "shove".
 	return CURSOR_SHIELD
+
+func trains_skill() -> String:
+	return "shove_skill"

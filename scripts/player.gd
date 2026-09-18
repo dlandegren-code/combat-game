@@ -59,6 +59,22 @@ func _post_setup() -> void:
 		move_indicator.visible = false
 
 
+func _use(ability, target) -> void:
+	## Run an ability and let the skill it teaches learn from it.
+	##
+	## Every ability the player uses goes through here, so that "using a skill trains it" is
+	## one rule in one place rather than a line repeated in twelve ability scripts. The await
+	## matters: an ability with a projectile (Firebolt) resolves after the shot lands, and the
+	## die it rolled is only known by then.
+	await ability.execute(self, target)
+	var field: String = ability.trains_skill()
+	if field == "":
+		return
+	# The die was rolled by whoever defended against this — see Combatant._attempt_defense —
+	# and left on us. An action that rolled nothing at all reads as an ordinary use.
+	award_skill_use(field, is_crit(consume_skill_die()))
+
+
 func _build_abilities() -> void:
 	# Order must match the Action enum. The toolbar's hotbar seeds itself from this order.
 	abilities = [
@@ -195,7 +211,7 @@ func _use_self_ability(index: int) -> void:
 	if not ability.can_use(self):
 		return
 	var cost: int = ability.get_cost(self)
-	ability.execute(self, null)
+	await _use(ability, null)
 	if cost <= 0:
 		_update_action_bar()
 		return
@@ -448,12 +464,12 @@ func _handle_click(screen_pos: Vector2) -> void:
 
 	if res.slot == Action.MOVE:
 		_begin_action(Action.MOVE)
-		ability.execute(self, res.tile)   # sets target_position + is_moving
+		await _use(ability, res.tile)   # sets target_position + is_moving
 		return
 
 	if ability.targets_self():
 		_begin_action(res.slot)
-		ability.execute(self, null)
+		await _use(ability, null)
 		_end_action_in_place()
 		return
 
@@ -485,12 +501,12 @@ func _handle_click(screen_pos: Vector2) -> void:
 		# Awaited because an ability may have a projectile to land before it resolves
 		# (Firebolt), and the turn must not end under it. Awaiting a plain function returns
 		# straight away, so every other ability behaves exactly as before.
-		await ability.execute(self, res.target)
+		await _use(ability, res.target)
 		_end_action_in_place()
 		return
 
 	_begin_action(res.slot)
-	ability.execute(self, res.tile)
+	await _use(ability, res.tile)
 	if _looting:
 		# The window has the turn now. Stop taking battlefield orders, but do NOT end it —
 		# finish_looting does that once the player is done taking things.
@@ -979,7 +995,7 @@ func _run_queued_attack() -> void:
 		# Walk AND swing: the whole turn is one bill, so a move-and-attack costs exactly what
 		# doing the two separately would have.
 		_pending_cost = walked + max(1, abilities[slot].get_cost(self))
-		await abilities[slot].execute(self, foe)
+		await _use(abilities[slot], foe)
 	else:
 		_pending_cost = walked
 		_show_action_text("Stopped short!")

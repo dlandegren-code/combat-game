@@ -43,7 +43,10 @@ const BUTTERFLY_SCALE := 0.18
 
 var _blades: Array[Node3D] = []
 var _butterflies: Array = []
-var _fire_light: OmniLight3D = null
+## Every campfire's light. An ARRAY because the clearing has two now — the one by the bench
+## and the mercenaries' — and a single slot meant the second fire to be added was the only one
+## that ever flickered, with the first frozen at whatever it was built with.
+var _fire_lights: Array[OmniLight3D] = []
 var _time := 0.0
 var _soft_dot: ImageTexture = null
 
@@ -100,14 +103,15 @@ func add_campfire(at: Vector3) -> void:
 	add_child(fire)
 
 	# The light is what sells it, and the flicker is what sells the light.
-	_fire_light = OmniLight3D.new()
-	_fire_light.name = "CampfireLight"
-	_fire_light.position = at + Vector3(0, 0.8, 0)
-	_fire_light.light_color = Color(1.0, 0.66, 0.34)
-	_fire_light.light_energy = 2.4
-	_fire_light.omni_range = 9.0
-	_fire_light.shadow_enabled = false
-	add_child(_fire_light)
+	var light := OmniLight3D.new()
+	light.name = "CampfireLight"
+	light.position = at + Vector3(0, 0.8, 0)
+	light.light_color = Color(1.0, 0.66, 0.34)
+	light.light_energy = 2.4
+	light.omni_range = 9.0
+	light.shadow_enabled = false
+	add_child(light)
+	_fire_lights.append(light)
 
 
 func add_falling_leaves(centre: Vector3, extent: Vector3) -> void:
@@ -180,11 +184,13 @@ func _process(delta: float) -> void:
 		node.position = pos
 		if ahead.distance_to(pos) > 0.001:
 			node.look_at(ahead, Vector3.UP)
-	if _fire_light != null:
+	for i in range(_fire_lights.size()):
 		# Two out-of-step sines rather than a random number per frame: noise reads as a fault,
-		# and a fire's light wavers rather than strobing.
-		var flicker := 2.2 + sin(_time * 7.3) * 0.28 + sin(_time * 3.1) * 0.18
-		_fire_light.light_energy = flicker
+		# and a fire's light wavers rather than strobing. Each fire is given a phase of its own
+		# off its index, so two fires in one clearing do not pulse in unison like a heartbeat.
+		var phase := _time + i * 1.7
+		var flicker := 2.2 + sin(phase * 7.3) * 0.28 + sin(phase * 3.1) * 0.18
+		_fire_lights[i].light_energy = flicker
 
 
 # --- Wind ------------------------------------------------------------------

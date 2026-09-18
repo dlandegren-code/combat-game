@@ -5,6 +5,8 @@ class_name Combatant
 ## animation and health-bar logic. Player and Enemy extend this and add only
 ## their control-specific behaviour (input vs AI).
 
+const ProgressionScript := preload("res://scripts/progression.gd")
+
 const GRID_SIZE := 2.0
 ## Fallback play bound, used only when there is no DungeonRoom to ask — see _is_in_arena.
 ## A square, which is what "the arena" used to mean, back when the level WAS one square room.
@@ -183,6 +185,22 @@ const PRONE_TARGET_PENALTY := 4
 ## find time for — but getting up is a real part of a turn, and paying for it is what makes
 ## lying down a decision rather than a permanent upgrade against archers.
 const STAND_UP_COST := 1
+
+## SKILL EXPERIENCE EARNED THIS QUEST, by CombatantStats field.
+##
+## Kept on the BODY and handed to the character at the end of the run (QuestScene.finish_quest
+## -> CharacterData.take_quest_skill_xp), like every other thing a quest produces. A body is
+## the only thing that knows a skill was used, and a body does not survive the quest.
+##
+## Only player-controlled combatants keep one. A goblin that parries well does not get better
+## at parrying, because nothing carries it to the next fight.
+var skill_xp_earned: Dictionary = {}
+## Ordinary (non-critical) awards per skill so far, which is what the per-quest roof counts.
+var _skill_uses: Dictionary = {}
+## The die a skill roll last came up with, left here for whoever is about to award experience
+## for it. Set by the DEFENDER, who is the one that rolls the attacker's die — see
+## _attempt_defense — and consumed by the attacker once their action has finished resolving.
+var _last_skill_die: int = 0
 
 ## Optional data-driven stat block (a CombatantStats resource). When assigned,
 ## its values are copied onto this combatant at _ready (overriding the
@@ -1903,7 +1921,13 @@ func take_damage(amount: int, attacker_skill: int = 0, is_ranged: bool = false,
 
 
 func _attempt_defense(attacker_skill: int, is_ranged: bool = false, attacker: Node = null) -> Dictionary:
-	var attack_roll := attacker_skill + randi_range(1, 5)
+	# The attacker's die is rolled here, on the defender, so this is where it gets handed back
+	# to them: their ability awards its experience once the swing has finished resolving, and
+	# by then this is the only place that knows whether it was a critical.
+	var attack_die := randi_range(1, 5)
+	if attacker != null and attacker.has_method("note_skill_die"):
+		attacker.note_skill_die(attack_die)
+	var attack_roll := attacker_skill + attack_die
 	var effective_dodge: int = get_dodge_skill() - (2 if is_prone else 0)
 	var result := { "defended": false, "attack_roll": attack_roll, "defense_roll": 0 }
 
@@ -1939,7 +1963,11 @@ func _attempt_defense(attacker_skill: int, is_ranged: bool = false, attacker: No
 		# prone — or overwhelmed, or had lost their weapon — keep parrying at +2 while the
 		# floor showed no zone at all.
 		var guard_bonus: int = GUARD_PARRY_BONUS if (is_guarding() and not is_ranged) else 0
-		result.defense_roll = get_parry_skill() + randi_range(1, 5) + cover_bonus + guard_bonus
+		# Parrying is using a skill, so it teaches like one. Awarded whether or not the parry
+		# lands: turning a blade and failing to turn it are both practice.
+		var parry_die := randi_range(1, 5)
+		award_skill_use("parry_skill", is_crit(parry_die))
+		result.defense_roll = get_parry_skill() + parry_die + cover_bonus + guard_bonus
 		if result.defense_roll >= attack_roll:
 			if inventory and inventory.has_method("degrade_equipped_weapon"):
 				inventory.degrade_equipped_weapon()
@@ -2642,7 +2670,9 @@ func roll_stealth() -> int:
 	## by different people at different times. The mover rolls as it sets off (_follow_path);
 	## the listeners ask on their own pulse, which may be a second later and may be several of
 	## them. One roll per move, checked by everybody who might have heard it.
-	_stealth_roll = get_stealth_skill() + randi_range(1, 5)
+	var stealth_die := randi_range(1, 5)
+	award_skill_use("stealth_skill", is_crit(stealth_die))
+	_stealth_roll = get_stealth_skill() + stealth_die
 	return _stealth_roll
 
 
@@ -3272,6 +3302,45 @@ func _loose_arrow_at(target: Node) -> void:
 	# it works out the same spray direction from `self` that this function would have passed.
 	var to_hit: int = get_missile_skill(ranged_skill, target, get_ranged_range())
 	target.take_damage(get_attack_damage(), to_hit, true, self)
+
+
+func award_skill_use(field: String, crit: bool = false) -> void:
+	## Record that a skill was used, for as much as the rules allow.
+	##
+	## The roof is the interesting part: ordinary uses stop paying after
+	## Progression.QUEST_USE_CAP of them in one quest, so there is nothing to be gained by
+	## standing in a cleared room shoving a wall. A critical — a natural 5 or 1 — pays more and
+	## ignores the roof, because an unusually good or unusually bad outcome is the one you
+	## actually learn from.
+	if not is_player_controlled or field == "":
+		return
+	var ordinary: int = int(_skill_uses.get(field, 0))
+	var award: int = ProgressionScript.capped_use_award(ordinary, crit)
+	if not crit:
+		_skill_uses[field] = ordinary + 1
+	if award <= 0:
+		return
+	skill_xp_earned[field] = int(skill_xp_earned.get(field, 0)) + award
+
+
+func note_skill_die(die: int) -> void:
+	## Remember the die a roll produced, so the award that follows knows whether it was a
+	## critical. Written by whoever rolled it, which for an attack is the DEFENDER.
+	_last_skill_die = die
+
+
+func consume_skill_die() -> int:
+	## Read the last die and forget it, so an action that rolled nothing cannot inherit the
+	## crit of the one before it.
+	var die := _last_skill_die
+	_last_skill_die = 0
+	return die
+
+
+static func is_crit(die: int) -> bool:
+	## A natural 5 or a natural 1 on the game's one die. Success and failure both count: the
+	## point is that the outcome was decisive, not that it was good.
+	return die == 5 or die == 1
 
 
 func _die() -> void:

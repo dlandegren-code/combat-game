@@ -70,13 +70,24 @@ const VITALS_FULL := -1
 ## comment there. The .tres still carries the real class.
 @export var stats: Resource
 
-## Level and experience. `xp` is a POOL — it is spent on training and goes down — so it cannot
-## also be the measure of how far a character has come; `xp_total` is what they have earned in
-## their life and only ever rises. Level is derived from the total (see Progression.level_for)
-## and stored so that a screen can show it without the rules having to be loaded.
+## GENERAL experience. `xp` is the unspent pool, `xp_total` the life's work that decides the
+## level badge. General xp is earned by finishing quests and putting enemies down, and the
+## only thing it can be spent on is assigning a single point to a skill per quest — see
+## Progression, and `general_assigned` below.
 @export var level: int = 1
 @export var xp: int = 0
 @export var xp_total: int = 0
+
+## SKILL experience: one pot per skill, keyed by the CombatantStats field it belongs to.
+## Earned by using that skill, by paying a trainer, and by the one general point a quest
+## allows. Spent to buy the next level of that skill and nothing else — which is what makes
+## skills level separately instead of a character level handing out points.
+@export var skill_xp: Dictionary = {}
+
+## Which skills have already taken their one general point since the last quest ended. Kept
+## per character rather than per party: two heroes on the same quest each get their own
+## allowance, because it is their own experience of it.
+@export var general_assigned: Dictionary = {}
 
 ## Wounds carried between quests. VITALS_FULL means "arrive at full", which is what a hero
 ## who has never fought yet is. Phase 1 decides what resting in town costs; until then a
@@ -182,6 +193,54 @@ func _restore_inventory(c: Node) -> void:
 		already.append(bag[idx])
 		# int() because a Dictionary round-tripped through JSON hands its keys back as strings.
 		inv.equip_into(int(slot), bag[idx])
+
+
+# --- Experience ------------------------------------------------------------
+
+func skill_xp_for(field: String) -> int:
+	return int(skill_xp.get(field, 0))
+
+
+func add_skill_xp(field: String, amount: int) -> void:
+	if amount <= 0:
+		return
+	skill_xp[field] = skill_xp_for(field) + amount
+
+
+func spend_skill_xp(field: String, amount: int) -> void:
+	skill_xp[field] = maxi(0, skill_xp_for(field) - amount)
+
+
+func may_assign_general(field: String) -> bool:
+	## One point of general xp per skill per quest — see Progression. A skill that has already
+	## taken its point has to wait for the next adventure.
+	return xp > 0 and not bool(general_assigned.get(field, false))
+
+
+func assign_general_xp(field: String) -> bool:
+	## Move one point of general xp into a skill's pot. Returns false and changes nothing when
+	## the allowance is used up or there is no general xp left.
+	if not may_assign_general(field):
+		return false
+	xp -= 1
+	add_skill_xp(field, 1)
+	general_assigned[field] = true
+	return true
+
+
+func refresh_general_allowance() -> void:
+	## A new quest is behind them, so every skill may take a point again. Called when a quest
+	## is captured (QuestScene.finish_quest) rather than when one starts, so that finishing an
+	## adventure is what earns the allowance.
+	general_assigned = {}
+
+
+func take_quest_skill_xp(ledger: Dictionary) -> void:
+	## Fold a quest's worth of earned skill xp into the character. The ledger is kept on the
+	## body during the quest (see Combatant.award_skill_use) and handed over at the end, which
+	## is the same shape every other quest result takes.
+	for field in ledger:
+		add_skill_xp(String(field), int(ledger[field]))
 
 
 # --- The bag, out of the dungeon -------------------------------------------
@@ -427,6 +486,8 @@ func to_dict() -> Dictionary:
 		"level": level,
 		"xp": xp,
 		"xp_total": xp_total,
+		"skill_xp": skill_xp.duplicate(),
+		"general_assigned": general_assigned.duplicate(),
 		"hp": hp,
 		"mana": mana,
 		"ammo": ammo,
@@ -453,6 +514,14 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	# A save written before xp was a spendable pool has no lifetime total; what it does have is
 	# an xp figure that was never spent, so it IS the lifetime total.
 	data.xp_total = int(d.get("xp_total", data.xp))
+	# Both default to empty: a save written before skills had their own experience simply has
+	# a character who has not banked any yet, which is true.
+	data.skill_xp = {}
+	for field in d.get("skill_xp", {}):
+		data.skill_xp[String(field)] = int(d["skill_xp"][field])
+	data.general_assigned = {}
+	for field in d.get("general_assigned", {}):
+		data.general_assigned[String(field)] = bool(d["general_assigned"][field])
 	data.hp = int(d.get("hp", VITALS_FULL))
 	data.mana = int(d.get("mana", VITALS_FULL))
 	data.ammo = int(d.get("ammo", VITALS_FULL))

@@ -216,7 +216,12 @@ func _try_unlock(actor) -> bool:
 
 	# The same 1-5 die every other contested roll in the game uses, so picking a lock reads
 	# like a parry rather than like its own little subsystem.
-	var roll: int = skill + _rng.randi_range(1, 5)
+	var die: int = _rng.randi_range(1, 5)
+	# Trying a lock is how lockpicking is learned, and a lock that springs on a 5 or sticks on
+	# a 1 teaches more than the ones in between (Progression).
+	if actor != null and actor.has_method("award_skill_use"):
+		actor.award_skill_use("lockpick_skill", die == 5 or die == 1)
+	var roll: int = skill + die
 	if roll < lock_difficulty:
 		PropSfx.door_locked(get_parent(), _sound_at())
 		_say(actor, "Lock holds! (%d vs %d)" % [roll, lock_difficulty])

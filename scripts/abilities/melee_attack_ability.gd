@@ -17,3 +17,7 @@ func execute(actor, target) -> void:
 
 func get_cursor_icon(_actor, _target) -> String:
 	return CURSOR_SWORD
+
+## Swinging at somebody teaches swordsmanship, hit or miss.
+func trains_skill() -> String:
+	return "attack_skill"
