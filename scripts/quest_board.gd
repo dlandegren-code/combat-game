@@ -16,7 +16,7 @@ extends Control
 ## (results screen, save, economy) has to be wired through, and wiring it through a fixed room
 ## is how the generator lands later as a change to one scene rather than to six files.
 
-const ScreenPanelScript := preload("res://scripts/screen_panel.gd")
+const ScreenPanelScript := preload("res://scripts/ui_kit.gd")
 const SaveGameScript := preload("res://scripts/save_game.gd")
 
 const TOWN_SCENE := "res://scenes/town.tscn"

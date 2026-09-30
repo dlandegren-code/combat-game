@@ -35,16 +35,22 @@ enum Style { ALLY, ENEMY }
 ## off each sprite's alpha channel — the render is inset by that much so it sits
 ## inside the opening rather than underneath the border. `tint` multiplies the
 ## sprite, so it only works cleanly on a neutral-coloured frame (Box23 is silver).
+## DRAWN rather than a sprite from the pack. Every framed box in Fantasy Menus carries corner
+## ornament, and on a 112-pixel portrait that ornament lands squarely on the face inside it —
+## which is the whole thing the frame exists to show. See UiKit.frame_style.
+##
+## The two are still different SHAPES, which was the original author's point and does not
+## depend on colour vision: an ally's corners are rounded, an enemy's are square.
 const FRAME_STYLES := {
 	Style.ALLY: {
-		"texture": "res://assets/UI/SPR_FantasyWarrior_Frame_Box22_Variant01.png",
-		"inset": 0.105,
-		"tint": Color(1.0, 1.0, 1.0),
+		"edge": Color(0.90, 0.72, 0.34),
+		"radius": 7,
+		"inset": 0.035,
 	},
 	Style.ENEMY: {
-		"texture": "res://assets/UI/SPR_FantasyWarrior_Frame_Box23.png",
-		"inset": 0.122,
-		"tint": Color(0.85, 0.32, 0.28),
+		"edge": Color(0.86, 0.32, 0.27),
+		"radius": 0,
+		"inset": 0.035,
 	},
 }
 
@@ -55,7 +61,8 @@ const LOW_HP_FRACTION := 0.35
 const COLOR_HP_OK := Color(0.36, 0.72, 0.35)
 const COLOR_HP_LOW := Color(0.78, 0.22, 0.20)
 const COLOR_HP_EMPTY := Color(0.18, 0.18, 0.20)
-const COLOR_BACKDROP := Color(0.078, 0.161, 0.220)   # the pack's dark teal
+const COLOR_BACKDROP := Color(0.063, 0.110, 0.192)   # UiKit.PANEL_NAVY, so a portrait
+## sits on the same colour as every panel in the game.
 const COLOR_DEAD_TINT := Color(0.35, 0.35, 0.40)
 const COLOR_ACTIVE_TINT := Color(1.45, 1.35, 1.05)
 
@@ -96,7 +103,7 @@ var _viewport: SubViewport
 var _stage: Node3D
 var _model: Node3D
 var _camera: Camera3D
-var _frame: TextureRect
+var _frame: Panel
 var _hp_bar: TextureProgressBar
 var _hp_text: Label
 var _name_label: Label
@@ -216,12 +223,9 @@ func _build_viewport() -> void:
 
 
 func _build_frame() -> void:
-	_frame = TextureRect.new()
-	_frame.texture = load(_style["texture"])
-	# Without IGNORE_SIZE the source texture (512²) becomes the node's minimum
-	# size and the explicit size below is clamped straight back up to it.
-	_frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_frame.stretch_mode = TextureRect.STRETCH_SCALE
+	_frame = Panel.new()
+	_frame.add_theme_stylebox_override("panel", _frame_style(
+		Color(0, 0, 0, 0), Color(_style["edge"]), 2, int(_style["radius"])))
 	_frame.size = Vector2(_px)
 	_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_frame)
@@ -418,9 +422,24 @@ func _apply_frame_tint() -> void:
 		_glow_style.bg_color.a = 0.0
 		return
 	# Brightening the plate reads far better at this size than the ring alone,
-	# which is nearly invisible against gold. Multiplied onto the style's own
-	# tint so an enemy plate brightens to a hot red rather than turning gold.
-	var base: Color = _style["tint"]
-	_frame.modulate = base * COLOR_ACTIVE_TINT if _is_active else base
+	# which is nearly invisible against gold. The frame is drawn in the style's own
+	# colour now, so this only has to brighten it — an enemy plate goes to a hot red
+	# rather than turning gold.
+	_frame.modulate = COLOR_ACTIVE_TINT if _is_active else Color.WHITE
 	_name_label.modulate = Color.WHITE
 	_glow_style.bg_color.a = 0.5 if _is_active else 0.0
+
+
+static func _frame_style(fill: Color, edge: Color, width: int, radius: int) -> StyleBoxFlat:
+	## A plain drawn frame: a fill, a line round it, rounded corners if asked for.
+	##
+	## Six lines of its own rather than a call into UiKit. This is a leaf widget that the
+	## dungeon builds dozens of before anything else is up, and reaching from here into the
+	## screen kit — which reaches back into ItemSlot — was enough to stop the game booting at
+	## all, with no error to show for it. A StyleBoxFlat is not worth a dependency.
+	var box := StyleBoxFlat.new()
+	box.bg_color = fill
+	box.border_color = edge
+	box.set_border_width_all(width)
+	box.set_corner_radius_all(radius)
+	return box

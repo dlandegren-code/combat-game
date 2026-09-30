@@ -14,11 +14,13 @@ extends CanvasLayer
 const UiScaleScript := preload("res://scripts/ui_scale.gd")
 
 const BACKPLATE := "res://assets/UI/SPR_FantasyWarrior_Box_Background_Shadowed.png"
-const DIVIDER := "res://assets/UI/SPR_FantasyWarrior_Tracery_Horizontal01.png"
-const WELL := "res://assets/UI/SPR_FantasyWarrior_Frame_Box24_Mask01.png"
-const WELL_FRAME := "res://assets/UI/SPR_FantasyWarrior_Frame_Box24_Variant01.png"
+const DIVIDER := "res://assets/UI/FantasyMenus/SPR_FantasyMenus_Line_Horizontal_01.png"
+const WELL := "res://assets/UI/FantasyMenus/SPR_FantasyMenus_Frame_Box_Small_01_Mask.png"
+const WELL_FRAME := "res://assets/UI/FantasyMenus/SPR_FantasyMenus_Frame_Box_Small_01.png"
 
-const PAD_BASE := 16.0
+## Clear of the frame's corner brackets. At 16 the left-hand column of every section sat on
+## the gold line — the old backplate had no edge to speak of, and this one does.
+const PAD_BASE := 26.0
 const TITLE_H_BASE := 30.0
 const HEADER_H_BASE := 20.0
 const DIVIDER_H_BASE := 11.0
@@ -28,11 +30,11 @@ const PANEL_W_BASE := 380.0
 ## Height reserved when the character has no spells, for the "cannot cast" line.
 const EMPTY_H_BASE := 40.0
 
-const COLOR_WELL := Color(0.075, 0.098, 0.130, 0.94)
-const COLOR_HEADING := Color(1.0, 0.84, 0.52)
-const COLOR_NAME := Color(1.0, 0.95, 0.78)
-const COLOR_STATS := Color(0.74, 0.78, 0.86)
-const COLOR_DESC := Color(0.60, 0.64, 0.72)
+const COLOR_WELL := Color(0.086, 0.145, 0.247, 0.92)
+const COLOR_HEADING := UiKit.HEADING
+const COLOR_NAME := UiKit.HEADING
+const COLOR_STATS := UiKit.BODY
+const COLOR_DESC := UiKit.MUTED
 const COLOR_DIM := Color(0.45, 0.47, 0.52)
 const COLOR_HOVER := Color(1.35, 1.28, 1.05)
 
@@ -121,14 +123,8 @@ func _rebuild() -> void:
 	_content.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.add_child(_content)
 
-	var plate := TextureRect.new()
-	plate.texture = load(BACKPLATE)
-	plate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	plate.stretch_mode = TextureRect.STRETCH_SCALE
-	plate.size = sz
-	plate.modulate = Color(1, 1, 1, 0.85)
-	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_content.add_child(plate)
+	# The same framed panel the town screens and the character sheet use.
+	UiKit.hud_plate(_content, sz)
 
 	var y: float = _pad + TITLE_H_BASE * _s
 

@@ -8,7 +8,7 @@ extends Control
 ## Starting over is the one destructive thing in the game, so it asks first and says exactly
 ## what will be lost.
 
-const ScreenPanelScript := preload("res://scripts/screen_panel.gd")
+const ScreenPanelScript := preload("res://scripts/ui_kit.gd")
 const SaveGameScript := preload("res://scripts/save_game.gd")
 const CharacterClassesScript := preload("res://scripts/character_classes.gd")
 

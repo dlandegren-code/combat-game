@@ -76,8 +76,20 @@ func _use(ability, target) -> void:
 
 
 func _build_abilities() -> void:
+	abilities = build_abilities()
+
+
+static func build_abilities() -> Array:
+	## The player's action list, in order.
+	##
+	## Static, and separate from the assignment above, so that something without a body can ask
+	## what a player can DO — the town's party sheet lists a character's spells off this, and a
+	## spell sheet that had its own copy of the list would be one spell behind the day a second
+	## one is written. Abilities are stateless (see Ability), so building a throwaway set to
+	## read display names and costs off costs nothing.
+	#
 	# Order must match the Action enum. The toolbar's hotbar seeds itself from this order.
-	abilities = [
+	return [
 		MoveAbilityScript.new(),
 		MeleeAttackAbilityScript.new(),
 		ShoveAbilityScript.new(),

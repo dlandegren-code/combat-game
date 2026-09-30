@@ -141,6 +141,16 @@ func _rebuild() -> void:
 
 
 func _build(panel_size: Vector2) -> void:
+	# The framed plate the rest of the game is drawn on. This panel never had one — it was the
+	# scene's default grey Panel showing through — which was tolerable when the HUD was its own
+	# bronze thing and is not now that everything else matches.
+	#
+	# Hung on the PANEL and pushed to the back, not on _content: the panel's title is a sibling
+	# authored in the scene, and a plate added to _content draws over it. It went in as the
+	# first child and the title vanished.
+	var plate := UiKit.hud_plate(_panel, panel_size)
+	_panel.move_child(plate, 0)
+
 	_doll = Control.new()
 	_doll.name = "Doll"
 	_doll.position = Vector2(_pad, _doll_top)

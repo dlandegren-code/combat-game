@@ -34,7 +34,19 @@ func _ready() -> void:
 	_guard_save()
 
 	GameState.clear()
+	# A FULL company, one of each class and a spare, because the party now stands in the
+	# clearing (TownLayout.PARTY_STAND) and a screenshot with one hero in it would not show
+	# whether the fourth mark is standing somebody in a fence. One of each class also means
+	# every body the game can draw is in the shot — including the archer's quiver, which is a
+	# model prop and the thing most likely to go missing.
+	# Named the way HIRELINGS are named, not the way a screenshot would prefer. Three of these
+	# four come off the mercenary camp in a real game, and "Ilse the Patient" is a great deal
+	# harder to fit over somebody's head than "Ilse" — which is the case the floating names
+	# have to survive, so it is the case the picture should show.
 	GameState.add_member(CharacterClassesScript.make("soldier", "Aldric"))
+	GameState.add_member(CharacterClassesScript.make("archer", "Wren Blackthorn"))
+	GameState.add_member(CharacterClassesScript.make("wizard", "Ilse the Patient"))
+	GameState.add_member(CharacterClassesScript.make("soldier", "Tobin Two-Coin"))
 	GameState.gold = 120
 	GameState.award_xp(260)
 	# Wounded, so the healer's button shows its price rather than being greyed out.

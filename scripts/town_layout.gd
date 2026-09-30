@@ -227,6 +227,38 @@ const TOWNSFOLK := [
 	{"model": "res://scenes/characters/male_d_model.tscn", "position": Vector3(-10.5, 0.0, 7.5), "rotation": 200.0},
 ]
 
+## Where the PARTY stands, one mark per member, main character first.
+##
+## Different from TOWNSFOLK above in the way that matters: those are three fixed models placed
+## for atmosphere, and these are whoever is actually in GameState.party, built from each
+## member's own class body and model props — so an archer in the party has their quiver on
+## their back here exactly as they do in the dungeon.
+##
+## Downstage and facing the camera, in the open grass to the right of the bench. That is the
+## one part of the clearing with nothing in it, and it is where a party photograph belongs:
+## close enough to read faces, far enough forward that nobody is standing in a shopfront.
+## Turned a few degrees off straight-on so four of them do not line up like a police lineup.
+## `clear` is deliberately tiny next to DEFAULT_CLEARANCE: these marks are in the meadow, and
+## the point of standing the party in long grass is that they are standing in long grass. It
+## only has to be enough that nobody is wearing a bush.
+## The marks are spread as far as the clearing allows; the NAMES sort themselves out in screen
+## space, where a collision can actually be measured (Town._position_name_tags). An earlier
+## version staggered the label heights here instead, which reads as a guess and was one: it
+## held for "Wren" and came apart for "Tobin the Quiet".
+const PARTY_STAND := [
+	{"position": Vector3(5.0, 0.0, 9.0), "rotation": 172.0, "clear": 1.5},
+	{"position": Vector3(7.8, 0.0, 9.8), "rotation": 186.0, "clear": 1.5},
+	{"position": Vector3(10.6, 0.0, 9.0), "rotation": 168.0, "clear": 1.5},
+	{"position": Vector3(13.4, 0.0, 9.8), "rotation": 192.0, "clear": 1.5},
+]
+
+## Where a party member's name floats, above their feet. Their models stand about 1.8 m at
+## TOWNSFOLK_SCALE, so this clears the tallest hat in the set.
+const PARTY_LABEL_Y := 2.35
+
+## Font size for a floating name. Smaller than a shop sign: it labels a person, not a door.
+const PARTY_LABEL_SIZE := 15
+
 ## The trees that make it a clearing rather than a field: a ring of birches with bigger meadow
 ## trees behind them for canopy mass. Generated rather than listed — forty hand-written tree
 ## positions would be forty numbers nobody will ever read — but from a FIXED seed, so the wood

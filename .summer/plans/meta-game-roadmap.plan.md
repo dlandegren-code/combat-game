@@ -661,3 +661,317 @@ hireling's wounds written back like anybody else's.
 STILL MISSING: hirelings cannot be equipped from town — the shop's party picker
 reaches them, but there is no screen that moves an item from one member's pack to
 another's. They fight with what their class gave them plus whatever they pick up.
+
+## The party becomes visible, and gear moves between packs (2026-09-19)
+
+Three asks, one theme: the company existed in data and on a battlefield, but in
+town it was a list of lines in the corner. Now it stands in the clearing and can
+be inspected and re-packed.
+
+- `TownLayout.PARTY_STAND` + `Town._build_party_models` — the actual party, one
+  body per member, downstage in the meadow facing the camera. Built from each
+  member's own class body and model props, so the archer standing here has the
+  quiver the archer downstairs has. MODELS ONLY: no Combatant, no inventory, no
+  collision. A town body is a picture of a character, and everything a Combatant
+  brings would be machinery in aid of a picture. Their name floats over them as a
+  billboarded Label3D — staggered in height, because four names on one line at
+  this spacing read as one long smear.
+- Their GEAR is not shown on those bodies. The sockets that put a sword in a hand
+  are built by Combatant off the model's skeleton, and lifting that out for a
+  silhouette is a job for the day somebody asks to see their armour from outside.
+- `scripts/party_sheet.gd` + `scenes/party_sheet.tscn` — Gear, Sheet and Spells
+  for one member at a time, with a member picker. The town's toolbar (bottom
+  left, opposite the system buttons) opens it on a chosen page; which page
+  travels on the screen's own `static var opening_tab`, because that is a
+  property of this trip to that screen and not of the game.
+
+WHY NOT THE QUEST SCREEN'S PANELS: `inventory_ui.gd`, `character_sheet_ui.gd` and
+`spell_sheet_ui.gd` all read `CombatManager.current_combatant` and work on a live
+Combatant with an Inventory child, and the inventory one routes its clicks
+through `Player.equip_weapon`, which charges time and ENDS THE TURN. None of that
+exists in town and none of it should — there is no turn to end and no body to
+fold an armour bonus into. So the party sheet reads CharacterData and edits it
+through the operations CharacterData already owns, the same ones the shop buys
+and sells through. Derived numbers (hit points from stamina, mana from willpower)
+are computed from Combatant's constants exactly as `CharacterClasses.summary_lines`
+already does for the creation screen.
+
+Rearranging gear in town is FREE, where in the dungeon it costs a turn. That
+difference is the point of doing it here: sorting out who carries the spare
+shield is planning, and planning is what a town is for.
+
+GEAR TRANSFER: one recipient is chosen up front and then one Give button per
+item, rather than a button per item per member — with four in the company that
+would be three buttons on every line of a full pack. An item leaves the giver
+FIRST (`bag_remove_at`, which also takes it off, the honest reading of handing
+somebody the shield off your arm) and goes straight back to them untouched if the
+receiver has no room. An item must never be able to evaporate between two packs.
+
+`Player.build_abilities()` was made static so the spell page can ask what a
+character can cast without a body to hang it on. The page lists whatever answers
+`is_spell()`, so a second spell appears there the day it is written rather than
+the day somebody remembers this screen exists.
+
+A REAL UI PROBLEM the test found: the member picker and the recipient row were
+both rows of bare names, so a press meant for one landed on the other. It was the
+test that got caught, but a player would have been caught the same way — the
+recipient buttons now read "Hand to Wren", and the test asserts which one moved.
+
+Verified: 847 checks, up from 816. The new ones walk the real screen: taking gear
+off and putting it back on, switching member, the Give button not existing until
+a recipient is chosen, a transfer leaving exactly one pack and arriving in
+exactly one other, gear handed over straight off the body coming off on the way,
+and a full pack refusing the gift with the giver keeping it. Both other pages are
+opened through the toolbar's own mechanism, and the spell page is checked to list
+Firebolt for a wizard and say plainly that a soldier is no caster.
+
+`tools/capture_town.gd` now populates a FULL company of four, one of each class,
+because a town screenshot with one hero in it cannot show whether the fourth mark
+stands somebody in a fence.
+
+STILL MISSING: nothing moves gear between a member and the GROUND from town, and
+there is no "sell from any pack" — the shop still sells out of whichever member
+its own picker is on.
+
+## The town screens get a face: INTERFACE - Fantasy Menus (2026-09-19)
+
+Pass one of two. The town is now gold-on-navy Synty rather than text on black, the
+market lists what it sells with pictures, and the party sheet's gear reads the
+way the dungeon's backpack does. Pass two — re-skinning the in-dungeon HUD to
+match — has not been done yet.
+
+- `assets/UI/FantasyMenus/` — 30 sprites, a curated cut of the pack's 234. Frames,
+  a damask, a vignette, dividers, flourishes, a scrollbar.
+- `scripts/ui_kit.gd` REPLACES `screen_panel.gd`, and deliberately keeps its shape:
+  mount / title / heading / label / button / row / separator / spacer / toast take
+  the same arguments and mean the same things. Porting eight screens was changing
+  one preload line each. What changed is what those calls DRAW. screen_panel.gd is
+  deleted; nothing referenced it by its class name.
+- `UiKit.item_row` is the piece the ask was really about: icon, name, what it
+  does, what it costs, and the buttons that act on it. The icon is an `ItemSlot`
+  — the very widget the dungeon's backpack grid is made of — so a potion on the
+  shelf is the same picture as the potion in the bag it ends up in.
+- The shop's shelf and the player's pack are both item rows now, with Buy and
+  Sell beside them. So is the party sheet's worn-and-carried gear, with Take off
+  / Put on / Give to.
+- The town's own floating buttons — the shop signs over the stalls, the party
+  toolbar, the system column — go through `UiKit.style_button`, so the clearing
+  does not look like a different game from the screens it opens.
+
+THE PACK SHIPS ITS ART IN TWO HALVES: a white silhouette to tint and a gold frame
+to lay over it. Godot's Button takes ONE StyleBox per state, so the two are
+composited in `UiKit._plate` — `blend_rect_mask` paints the tint through the
+silhouette's alpha, `blend_rect` drops the gold on top — and cached. The four
+button states are then one texture under four `modulate_color` values, because a
+pressed button in this pack is the same button a shade darker.
+
+`tools/capture_screens.gd` was written first, before any of it. The flat screens
+are the part of the game that is ENTIRELY look, and nothing about a wrong
+nine-patch margin raises an error — the round-trip test can only say that a button
+exists and does what it says. It shoots all ten screens with a real party and
+prints each panel's size next to the window's, warning when one stops fitting.
+
+THREE LAYOUT BUGS IT CAUGHT, none of which would have raised an error:
+1. A NinePatchRect is not a container — it never grows to fit its children. The
+   first build put a 400-pixel frame around 900 pixels of market and spilled the
+   shelf out the bottom. Both the panel and the row plates are PanelContainers
+   with a StyleBoxTexture now, which take the same nine-patch art, size to their
+   child, and take their padding off the stylebox.
+2. A nine-patch draws its corners at the TEXTURE's pixel size, so a 1024-pixel
+   frame with 250-pixel corners puts 500 pixels of ornament into a panel 800
+   wide. Each composited plate is now resized to the job: 400 for the panel, 96
+   for a button, whose smallest instance is 36 pixels tall.
+3. A TextureRect reports its texture as its minimum size unless told otherwise,
+   and the dividers in this pack are 1024 wide — so panels came out eighteen
+   hundred pixels across, sized to the rule under a heading rather than to the
+   words beside it. Every TextureRect the kit builds sets EXPAND_IGNORE_SIZE.
+
+BUTTON LABELS AND BUTTON NAMES: a shelf where every row's button repeats its own
+item's name is noise, so the label is "Buy". But six buttons all reading "Buy"
+are unpressable by name, and the round-trip test walks these screens by pressing
+buttons. So the label stays short and the NODE is named for both — "Buy Health
+Potion" — and `_find_button` matches either. The alternative was a test that
+presses the wrong row and passes.
+
+Verified: 847 checks, unchanged — this pass moved no rules, only the furniture,
+and the point of running it was to prove that. The screens themselves are checked
+by eye, from .summer/local/screens/.
+
+DECORATION, SECOND PASS: the first cut used the pack's ornate bars (Frame_Bar_06)
+as section rules and separators. Those are drawn to be seen at about four to one,
+and a divider across this panel is nearer sixty to one — squashed that far, the
+scrollwork came apart into a row of smears. Rules are now Line_Horizontal_01, a
+soft gradient along its own length, which only gets longer when stretched; the
+ornate bar moved to under the title, where a centred flourish has room to be
+shown at its own proportions. Two button fixes went with it: a standalone button
+no longer clips its label (the board was offering to "Take: Sanctify the Hollow
+Tomb", one letter short of the truth), and the text padding is now tied to
+BOX_SLICE so a long label cannot sit on top of the corner brackets.
+
+THE MARKET BECAME TWO COLUMNS (2026-09-20): stacked, the shelf and the pack meant
+scrolling past thirteen things on sale to reach your own kit — and buying and
+selling are the same decision seen from two sides, so the two lists want to be
+readable against each other. `UiKit.mount_wide` + `UiKit.split` put them in two
+framed boxes that scroll independently, with the title, picker, purse line and
+the way out spanning both.
+
+That needed the kit to stop measuring everything against one WIDTH constant: a
+column now CARRIES its width and the helpers ask it (`_width_of`). The wide panel
+sizes itself off the viewport rather than a fixed number, because there is no
+window size in project.godot — the game runs at Godot's default and the editor's
+play window is whatever it was left at.
+
+Three things had to give to fit a list into a third of a window: an item name
+wraps now (a Label that will not wrap reports its whole text as a minimum width,
+which was enough to push the two columns wider than the window); the price moved
+onto the name's line instead of a column of its own; and row-action buttons got a
+tighter text inset, because the padding that keeps a long label off the corner
+brackets leaves a 76-pixel "Take off" reading "Take".
+
+THE THREE STALLS SELL THREE DIFFERENT THINGS (2026-09-21): the armourer, the
+weapon shop and the general store all opened the same shelf. They are still one
+scene — a shop is not different enough from another shop to be its own — but
+`Shop.opening_shop`, set by Town from the service's own id, decides the sign over
+the door and what is on the shelf.
+
+The split is by the item's OWN type rather than three hand-written lists:
+armourer takes SHIELD/ARMOR/HELMET/LEGS, weapon shop WEAPON/THROWABLE/AMMO. The
+general store's list is EMPTY, and that is the point — it means "whatever the
+other two do not take". Add a kind of item nobody claims and it appears on its
+shelf without the table being touched, which is the only version of "everything
+else" that stays true. The test checks that property directly: every item is on
+exactly one shelf, and the three shelves together are the whole stock.
+
+The three bottles already in resources/items were put on sale at the same time.
+Split by type, the general store had one item on it — a potion — and a shop with
+one thing in it is a worse answer to the request than the one-shop version was.
+
+NOT changed: any stall will still BUY anything. Restricting that too would mean
+three visits to clear a mixed haul after every dungeon, which is a chore rather
+than a decision. The ask was about what is for sale.
+
+THE SHOP SHOWS THE REAL ITEMS (2026-09-21): asked whether the Fantasy Warrior HUD
+pack has 3D versions of its item icons. It does not — it is an INTERFACE pack,
+1883 PNGs and nothing else, no meshes in the zip or the unitypackage. The 3D
+comes from POLYGON - Dungeon Pack, which the items already point at.
+
+Nothing needed building, because `item_thumbnails.gd` has photographed each
+item's own model into its cell since the inventory was written. What was wrong
+was one line in `UiKit.item_row`: the ItemSlot was given its item BEFORE it was
+added to the tree, and `ItemSlot._apply_thumbnail` gives up immediately on a cell
+with no tree to await frames from. Every row in the market therefore kept the
+flat category icon — one sword picture for every sword — which is exactly the
+thing the thumbnail system exists to avoid. Added to the tree first, the shelves
+show the actual Synty models.
+
+`ITEM_CELL` went back up to 56 with it. It had been trimmed to 44 to fit the
+split market, which is fine for a flat icon and not fine for a photograph: at 44
+a rendered sword is a grey smudge.
+
+A NOTE ON THE CAPTURE TOOL: its SETTLE_FRAMES was 4, which is enough to lay a
+screen out and nowhere near enough to photograph its items — the renders go
+through one shared viewport, one item per frame. At 4 frames every screenshot
+taken during the UI work showed fallback icons, which is why this went unnoticed
+for so long. It is 90 now, and the shots show what the player sees.
+
+THE FLOATING PARTY NAMES STOPPED COLLIDING (2026-09-21): they were Label3D in the
+world, with staggered heights in TownLayout meant to keep them apart. That was a
+guess and it only held for short names — a world-space label cannot be kept off
+the one beside it, because the heroes stand under three metres apart, the names
+are as long as a hireling happens to be called, and a fixed-size 3D label keeps
+its pixel size while the gap between two heroes shrinks with the window.
+
+They are screen-space Labels now, projected through the same camera the shop
+signs use, and the collision is MEASURED rather than guessed. Each name tries a
+short list of rows and takes the first that hits nothing. The shop signs are
+placed first and passed in as occupied space, so a name dodges a sign as well as
+another name — the signs keep their places because a sign that wandered off its
+roof would stop naming anything, while a name a few pixels up still points at the
+person standing there.
+
+The row order is up, then DOWN, then further out alternately. Lifting only
+upwards was the first attempt and it walks a name into the row of shop signs
+above the party: it ran out of tries still overlapping "General Store" and left
+it there. Below a hero is open grass.
+
+`capture_town.gd` now populates the party with hireling-length names — "Ilse the
+Patient", "Tobin Two-Coin" — rather than the short ones a screenshot would
+prefer. The long names are the case this has to survive, so they are the case the
+picture shows.
+
+KNOWN, NOT FIXED: the BUILDING signs still overlap each other — Armorer / Weapon
+Shop / General Store sit shoulder to shoulder, and Mercenary Camp crowds Healer's
+House. The same measured placement would sort them, but a shop sign cannot simply
+move: it has to stay on its own roof to mean anything, so that is a job for the
+positions in TownLayout rather than for a runtime nudge.
+
+PASS TWO, DONE (2026-09-21): the dungeon HUD wears the same clothes as the town.
+Character sheet, spell book, inventory, action toolbar, party portraits and the
+HUD slots all come off UiKit now; the only Fantasy Warrior art left in the game is
+the inventory ICON set (which is drawn art with no equivalent in the newer pack)
+and the three stance greebles in stance.gd.
+
+`tools/capture_hud.gd` was written first, as capture_screens.gd was for the town.
+It loads the quest scene, hands the turn to a hero — the panels draw whoever is
+active, and combat often starts on a goblin, who has no character sheet worth
+drawing — opens each panel in turn and shoots it.
+
+WHAT IT CAUGHT, all of it invisible to the round-trip test:
+- The town's big ornate frame is WRONG at HUD size. Its corner scrollwork is a
+  quarter of a 300-pixel sheet and swallowed the section headings. HUD panels use
+  the bracket frame instead (UiKit.hud_plate), which is the same family — it is
+  what a market row is drawn in — with corners small enough to put text near.
+- The sheets' padding was 16, which was fine against the old backplate because
+  that plate had no edge to speak of. Against a real frame the whole left column
+  sat on the gold line. It is 26.
+- The inventory panel had NO plate at all: it was the scene's default grey Panel
+  showing through. Adding one covered its title, which is a sibling authored in
+  the .tscn — so the plate goes on the panel and is pushed to the back.
+- Enemy portraits came out as four red BLOCKS across the top of the screen. The
+  first attempt paired a heavier frame with a hard red; the frames are matched in
+  weight now and the red is softened. They are still a different SHAPE from an
+  ally's, which was the original author's point and does not depend on colour
+  vision.
+
+TWO THINGS THE PACK COULD NOT DO. There is no steel frame in Fantasy Menus — it
+is gold throughout — so a hotbar cell and the SELECTED hotbar cell are now the
+same sprite at two temperatures, via a per-frame tint multiplied into the state
+tint. And the system cluster is square rather than round: the pack ships a circle
+frame, but the editor will not import new files into this project (see below), so
+the cluster is told apart by its corners instead.
+
+THE CORNER ORNAMENT HAD TO GO (2026-09-22): every framed box in this pack carries
+something at its corners — brackets, scrollwork, spikes — which is fine on a
+button or a market row, where the frame is most of what you are looking at. In
+the dungeon it lands on the content: the panel corners jutted into the first line
+of every section, the portrait frames sat on the face inside them, and the Town
+and Quit buttons had curls hanging off them.
+
+So the HUD frames are DRAWN now, in StyleBoxFlat, not taken from the pack: the
+panels are navy with a plain double gold line, a portrait is a single line, a
+hotbar cell is a single line. The pack ships a plain double-line rectangle for
+exactly this and the project cannot import it (see below), so it is reproduced in
+six lines of code. ItemSlot reached the same conclusion about its own cells long
+before this, and for the same reason — art too heavy for the job is worse than no
+art, and a line is a line.
+
+Two things came back with it. The system cluster is ROUND again (a corner radius
+of half the cell is a circle), which it had been under the old pack and stopped
+being when this was sprites. And the ally/enemy portraits are told apart by SHAPE
+as well as colour — rounded corners against square ones — which was the original
+author's accessibility point and which the sprite swap had been about to lose.
+
+THE MISTAKE WORTH RECORDING: renaming UiKit._hud_box to frame_style left one call
+site behind. A broken UiKit stops the GAME booting, with no output at all — not a
+crash, not an error in the console, just silence — so every scene appeared to hang
+and reverting the two widgets I had just edited changed nothing. summer_get_script_errors
+on ui_kit.gd had been run BEFORE the rename and said zero. The lesson is narrow
+and worth keeping: re-check the file you renamed a function in, after the rename,
+and when everything hangs at once suspect the thing everything depends on rather
+than the thing you touched last.
+
+THE IMPORT PROBLEM, which shaped all of this: Godot here does not rescan for files
+added outside the editor, whatever is done to provoke it. Every texture in the
+re-skin therefore had to come from the thirty sprites that happened to be imported
+on the first scan. If that ever unsticks, the frames worth revisiting are a circle
+for the system cluster and a second box shape for the hotbar.

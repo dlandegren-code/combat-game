@@ -10,7 +10,7 @@ extends Control
 ## every time this screen draws (GameState.hire_roster), so it is stable while the party is in
 ## town and changes when they come back from a quest. See Hireling.
 
-const ScreenPanelScript := preload("res://scripts/screen_panel.gd")
+const ScreenPanelScript := preload("res://scripts/ui_kit.gd")
 const HirelingScript := preload("res://scripts/hireling.gd")
 const SaveGameScript := preload("res://scripts/save_game.gd")
 

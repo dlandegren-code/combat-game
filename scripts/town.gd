@@ -15,7 +15,7 @@ extends Node3D
 ## world space, projected through the camera onto the screen. They are ordinary Buttons in a
 ## CanvasLayer, so they behave like buttons; only where they sit is 3D.
 
-const ScreenPanelScript := preload("res://scripts/screen_panel.gd")
+const ScreenPanelScript := preload("res://scripts/ui_kit.gd")
 const CharacterDataScript := preload("res://scripts/character_data.gd")
 const CharacterClassesScript := preload("res://scripts/character_classes.gd")
 const SaveGameScript := preload("res://scripts/save_game.gd")
@@ -24,6 +24,8 @@ const CombatantScript := preload("res://scripts/combatant.gd")
 const TownLayoutScript := preload("res://scripts/town_layout.gd")
 const SyntyModelScript := preload("res://scripts/synty_model.gd")
 const TownAmbienceScript := preload("res://scripts/town_ambience.gd")
+const PartySheetScript := preload("res://scripts/party_sheet.gd")
+const ShopScript := preload("res://scripts/shop.gd")
 
 const FARM_PREFABS := "res://assets/Synty/PolygonFarm/Prefabs/"
 
@@ -34,11 +36,22 @@ const TRAINING_SCENE := "res://scenes/training.tscn"
 const SHOP_SCENE := "res://scenes/shop.tscn"
 const BOARD_SCENE := "res://scenes/quest_board.tscn"
 const CAMP_SCENE := "res://scenes/hire_camp.tscn"
+const PARTY_SHEET_SCENE := "res://scenes/party_sheet.tscn"
 
 var _camera: Camera3D
 var _world: Node3D
 var _ui: CanvasLayer
 var _signs: Array = []            ## [{button, at}] — repositioned when the window resizes
+var _name_tags: Array = []        ## [{label, at}] — the floating party names, same idea
+
+## How far a name is lifted when it would land on one already placed, and how much clear air
+## two names must have between them before they count as separate. See _position_name_tags.
+const TAG_ROW_GAP := 2.0
+const TAG_SIDE_GAP := 7.0
+## Where a name may sit, in rows from over its hero's head, tried in this order. Up first
+## because that is where a name belongs; then down, over the grass, which is empty. Nothing
+## goes further than two rows up, because three would reach the shop signs.
+const TAG_ROWS := [0, -1, 1, -2, 2, 3]
 var _save_note := ""
 
 
@@ -50,6 +63,7 @@ func _ready() -> void:
 	_build_clearing()
 	_build_services()
 	_build_dressing()
+	_build_party_models()
 	_build_ambience()
 	_build_ui()
 	get_viewport().size_changed.connect(_position_signs)
@@ -157,7 +171,8 @@ func _occupied_spots() -> Array:
 	## metres and a scatter that only avoids a box around the village had no reason to leave
 	## them alone.
 	var spots: Array = []
-	for group in [TownLayoutScript.SERVICES, TownLayoutScript.SCENERY, TownLayoutScript.TOWNSFOLK]:
+	for group in [TownLayoutScript.SERVICES, TownLayoutScript.SCENERY, TownLayoutScript.TOWNSFOLK,
+			TownLayoutScript.PARTY_STAND]:
 		for entry in group:
 			spots.append({
 				"at": entry["position"],
@@ -300,6 +315,51 @@ func _place_townsfolk(folk: Dictionary) -> void:
 		anim.play("idle")
 
 
+func _build_party_models() -> void:
+	## Stand the actual party in the clearing, one body per member.
+	##
+	## Models only — no Combatant, no inventory, no collision. A town body is a PICTURE of a
+	## character, and everything a Combatant brings (derived stats, equipment sockets, turn
+	## order) would be machinery in aid of a picture. What it does share with the dungeon is
+	## where the picture comes from: the class body and model props off the member's own
+	## CharacterData, so the archer standing here has the quiver the archer downstairs has.
+	##
+	## Their GEAR is not shown. The sockets that put a sword in a hand are built by Combatant
+	## off the model's skeleton, and lifting that out for a town that only needs a silhouette
+	## is a job for the day somebody asks to see their armour from the outside.
+	if not GameState.has_party():
+		return
+	for i in range(GameState.party.size()):
+		if i >= TownLayoutScript.PARTY_STAND.size():
+			# More party than marks. Not a crash and not silent: PARTY_MAX and the mark list
+			# are two numbers that have to agree, and this is where they would stop agreeing.
+			push_warning("Town: no mark to stand party member %d on" % i)
+			break
+		_place_party_member(GameState.party[i], TownLayoutScript.PARTY_STAND[i])
+
+
+func _place_party_member(member, mark: Dictionary) -> void:
+	var packed := load(member.model_scene_path()) as PackedScene
+	if packed == null:
+		push_warning("Town: %s has no body to stand in" % member.character_name)
+		return
+	var node := packed.instantiate() as Node3D
+	# Before the tree, like everywhere else these models are built: CharacterSkin reads its
+	# props in its own _ready, and an archer whose quiver is switched on afterwards never gets
+	# one built. Same rule as QuestScene._spawn_member.
+	for prop in member.model_props():
+		node.set(prop, member.model_props()[prop])
+	node.position = mark["position"]
+	node.rotation_degrees = Vector3(0.0, float(mark.get("rotation", 180.0)), 0.0)
+	node.scale = Vector3.ONE * TownLayoutScript.TOWNSFOLK_SCALE
+	_world.add_child(node)
+
+	var anim := _find_anim_player(node)
+	if anim != null and anim.has_animation("idle"):
+		anim.play("idle")
+
+
+
 func _find_anim_player(node: Node) -> AnimationPlayer:
 	var player := node as AnimationPlayer
 	if player != null:
@@ -334,12 +394,15 @@ func _build_ui() -> void:
 	if _ui != null:
 		_ui.queue_free()
 	_signs.clear()
+	_name_tags.clear()
 	_ui = CanvasLayer.new()
 	_ui.name = "TownUI"
 	add_child(_ui)
 
 	_build_party_panel()
 	_build_service_signs()
+	_build_name_tags()
+	_build_party_toolbar()
 	_build_system_buttons()
 	_position_signs()
 
@@ -355,6 +418,7 @@ func _build_party_panel() -> void:
 	if not GameState.has_party():
 		_label(panel, "Nobody here yet.", ScreenPanelScript.HEADING_SIZE, ScreenPanelScript.HEADING)
 		var make := Button.new()
+		ScreenPanelScript.style_button(make)
 		make.text = "Create a character"
 		make.pressed.connect(_on_create)
 		panel.add_child(make)
@@ -377,6 +441,7 @@ func _build_party_panel() -> void:
 func _build_service_signs() -> void:
 	for entry in TownLayoutScript.SERVICES:
 		var button := Button.new()
+		ScreenPanelScript.style_button(button)
 		button.text = _service_text(entry)
 		button.tooltip_text = String(entry.get("note", ""))
 		button.pressed.connect(_on_service.bind(entry))
@@ -385,15 +450,44 @@ func _build_service_signs() -> void:
 		_signs.append({"button": button, "at": entry["sign_at"]})
 
 
+func _build_name_tags() -> void:
+	## A floating name over each party member.
+	##
+	## Screen-space Labels projected through the camera, NOT Label3D in the world. They were
+	## Label3D first, and a world-space label cannot be kept from colliding with the one beside
+	## it: the heroes stand less than three metres apart, the names are as long as the names
+	## happen to be — "Tobin the Quiet" is a perfectly ordinary hireling — and a fixed-size 3D
+	## label keeps its pixel size while the gap between two heroes shrinks with the window. In
+	## screen space the collision is measurable, so it can be resolved. See _position_name_tags.
+	if not GameState.has_party():
+		return
+	for i in range(GameState.party.size()):
+		if i >= TownLayoutScript.PARTY_STAND.size():
+			break
+		var mark: Dictionary = TownLayoutScript.PARTY_STAND[i]
+		var tag := _label(_ui, GameState.party[i].character_name,
+			TownLayoutScript.PARTY_LABEL_SIZE, ScreenPanelScript.TITLE)
+		tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_name_tags.append({
+			"label": tag,
+			"at": mark["position"] + Vector3(0.0, TownLayoutScript.PARTY_LABEL_Y, 0.0),
+		})
+
+
 func _position_signs() -> void:
-	## Put each button where its building is on screen.
+	## Put each button where its building is on screen, then fit the party's names around them.
 	##
 	## Projected in code rather than parented to a Node3D because the camera never moves: one
 	## projection when the town is built is enough, and the only thing that can invalidate it
 	## is the window being resized.
+	##
+	## ORDER MATTERS. The buildings go first and keep their places — a sign that wandered off
+	## its roof would stop naming anything. The NAMES move, because a name belongs to a person
+	## who is standing right there and a few pixels up still points at them.
 	if _camera == null:
 		return
 	var viewport := get_viewport().get_visible_rect().size
+	var taken: Array = []
 	for sign_entry in _signs:
 		var button: Button = sign_entry["button"]
 		if not is_instance_valid(button):
@@ -406,6 +500,90 @@ func _position_signs() -> void:
 		button.position = Vector2(
 			clampf(screen_pos.x - size.x * 0.5, 8.0, maxf(8.0, viewport.x - size.x - 8.0)),
 			clampf(screen_pos.y - size.y * 0.5, 8.0, maxf(8.0, viewport.y - size.y - 8.0)))
+		taken.append(Rect2(button.position, size))
+	_position_name_tags(viewport, taken)
+
+
+func _position_name_tags(viewport: Vector2, taken: Array) -> void:
+	## Put each name over its hero, moving any that would land on something already placed.
+	##
+	## Left to right, so "the one before" always means the one to the left. Each name tries a
+	## short list of offsets and takes the first that hits NOTHING — not another name, and not
+	## a shop sign, which is why the signs are placed first and passed in.
+	##
+	## The offsets go up one row, then DOWN one, then further out alternately. Lifting only
+	## upwards was the first attempt and it walks a name straight into the row of shop signs
+	## above the party: it ran out of tries still overlapping "General Store" and left it
+	## there. Below the hero is open grass, so down is the better second choice.
+	var ordered: Array = _name_tags.duplicate()
+	ordered.sort_custom(func(a, b):
+		return _camera.unproject_position(a["at"]).x < _camera.unproject_position(b["at"]).x)
+
+	var placed: Array = taken.duplicate()
+	for entry in ordered:
+		var label: Label = entry["label"]
+		if not is_instance_valid(label):
+			continue
+		var size := label.get_minimum_size()
+		label.size = size
+		var at := _camera.unproject_position(entry["at"])
+		var home := Vector2(
+			clampf(at.x - size.x * 0.5, 4.0, maxf(4.0, viewport.x - size.x - 4.0)),
+			at.y - size.y)
+		var step := size.y + TAG_ROW_GAP
+
+		var chosen := home
+		for row in TAG_ROWS:
+			var candidate := Rect2(home + Vector2(0.0, step * row), size)
+			if not _tag_collides(candidate, placed):
+				chosen = candidate.position
+				break
+		label.position = chosen
+		placed.append(Rect2(chosen, size))
+
+
+func _tag_collides(rect: Rect2, placed: Array) -> bool:
+	# Grown sideways before the test: two names that merely touch are still two names read as
+	# one, so they are kept a clear gap apart rather than merely not overlapping.
+	var padded := rect.grow_individual(TAG_SIDE_GAP, 0.0, TAG_SIDE_GAP, 0.0)
+	for other in placed:
+		if padded.intersects(other):
+			return true
+	return false
+
+
+func _build_party_toolbar() -> void:
+	## Gear, Sheet and Spells, bottom left — the town's answer to the quest screen's toolbar,
+	## and deliberately the same three words in the same order, because they open the same
+	## three things about the same characters.
+	##
+	## Opposite corner from the system buttons: those are about the GAME (board, menu, quit)
+	## and these are about the PARTY, and a player should not have to read a label to tell a
+	## "look at my sword" button from a "quit" button.
+	if not GameState.has_party():
+		return
+	var row := HBoxContainer.new()
+	row.name = "PartyToolbar"
+	row.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	row.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	row.position = Vector2(24, -24)
+	row.add_theme_constant_override("separation", 6)
+	_ui.add_child(row)
+
+	for tab in PartySheetScript.TABS:
+		var button := Button.new()
+		ScreenPanelScript.style_button(button)
+		button.text = String(tab["label"])
+		button.pressed.connect(_on_party_sheet.bind(String(tab["id"])))
+		row.add_child(button)
+
+
+func _on_party_sheet(tab: String) -> void:
+	# Which page to open on travels on the screen's own script rather than through GameState:
+	# it is a property of this trip to that screen, not of the game, and nothing else in the
+	# project should be able to read or write it. See PartySheet.opening_tab.
+	PartySheetScript.opening_tab = tab
+	get_tree().change_scene_to_file(PARTY_SHEET_SCENE)
 
 
 func _build_system_buttons() -> void:
@@ -419,16 +597,19 @@ func _build_system_buttons() -> void:
 	_ui.add_child(column)
 
 	var board := Button.new()
+	ScreenPanelScript.style_button(board)
 	board.text = "Quest Board"
 	board.pressed.connect(_on_quest_board)
 	column.add_child(board)
 
 	var menu := Button.new()
+	ScreenPanelScript.style_button(menu)
 	menu.text = "Main Menu"
 	menu.pressed.connect(_on_title)
 	column.add_child(menu)
 
 	var quit := Button.new()
+	ScreenPanelScript.style_button(quit)
 	quit.text = "Quit"
 	quit.pressed.connect(func(): get_tree().quit())
 	column.add_child(quit)
@@ -470,6 +651,10 @@ func _service_enabled(entry: Dictionary) -> bool:
 func _on_service(entry: Dictionary) -> void:
 	match String(entry.get("action", "")):
 		"shop":
+			# Which stall was clicked, so the armourer shows armour and the weapon shop does
+			# not. The service's own id is the key into Shop.SHOPS — one name, not two lists
+			# that have to be kept in step.
+			ShopScript.opening_shop = String(entry.get("id", ""))
 			get_tree().change_scene_to_file(SHOP_SCENE)
 		"training":
 			get_tree().change_scene_to_file(TRAINING_SCENE)
@@ -511,7 +696,7 @@ func _on_title() -> void:
 
 
 func _toast_host() -> Control:
-	## ScreenPanel.toast hangs its message on a Control, and this scene's root is 3D.
+	## UiKit.toast hangs its message on a Control, and this scene's root is 3D.
 	var host := Control.new()
 	host.set_anchors_preset(Control.PRESET_FULL_RECT)
 	host.mouse_filter = Control.MOUSE_FILTER_IGNORE

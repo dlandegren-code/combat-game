@@ -10,7 +10,7 @@ extends Control
 ## straight from the dungeon into the town screen, the xp and the gold just appeared as
 ## different numbers, and a wipe looked the same as a victory.
 
-const ScreenPanelScript := preload("res://scripts/screen_panel.gd")
+const ScreenPanelScript := preload("res://scripts/ui_kit.gd")
 
 const TOWN_SCENE := "res://scenes/town.tscn"
 const CREATION_SCENE := "res://scenes/character_creation.tscn"

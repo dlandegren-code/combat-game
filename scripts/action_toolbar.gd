@@ -116,15 +116,10 @@ func _build() -> void:
 	_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_row)
 
-	var plate := TextureRect.new()
-	plate.texture = load(BACKPLATE)
-	plate.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	plate.stretch_mode = TextureRect.STRETCH_SCALE
-	plate.modulate = Color(1, 1, 1, 0.72)
+	# The action bar stands on the same plate as everything else, so the bottom of the screen
+	# belongs to the same interface as the panels that open above it.
+	var plate := UiKit.hud_plate(_row, Vector2(_bar_width() + 28.0, row_h + 20.0))
 	plate.position = Vector2(-14.0, -10.0)
-	plate.size = Vector2(_bar_width() + 28.0, row_h + 20.0)
-	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_row.add_child(plate)
 
 	var x := 0.0
 

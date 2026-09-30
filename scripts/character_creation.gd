@@ -7,7 +7,7 @@ extends Control
 ##
 ## One character, deliberately. Hirelings are Phase 5, and they join the same array.
 
-const ScreenPanelScript := preload("res://scripts/screen_panel.gd")
+const ScreenPanelScript := preload("res://scripts/ui_kit.gd")
 const CharacterClassesScript := preload("res://scripts/character_classes.gd")
 
 const TOWN_SCENE := "res://scenes/town.tscn"

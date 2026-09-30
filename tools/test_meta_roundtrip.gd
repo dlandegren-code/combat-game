@@ -27,6 +27,8 @@ const SaveGameScript := preload("res://scripts/save_game.gd")
 const ProgressionScript := preload("res://scripts/progression.gd")
 const QuestDefScript := preload("res://scripts/quest_def.gd")
 const HirelingScript := preload("res://scripts/hireling.gd")
+const PartySheetScript := preload("res://scripts/party_sheet.gd")
+const ShopScript := preload("res://scripts/shop.gd")
 
 ## A save path of this test's own. The real one belongs to whoever is playing, and a dev tool
 ## has no business writing to it.
@@ -206,6 +208,9 @@ func _run() -> void:
 
 	# --- Hiring, and taking the people hired underground ---------------------------------
 	await _run_hire_checks()
+
+	# --- The party sheet, and moving gear between packs ----------------------------------
+	await _run_party_sheet_checks()
 
 	# --- The screens, buttons and all ----------------------------------------------------
 	await _run_screen_checks()
@@ -601,6 +606,166 @@ func _run_hire_checks() -> void:
 		"and a hireling's wounds are written back like anybody else's")
 
 
+func _run_party_sheet_checks() -> void:
+	## The town's party sheet: three pages, and the only place gear crosses between two packs.
+	##
+	## Driven through the real screen rather than through CharacterData directly, because what
+	## is actually new here is the SCREEN — CharacterData's bag operations were already covered
+	## by the shop. So this mounts it and presses its buttons, and the thing it is really
+	## watching is that an item can never be in two packs or in none.
+	_guard_real_save()
+
+	GameState.clear()
+	GameState.add_member(CharacterClassesScript.make("soldier", "Giver"))
+	GameState.add_member(CharacterClassesScript.make("wizard", "Taker"))
+	GameState.gold = 100
+
+	var giver = GameState.party[0]
+	var taker = GameState.party[1]
+	var before_giver := _bag_count(giver)
+	var before_taker := _bag_count(taker)
+
+	PartySheetScript.opening_tab = "gear"
+	var sheet: Node = await _mount("res://scenes/party_sheet.tscn")
+	_check(_has_buttons(sheet), "the party sheet draws")
+	_check(sheet._tab == "gear", "and opens on the page the toolbar asked for")
+
+	# --- Taking something off and putting it back on ---------------------------------------
+	# The soldier walks in wearing a sword, a shield and leather.
+	_check(not giver.equipped.is_empty(), "the soldier starts with gear on")
+	var worn_name := ""
+	for slot in giver.equipped:
+		var idx: int = int(giver.equipped[slot])
+		if idx >= 0 and idx < giver.bag.size() and giver.bag[idx] != null:
+			worn_name = giver.bag[idx].item_name
+			break
+	_check(_press(sheet, "Take off %s" % worn_name), "something worn can be taken off")
+	_check(_bag_count(giver) == before_giver, "which leaves it in the pack")
+	var still_worn := false
+	for slot in giver.equipped:
+		var idx2: int = int(giver.equipped[slot])
+		if idx2 >= 0 and idx2 < giver.bag.size() and giver.bag[idx2] != null \
+				and giver.bag[idx2].item_name == worn_name:
+			still_worn = true
+	_check(not still_worn, "and off the body (%s)" % worn_name)
+	_check(_press(sheet, "Put on"), "and it can be put back on")
+
+	# --- Handing something over -------------------------------------------------------------
+	_check(_press(sheet, "Taker"), "the sheet can switch to the other member")
+	_check(sheet._who == 1, "and is now showing them")
+	_check(_press(sheet, "Giver"), "and back again")
+	_check(sheet._who == 0, "showing the first one")
+	# A recipient has to be chosen before anything can be handed over: with nobody picked there
+	# is no Give button on the screen at all.
+	_check(_find_button(sheet, "Give to") == null,
+		"nothing can be given before a recipient is picked")
+	_check(_press(sheet, "Hand to Taker"), "a recipient can be chosen")
+	_check(sheet._giving_to == 1, "and is remembered")
+	# The one that bit: the member picker and the recipient row are both rows of names, so a
+	# press meant for one can land on the other. Asserted rather than assumed.
+	_check(sheet._who == 0, "while the sheet still shows the giver")
+
+	# Something loose to hand over. The soldier may be wearing everything they own, and a
+	# transfer test that quietly did nothing because there was nothing to transfer would pass.
+	giver.bag_add((load(LOOT_ITEM) as ItemResource).make_instance())
+	var gift := "Health Potion"
+	sheet._build()
+	_check(sheet._giving_to == 1, "the recipient survives a redraw")
+	before_giver = _bag_count(giver)
+	before_taker = _bag_count(taker)
+	var giver_had := _count_of(giver, gift)
+	var taker_had := _count_of(taker, gift)
+	_check(_press(sheet, "Give to Taker"), "and an item handed over (%s)" % gift)
+	_check(_bag_count(giver) == before_giver - 1, "which leaves the giver's pack")
+	_check(_bag_count(taker) == before_taker + 1, "and arrives in the taker's")
+	_check(_count_of(giver, gift) == giver_had - 1, "one fewer on the giver")
+	_check(_count_of(taker, gift) == taker_had + 1, "and one more on the taker — never both")
+
+	# Giving away something WORN takes it off on the way out — the honest reading of handing
+	# somebody the shield off your arm.
+	sheet._who = 0
+	sheet._giving_to = 1
+	sheet._build()
+	var armed := -1
+	for slot in giver.equipped:
+		armed = int(giver.equipped[slot])
+		break
+	if armed >= 0 and armed < giver.bag.size() and giver.bag[armed] != null:
+		var worn_gift: String = giver.bag[armed].item_name
+		sheet._on_give(armed)
+		_check(_has_item(taker, worn_gift), "gear can be handed over straight off the body")
+		_check(not giver.is_equipped(armed) or giver.bag[armed] == null,
+			"and the giver is not still wearing it")
+
+	# A full pack refuses the gift and the giver keeps it, rather than the item vanishing
+	# between two packs — the one failure this screen must never have.
+	while taker.bag_has_room():
+		taker.bag_add((load(LOOT_ITEM) as ItemResource).make_instance())
+	var loose := -1
+	for i in range(giver.bag.size()):
+		if giver.bag[i] != null and not giver.is_equipped(i):
+			loose = i
+			break
+	if loose >= 0:
+		var kept: String = giver.bag[loose].item_name
+		var kept_count := _bag_count(giver)
+		sheet._who = 0
+		sheet._giving_to = 1
+		sheet._on_give(loose)
+		_check(_bag_count(giver) == kept_count, "a full pack refuses the gift")
+		_check(_has_item(giver, kept), "and the giver still has it (%s)" % kept)
+	_free(sheet)
+
+	# --- The other two pages draw -----------------------------------------------------------
+	PartySheetScript.opening_tab = "sheet"
+	var stat_page: Node = await _mount("res://scenes/party_sheet.tscn")
+	_check(stat_page._tab == "sheet", "the toolbar can open the sheet page")
+	_check(_has_buttons(stat_page), "which draws")
+	_check(_press(stat_page, "Spells"), "and the pages can be switched between")
+	_check(stat_page._tab == "spells", "landing on the spell book")
+	_free(stat_page)
+
+	# The wizard casts and the soldier does not, and the page has to say so either way — it is
+	# read off the real ability roster, so a spell nobody can list is a spell nobody can find.
+	PartySheetScript.opening_tab = "spells"
+	var spell_page: Node = await _mount("res://scenes/party_sheet.tscn")
+	spell_page._who = 1
+	spell_page._build()
+	_check(_label_containing(spell_page, "Firebolt") != null,
+		"a caster's spell book lists what they can cast")
+	spell_page._who = 0
+	spell_page._build()
+	_check(_label_containing(spell_page, "no caster") != null,
+		"and a fighter's says plainly that they cannot")
+	_free(spell_page)
+
+	var spells := 0
+	for ability in load("res://scripts/player.gd").build_abilities():
+		if ability.is_spell():
+			spells += 1
+	_check(spells > 0, "the ability roster can be read without a body to hang it on")
+
+	_restore_real_save()
+
+
+func _count_of(data, item_name: String) -> int:
+	var n := 0
+	for item in data.bag:
+		if item != null and item.item_name == item_name:
+			n += 1
+	return n
+
+
+func _label_containing(node: Node, fragment: String) -> Label:
+	if node is Label and String(node.text).contains(fragment):
+		return node
+	for child in node.get_children():
+		var found := _label_containing(child, fragment)
+		if found != null:
+			return found
+	return null
+
+
 func _run_screen_checks() -> void:
 	## Mount each town screen with a real party in memory and press the buttons that DO
 	## something, rather than the ones that change scene.
@@ -638,7 +803,61 @@ func _run_screen_checks() -> void:
 	_check(GameState.party[1].xp < 400, "which came out of THEIR general xp")
 	_free(training)
 
+	# --- The three stalls -------------------------------------------------------------------
+	# Each sells its own trade and nothing else, and between them they sell everything the
+	# town has. The last part is what stops an item quietly falling off every shelf when a new
+	# kind of item is added: the general store's list is the complement of the other two, so a
+	# type nobody claims has to land there.
+	var shelves := {}
+	var everywhere: Array = []
+	for stall in ShopScript.SHOPS:
+		shelves[stall] = ShopScript.stock_for(stall)
+		for path in shelves[stall]:
+			_check(not (path in everywhere), "%s is on exactly one shelf" % String(path).get_file())
+			everywhere.append(path)
+	_check(everywhere.size() == ShopScript.STOCK.size(),
+		"between them the three stalls sell everything (%d of %d)"
+			% [everywhere.size(), ShopScript.STOCK.size()])
+
+	var armour_only := true
+	for path in shelves["armorer"]:
+		var it = load(path)
+		if not (it.item_type in [ItemResource.ItemType.SHIELD, ItemResource.ItemType.ARMOR,
+				ItemResource.ItemType.HELMET, ItemResource.ItemType.LEGS]):
+			armour_only = false
+	_check(armour_only and not shelves["armorer"].is_empty(),
+		"the armourer sells armour and shields, and only those (%d items)"
+			% shelves["armorer"].size())
+
+	var arms_only := true
+	for path in shelves["weaponsmith"]:
+		var it2 = load(path)
+		if not (it2.item_type in [ItemResource.ItemType.WEAPON,
+				ItemResource.ItemType.THROWABLE, ItemResource.ItemType.AMMO]):
+			arms_only = false
+	_check(arms_only and not shelves["weaponsmith"].is_empty(),
+		"the weapon shop sells weapons and ammunition, and only those (%d items)"
+			% shelves["weaponsmith"].size())
+
+	var rest_only := true
+	for path in shelves["general"]:
+		var it3 = load(path)
+		if it3.item_type in [ItemResource.ItemType.SHIELD, ItemResource.ItemType.ARMOR,
+				ItemResource.ItemType.HELMET, ItemResource.ItemType.LEGS,
+				ItemResource.ItemType.WEAPON, ItemResource.ItemType.THROWABLE,
+				ItemResource.ItemType.AMMO]:
+			rest_only = false
+	_check(rest_only and not shelves["general"].is_empty(),
+		"the general store sells what the other two do not (%d items)"
+			% shelves["general"].size())
+	# A potion is the plainest case of "everything else", and the one a player will look for.
+	_check("res://resources/items/health_potion.tres" in shelves["general"],
+		"potions are on the general store's shelf")
+	_check(not ("res://resources/items/health_potion.tres" in shelves["armorer"]),
+		"and not on the armourer's")
+
 	# --- Market ---
+	ShopScript.opening_shop = "general"
 	var shop: Node = await _mount("res://scenes/shop.tscn")
 	before_gold = GameState.gold
 	var before_bag: int = _bag_count(GameState.party[0])
@@ -759,7 +978,12 @@ func _press(root: Node, fragment: String) -> bool:
 
 
 func _find_button(node: Node, fragment: String) -> Button:
-	if node is Button and not node.disabled and String(node.text).contains(fragment):
+	## Matched on the label OR the node's name. An item row's button is labelled "Buy" and
+	## named "Buy Health Potion" (see UiKit.item_row), because six buttons all reading "Buy"
+	## are unpressable by name — and a test that presses the wrong one passes just as happily
+	## as one that presses the right one.
+	if node is Button and not node.disabled and (String(node.text).contains(fragment)
+			or String(node.name).contains(fragment)):
 		return node
 	for child in node.get_children():
 		var found := _find_button(child, fragment)

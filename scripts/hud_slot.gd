@@ -15,21 +15,28 @@ signal pressed
 ## Right-click. The toolbar uses it for "reassign this hotbar slot".
 signal alt_pressed
 
-## Square frames. Steel reads as an ordinary cell, gold as the selected one.
-const FRAME_STEEL := "res://assets/UI/SPR_FantasyWarrior_Frame_Box_Small03.png"
-const FRAME_GOLD := "res://assets/UI/SPR_FantasyWarrior_Frame_Box_Small01.png"
-## More ornate square, for the controls that are not hotbar cells.
-const FRAME_ORNATE := "res://assets/UI/SPR_FantasyWarrior_Frame_Box_Medium01_Variant01.png"
-## Round frame, for the system cluster.
-const FRAME_RING := "res://assets/UI/SPR_FantasyWarrior_Ring_Small01_Variant01.png"
+## The four frames a slot can wear, DRAWN rather than taken from the pack.
+##
+## Every framed box in Fantasy Menus carries corner ornament, and on a cell this size the
+## ornament sits on top of the icon the cell exists to show — curls hanging off the corners of
+## the Town and Quit buttons, brackets across a hotbar item. A cell's frame should be a line.
+## See UiKit.frame_style, and ItemSlot, which reached the same conclusion about its own cells
+## long before this.
+##
+## `radius` is what tells them apart by SHAPE as well as colour: the system cluster is round
+## again — a radius of half the cell is a circle — which it was under the old pack and stopped
+## being when this was sprites from the new one.
+const FRAME_STEEL := "steel"
+const FRAME_GOLD := "gold"
+const FRAME_ORNATE := "ornate"
+const FRAME_RING := "ring"
 
-## How far each frame's border intrudes, as a fraction of the sprite's width. Measured off
-## the alpha of each sprite; the icon is inset by this much so it sits in the opening.
-const FRAME_INSETS := {
-	FRAME_STEEL: 0.10,
-	FRAME_GOLD: 0.10,
-	FRAME_ORNATE: 0.11,
-	FRAME_RING: 0.17,
+const FRAME_LOOKS := {
+	FRAME_STEEL: {"edge": Color(0.58, 0.66, 0.80), "width": 2, "radius": 4, "inset": 0.10},
+	FRAME_GOLD: {"edge": Color(1.00, 0.80, 0.36), "width": 3, "radius": 4, "inset": 0.10},
+	FRAME_ORNATE: {"edge": Color(0.88, 0.72, 0.38), "width": 2, "radius": 6, "inset": 0.11},
+	# Radius is filled in from the cell size at build time — see _look_of.
+	FRAME_RING: {"edge": Color(0.88, 0.72, 0.38), "width": 2, "radius": -1, "inset": 0.16},
 }
 
 const COLOR_IDLE := Color(1, 1, 1)
@@ -40,7 +47,8 @@ const HOTKEY_FONT_SIZE := 12
 const CAPTION_FONT_SIZE := 11
 const CAPTION_HEIGHT := 14
 
-var _frame: TextureRect
+var _frame: Panel
+var _cell := 0.0
 var _icon: TextureRect
 var _glyph: Label
 var _hotkey: Label
@@ -65,16 +73,13 @@ func build(cell: float, frame_idle: String = FRAME_STEEL, frame_selected: String
 	size = Vector2(cell, total_h)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
-	_frame = TextureRect.new()
-	# Without IGNORE_SIZE the 512-square source becomes the minimum size and the explicit
-	# size below is clamped straight back up to it.
-	_frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_frame.stretch_mode = TextureRect.STRETCH_SCALE
+	_cell = cell
+	_frame = Panel.new()
 	_frame.size = Vector2(cell, cell)
 	_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_frame)
 
-	var inset: float = cell * float(FRAME_INSETS.get(frame_idle, 0.10))
+	var inset: float = cell * float(_look_of(frame_idle)["inset"])
 	var inner: float = cell - inset * 2.0
 
 	_icon = TextureRect.new()
@@ -164,9 +169,19 @@ func set_empty(on: bool) -> void:
 	_restyle()
 
 
+func _look_of(frame: String) -> Dictionary:
+	## The frame's description, with the ring's radius resolved against this cell — half a
+	## cell's width is a circle, and the cell size is not known until the slot is built.
+	var look: Dictionary = FRAME_LOOKS.get(frame, FRAME_LOOKS[FRAME_STEEL]).duplicate()
+	if int(look["radius"]) < 0:
+		look["radius"] = int(round(_cell * 0.5))
+	return look
+
+
 func _restyle() -> void:
-	var path: String = _frame_selected if _selected else _frame_idle
-	_frame.texture = load(path)
+	var look := _look_of(_frame_selected if _selected else _frame_idle)
+	_frame.add_theme_stylebox_override("panel", _frame_style(
+		Color(0, 0, 0, 0), Color(look["edge"]), int(look["width"]), int(look["radius"])))
 	var tint := COLOR_IDLE
 	if not _enabled:
 		tint = COLOR_DISABLED
@@ -188,3 +203,18 @@ func _gui_input(event: InputEvent) -> void:
 		elif mb.button_index == MOUSE_BUTTON_RIGHT:
 			alt_pressed.emit()
 			accept_event()
+
+
+static func _frame_style(fill: Color, edge: Color, width: int, radius: int) -> StyleBoxFlat:
+	## A plain drawn frame: a fill, a line round it, rounded corners if asked for.
+	##
+	## Six lines of its own rather than a call into UiKit. This is a leaf widget that the
+	## dungeon builds dozens of before anything else is up, and reaching from here into the
+	## screen kit — which reaches back into ItemSlot — was enough to stop the game booting at
+	## all, with no error to show for it. A StyleBoxFlat is not worth a dependency.
+	var box := StyleBoxFlat.new()
+	box.bg_color = fill
+	box.border_color = edge
+	box.set_border_width_all(width)
+	box.set_corner_radius_all(radius)
+	return box

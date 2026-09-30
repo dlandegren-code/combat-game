@@ -14,7 +14,7 @@ extends Control
 ## slowly, and the experience from adventuring in general trickles wherever you point it. The
 ## numbers are all in progression.gd; this file is the buttons.
 
-const ScreenPanelScript := preload("res://scripts/screen_panel.gd")
+const ScreenPanelScript := preload("res://scripts/ui_kit.gd")
 const ProgressionScript := preload("res://scripts/progression.gd")
 const CharacterClassesScript := preload("res://scripts/character_classes.gd")
 const SaveGameScript := preload("res://scripts/save_game.gd")
