@@ -58,7 +58,9 @@ func setup(world: Node3D) -> void:
 	_find_blades(world)
 
 
-func add_chimney_smoke(at: Vector3, amount: int = 14) -> void:
+func add_chimney_smoke(at: Vector3, amount: int = 14, tint := Color(0.9, 0.9, 0.93)) -> void:
+	## `tint` is the smoke's colour as it leaves the chimney; the default is woodsmoke. The
+	## witch's hut passes a sickly green.
 	var smoke := GPUParticles3D.new()
 	smoke.name = "ChimneySmoke"
 	smoke.position = at
@@ -77,13 +79,16 @@ func add_chimney_smoke(at: Vector3, amount: int = 14) -> void:
 	mat.scale_min = 0.5
 	mat.scale_max = 1.1
 	mat.scale_over_velocity_min = 0.0
-	mat.color = Color(0.86, 0.86, 0.89, 0.30)
-	mat.color_ramp = _fade_ramp(Color(0.9, 0.9, 0.93, 0.34))
+	mat.color = Color(tint.r - 0.04, tint.g - 0.04, tint.b - 0.04, 0.30)
+	mat.color_ramp = _fade_ramp(Color(tint.r, tint.g, tint.b, 0.34))
 	smoke.process_material = mat
 	add_child(smoke)
 
 
-func add_campfire(at: Vector3) -> void:
+func add_campfire(at: Vector3, tint := Color(1.0, 0.62, 0.22, 0.85),
+		light_colour := Color(1.0, 0.66, 0.34)) -> void:
+	## `tint` colours the flame and `light_colour` the glow it throws; the defaults are a wood
+	## fire. A cauldron passes green for both.
 	var fire := GPUParticles3D.new()
 	fire.name = "Campfire"
 	fire.position = at + Vector3(0, 0.25, 0)
@@ -98,7 +103,7 @@ func add_campfire(at: Vector3) -> void:
 	mat.gravity = Vector3(0.2, 0.6, 0)
 	mat.scale_min = 0.4
 	mat.scale_max = 0.9
-	mat.color_ramp = _fade_ramp(Color(1.0, 0.62, 0.22, 0.85))
+	mat.color_ramp = _fade_ramp(tint)
 	fire.process_material = mat
 	add_child(fire)
 
@@ -106,7 +111,7 @@ func add_campfire(at: Vector3) -> void:
 	var light := OmniLight3D.new()
 	light.name = "CampfireLight"
 	light.position = at + Vector3(0, 0.8, 0)
-	light.light_color = Color(1.0, 0.66, 0.34)
+	light.light_color = light_colour
 	light.light_energy = 2.4
 	light.omni_range = 9.0
 	light.shadow_enabled = false

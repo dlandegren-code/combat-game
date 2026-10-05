@@ -9,6 +9,6 @@ weapon_sound = 1
 item_type = 0
 equip_slot = 1
 handedness = 1
-attack_bonus = 2
+attack_bonus = 4
 damage_bonus = 2
 durability = 12

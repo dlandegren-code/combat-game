@@ -62,7 +62,7 @@ const EQUIP_DON := 3     ## body armour — not really a thing you do mid-fight
 ## What a ruined weapon costs to use. Steep on purpose: with these a broken weapon is worse
 ## than bare hands for hitting — but bare hands cannot parry at all, and a broken weapon can.
 ## That trade is the point, and it is why dropping one is a decision rather than a formality.
-const BROKEN_HIT_PENALTY := 4
+const BROKEN_HIT_PENALTY := 8   ## d20 scale
 const BROKEN_DAMAGE_PENALTY := 2
 
 ## What lock this opens, for a KEY. Matched against LootContainer.key_id, so a key is not a
@@ -73,6 +73,7 @@ const BROKEN_DAMAGE_PENALTY := 2
 ## it belongs to not existing yet.
 @export var key_id: String = ""
 
+## Added to the wielder's attack skill on the d20 scale: +2 is ten percentage points.
 @export var attack_bonus: int = 0
 @export var damage_bonus: int = 0
 @export var durability: int = 10
@@ -95,7 +96,8 @@ const DEFAULT_THROW_RANGE := 2
 ## Defense properties granted while this item is equipped
 @export var is_shield: bool = false    ## Allows parrying ranged attacks
 @export var parry_ranged: bool = false ## Skill/artifact that allows parrying ranged attacks
-## Added to the parry roll while this is held in either hand (Combatant.get_parry_skill).
+## Added to the parry skill (d20 scale) while this is held in either hand
+## (Combatant.get_parry_skill).
 ## Only the Parry stance reads it — a dodging character gets nothing from a shield, since the
 ## dodge roll never consults equipment.
 @export var parry_bonus: int = 0
@@ -169,11 +171,11 @@ const VALUE_BASE := {
 	ItemType.SHIELD: 16, ItemType.ARMOR: 20, ItemType.HELMET: 14, ItemType.LEGS: 14,
 	ItemType.KEY: 0,
 }
-const VALUE_PER_ATTACK := 8
+const VALUE_PER_ATTACK := 4     ## per point on the d20 (5%), so +2 is worth one old point
 const VALUE_PER_DAMAGE := 8
 const VALUE_PER_ARMOUR := 12
 const VALUE_PER_RESISTANCE := 1
-const VALUE_PER_PARRY := 6
+const VALUE_PER_PARRY := 3      ## d20 points, as attack
 const VALUE_PER_HEAL := 2
 const VALUE_PER_ARROW := 1
 ## Reach is worth something, but a longbow reaches 200 squares and a shortbow 60 — priced per

@@ -16,6 +16,7 @@ extends Control
 
 const ScreenPanelScript := preload("res://scripts/ui_kit.gd")
 const ProgressionScript := preload("res://scripts/progression.gd")
+const D20Script := preload("res://scripts/d20.gd")
 const CharacterClassesScript := preload("res://scripts/character_classes.gd")
 const SaveGameScript := preload("res://scripts/save_game.gd")
 
@@ -86,7 +87,7 @@ func _add_skill(column: Node, member, entry: Dictionary) -> void:
 	var banked: int = member.skill_xp_for(field)
 	var capped: bool = current >= ProgressionScript.SKILL_CAP
 
-	var headline: String = "%s  %d" % [entry["label"], current]
+	var headline: String = "%s  %d (%d%%)" % [entry["label"], current, D20Script.chance(current)]
 	if capped:
 		headline += "   ·   trained as far as it goes"
 	else:

@@ -142,13 +142,14 @@ const CHEST_LOOT := [
 const CHEST_SCALE_MUL := 2.0
 
 ## Whether the chest starts shut AND locked. True: getting in means the boss's key or a lockpick
-## roll against CHEST_LOCK_DIFFICULTY. Flip to false to open and shut it freely, which is what
+## roll against CHEST_LOCK_PENALTY. Flip to false to open and shut it freely, which is what
 ## it was set to briefly while the lid animation was being looked at.
 const CHEST_STARTS_LOCKED := true
 
 const CHEST_KEY_ID := "dungeon_chest"
-## Beatable on a 1-5 die by a lockpick skill of 3 or better, and never by anybody untrained.
-const CHEST_LOCK_DIFFICULTY := 8
+## Taken off the lockpick skill before the d20 is read: the archer's starting 9 picks it on a
+## 5 or less (25%), and nobody untrained gets to roll at all.
+const CHEST_LOCK_PENALTY := 4
 
 const SCALE := 0.8                 # dial the whole environment's size here
 const TILE := 5.0 * SCALE          # world units per tile (= 4.0 at 0.8)
@@ -556,7 +557,7 @@ func _build_containers() -> void:
 	chest.open_verb = "Open"
 	chest.locked = CHEST_STARTS_LOCKED
 	chest.key_id = CHEST_KEY_ID
-	chest.lock_difficulty = CHEST_LOCK_DIFFICULTY
+	chest.lock_penalty = CHEST_LOCK_PENALTY
 	chest.loot = CHEST_LOOT
 	chest.loot_rolls = 2
 	# Added last: _ready() builds the geometry, and it must not run before the fields above
@@ -583,7 +584,7 @@ func _build_containers() -> void:
 		_spot_beside(5.0 + i * 2.0, wall_z, "stores")
 
 	# And the crates in the north-east corner, where the gear is. Unlocked, so no key_id and no
-	# lock_difficulty: they open to anyone who walks over and looks.
+	# lock_penalty: they open to anyone who walks over and looks.
 	for entry in CRATES:
 		var crate = LootContainerScript.new()
 		crate.configure(Vector3(entry["x"], FLOOR_Y, entry["z"]), entry["yaw"],

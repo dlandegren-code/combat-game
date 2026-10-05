@@ -22,6 +22,7 @@ class_name LootContainer
 ## nothing until it is searched.
 
 const PropSfx := preload("res://scripts/fx/prop_sfx.gd")
+const D20Script := preload("res://scripts/d20.gd")
 
 ## Emitted when this container has been opened and is ready to be looted from. The loot window
 ## listens; nothing in the game rules does.
@@ -57,8 +58,9 @@ var locked := false
 ## The key_id an ItemResource must carry to open this. Empty means no key was ever cut for it
 ## and a lockpick is the only way in.
 var key_id := ""
-## What a lockpick roll has to beat. See _try_unlock.
-var lock_difficulty := 8
+## How much harder than an ordinary task this lock is: taken off the picker's lockpick skill
+## before the d20 is read. See _try_unlock.
+var lock_penalty := 4
 ## The loot TABLE: resource paths to draw from, and how many draws. Paths rather than loaded
 ## resources so a container costs nothing until somebody opens it.
 var loot: Array = []
@@ -214,21 +216,22 @@ func _try_unlock(actor) -> bool:
 		_say(actor, "Locked!")
 		return false
 
-	# The same 1-5 die every other contested roll in the game uses, so picking a lock reads
-	# like a parry rather than like its own little subsystem.
-	var die: int = _rng.randi_range(1, 5)
-	# Trying a lock is how lockpicking is learned, and a lock that springs on a 5 or sticks on
-	# a 1 teaches more than the ones in between (Progression).
+	# The same d20 every other roll in the game uses, read the same way — under the skill, less
+	# what this lock costs — so picking a lock reads like a parry rather than like its own
+	# little subsystem.
+	var die: int = _rng.randi_range(1, D20Script.SIDES)
+	var target: int = skill - lock_penalty
+	# Trying a lock is how lockpicking is learned, and a lock that springs on a 1 or jams on a
+	# 20 teaches more than the ones in between (Progression).
 	if actor != null and actor.has_method("award_skill_use"):
-		actor.award_skill_use("lockpick_skill", die == 5 or die == 1)
-	var roll: int = skill + die
-	if roll < lock_difficulty:
+		actor.award_skill_use("lockpick_skill", D20Script.is_decisive(die))
+	if not D20Script.succeeds(die, target):
 		PropSfx.door_locked(get_parent(), _sound_at())
-		_say(actor, "Lock holds! (%d vs %d)" % [roll, lock_difficulty])
+		_say(actor, "Lock holds! (rolled %d, needed %d or less)" % [die, maxi(1, target)])
 		return false
 	locked = false
 	PropSfx.lock_open(get_parent(), _sound_at())
-	_say(actor, "Picked it! (%d vs %d)" % [roll, lock_difficulty])
+	_say(actor, "Picked it! (rolled %d, needed %d or less)" % [die, maxi(1, target)])
 	return true
 
 

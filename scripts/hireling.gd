@@ -24,9 +24,10 @@ const CharacterClassesScript := preload("res://scripts/character_classes.gd")
 const CharacterDataScript := preload("res://scripts/character_data.gd")
 const ProgressionScript := preload("res://scripts/progression.gd")
 
-## Skill levels a hireling has for each level above the first. Two, so a level 3 hire is four
-## points better than a raw recruit — worth the money, and not worth more than the hero.
-const SKILLS_PER_LEVEL := 2
+## Skill levels a hireling has for each level above the first. Five d20 points (25 percentage
+## points spread over their class skills), so a level 3 hire is ten points better than a raw
+## recruit — worth the money, and not worth more than the hero.
+const SKILLS_PER_LEVEL := 5
 
 ## How far from the party's own level the camp's people range. Below, because a cheap body to
 ## stand in front of an archer is a real thing to want; above, because the point of hiring is

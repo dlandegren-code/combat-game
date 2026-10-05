@@ -6,6 +6,7 @@ class_name Combatant
 ## their control-specific behaviour (input vs AI).
 
 const ProgressionScript := preload("res://scripts/progression.gd")
+const D20Script := preload("res://scripts/d20.gd")
 
 const GRID_SIZE := 2.0
 ## Fallback play bound, used only when there is no DungeonRoom to ask — see _is_in_arena.
@@ -58,9 +59,9 @@ const BLOOD_REFERENCE_DAMAGE := 7.0
 const SWING_REFERENCE_DAMAGE := 7.0
 const SWING_WINDUP := 0.14
 
-## Attacker skill worth a full-size shower of parry sparks. Skill rather than damage, because
+## Attacker skill (d20 scale) worth a full-size shower of parry sparks. Skill rather than damage, because
 ## a parried blow never rolls its damage — see _parry_sparks.
-const PARRY_REFERENCE_SKILL := 10.0
+const PARRY_REFERENCE_SKILL := 14.0
 
 ## The 8 grid steps (cardinals + diagonals) used by every path search.
 const GRID_DIRS := [
@@ -71,29 +72,28 @@ const GRID_DIRS := [
 ]
 
 ## Partial cover (ranged & thrown only): a short obstacle between shooter and target.
-const COVER_DEFENSE_BONUS := 3    ## added to an active dodge/parry roll when in cover
+const COVER_DEFENSE_BONUS := 5    ## added to an active dodge/parry skill when in cover (d20 scale)
 
 ## Hiding: a sneak who has STOPPED beside something gets one roll to be overlooked. See
-## _update_hiding and get_hide_total.
+## _update_hiding and get_hide_skill.
 ##
-## Eyes are better at this than ears, so the same character is a point worse at going unnoticed
-## than at going unheard — and lying down behind the thing is worth two, which is the difference
-## between a hero who is usually spotted and one who usually is not. Against the standard
-## perception of 7 that puts a standing hero at 40% and a prone one at 80%, a wizard at 20/60
-## and a ranger at 60/100: only the character built for it, flat on the floor, is a sure thing,
-## and any enemy with a perception above 7 beats even that.
-const HIDE_EXPOSURE_PENALTY := 1
-const HIDE_PRONE_BONUS := 2
+## Eyes are better at this than ears, so the same character is two points worse at going
+## unnoticed than at going unheard — and lying down behind the thing is worth four. Against a
+## goblin's perception of 10 that has a goblin spotting a standing ranger about 36% of the time
+## and a prone one 27%, and a wizard 42% / 34%: lying flat matters, but nobody is ever a sure
+## thing, because the listener's die can always come up a 1.
+const HIDE_EXPOSURE_PENALTY := 2
+const HIDE_PRONE_BONUS := 4
 
 ## Movement is divided by this while sneaking — see get_move_range.
 const SNEAK_MOVE_DIVISOR := 2
-const COVER_SAVE_CHANCE := 25     ## % chance the obstacle eats the shot when we can't actively defend
+const COVER_SAVE_TARGET := 5      ## d20 <= this (25%): the obstacle eats the shot when we can't actively defend
 const COVER_RAY_DROP := 0.6       ## metres below eye-line for the "does a short prop block us" ray
 
 ## Bonus to a Protection-stance parry roll. Melee only, on purpose: planting your feet and
 ## keeping the guard up is worth something against a blade in front of you and nothing at all
 ## against an arrow, which is what stops Protection being the strictly-best stance.
-const GUARD_PARRY_BONUS := 2
+const GUARD_PARRY_BONUS := 4
 
 ## Reach of a Protection-stance guardian's zone, in tiles. One square by default, which is
 ## exactly the ring _is_adjacent already covers — so an enemy stopped at the edge of the zone
@@ -106,7 +106,7 @@ const GUARD_RADIUS := 1
 const GUARD_MOVE_DIVISOR := 2
 
 ## Dual-wield free off-hand attack (see _do_melee_attack).
-const OFFHAND_HIT_PENALTY := 5    ## to-hit penalty for the off-hand strike (0 with dual_wield_skill)
+const OFFHAND_HIT_PENALTY := 8    ## to-hit penalty for the off-hand strike (0 with dual_wield_skill)
 const OFFHAND_DELAY := 0.3        ## beat between the main hit and the off-hand follow-up
 
 ## Sound family (ItemResource.WeaponSound) of the hand currently mid-strike, or -1 for a hand
@@ -135,24 +135,30 @@ var _has_charged := false
 ## exactly as it did; only something that explicitly asks for another type gets other rules.
 enum DamageType { PHYSICAL, FIRE }
 
-## Hit points per point of stamina. Set so the old hand-authored totals fall out of whole
-## stamina scores: 4 stamina = the 20 hp a hero used to be given outright, 6 = the boss's 30.
-const HP_PER_STAMINA := 5
-
-## Mana per point of willpower, matching HP_PER_STAMINA so the two pools read on one scale.
-## Only characters with `can_cast` get a pool at all; for everyone else it is 0.
-const MANA_PER_WILLPOWER := 5
-
-## Defence debt per point of stamina — how many ticks of "already spent reacting" a character
-## can carry before the guard drops (see defense_debt / is_overwhelmed). Stamina because this
-## is endurance, the same attribute behind HP_PER_STAMINA.
+## Attributes are on the human 3-18 scale (10 is unremarkable, 18 is as good as people get,
+## and monsters may go past it). The derived numbers below are written per THREE points so they
+## read as whole numbers off that scale.
 ##
-## At 1 the cast reads boss 6, hero 4, wizard 3, goblin 2. Kept here after playtesting: a
+## Hit points: five per three stamina, rounded. Set so the old hand-authored totals still fall
+## out: a hero's stamina 13 is 22 hp, a goblin's 6 is 10, the boss's 18 is 30. Read it through
+## hp_for_stamina() — the town and the sheets need the same number without a body to ask.
+const HP_PER_3_STAMINA := 5
+
+## Mana per three willpower, matching the hit-point rate so the two pools read on one scale: a
+## wizard's willpower 15 is 25 mana. Only characters with `can_cast` get a pool at all; for
+## everyone else it is 0. Read it through mana_for_willpower().
+const MANA_PER_3_WILLPOWER := 5
+
+## Stamina per tick of defence debt — how many ticks of "already spent reacting" a character
+## can carry before the guard drops (see defense_debt / is_overwhelmed). Stamina because this
+## is endurance, the same attribute behind the hit points.
+##
+## At 3 the cast reads boss 6 (stamina 18), hero 4 (13), wizard 3 (10), goblin 2 (6). Kept here after playtesting: a
 ## guard drops after only a handful of reactions, which reads as a real limit on how much one
 ## character can cover at once. Doubling it (boss 12, hero 8) puts the threshold out of reach
 ## in a four-enemy fight, because the advancing clock drains debt about as fast as parries and
 ## interceptions add it — the mechanic technically works but never visibly fires.
-const DEBT_PER_STAMINA := 1
+const STAMINA_PER_DEBT := 3
 ## How near the limit counts as strained. Only the initiative readout uses it, to warn amber
 ## before the guard actually drops rather than after.
 const DEBT_WARN_MARGIN := 2
@@ -168,10 +174,10 @@ const DEBT_WARN_MARGIN := 2
 ## A square is one combatant's fighting space — reckon it at 1.5 m if you are converting a
 ## real weapon's range (a 300 m longbow is 200 squares).
 const RANGE_FREE_TILES := 10       ## shots out to here are clean
-const RANGE_PENALTY_NEAR := 3      ## beyond the free range, out to half the weapon's range
-const RANGE_PENALTY_FAR := 6       ## beyond half the weapon's range
+const RANGE_PENALTY_NEAR := 4      ## beyond the free range, out to half the weapon's range
+const RANGE_PENALTY_FAR := 8       ## beyond half the weapon's range
 ## Shooting at someone already in melee with one of ours: you are picking a gap in a scrum.
-const ENGAGED_PENALTY := 5
+const ENGAGED_PENALTY := 6
 ## Shooting at someone lying down: a much smaller silhouette, and a still one behind whatever
 ## is on the floor between you.
 ##
@@ -179,12 +185,22 @@ const ENGAGED_PENALTY := 5
 ## gap between two people. MISSILES ONLY — being down is still a disaster in melee, where the
 ## dodge penalty in _attempt_defense goes on applying. A trip is now a genuine trade rather
 ## than a strict win: it wrecks its victim at arm's length and shelters them from the archers.
-const PRONE_TARGET_PENALTY := 4
+const PRONE_TARGET_PENALTY := 5
+## Dodging from the floor. Melee and missiles alike — see _attempt_defense.
+const PRONE_DODGE_PENALTY := 4
 
 ## Time to get back on your feet. Going DOWN is free — dropping is not something you have to
 ## find time for — but getting up is a real part of a turn, and paying for it is what makes
 ## lying down a decision rather than a permanent upgrade against archers.
 const STAND_UP_COST := 1
+
+## Strength per tile of shove, before the target's weight is taken off. Three, so the old
+## distances survive the move to the 3-18 scale: an average 10 shoves a goblin (weight 1) two
+## tiles, the boss's 16 shoves it four.
+const STRENGTH_PER_PUSH_TILE := 3
+
+## Willpower per point of spell damage — see get_spell_power.
+const SPELL_POWER_DIVISOR := 3
 
 ## SKILL EXPERIENCE EARNED THIS QUEST, by CombatantStats field.
 ##
@@ -227,18 +243,18 @@ var move_range: int = 4
 @export var attack_cost: int = 2
 @export var armor: int = 0
 @export var physical_resistance: int = 0  ## percentage 0-100
-@export var attack_skill: int = 5       ## used in attack vs defense rolls
-@export var parry_skill: int = 4        ## parry defense skill
+@export var attack_skill: int = 13      ## d20 roll-under: 13 hits on 1-13 (65%) before the defence
+@export var parry_skill: int = 11       ## parry defense skill (d20 roll-under)
 ## No dodge_skill: dodging is agility (see get_dodge_skill), so there is one number to tune
 ## rather than two that can contradict each other.
 ## Ids are load-bearing and append-only — see Stance for the catalogue and the warning.
 @export_enum("Parry", "Dodge", "Protection") var defensive_option: int = 0
-@export var shove_skill: int = 5
-@export var trip_skill: int = 4
+@export var shove_skill: int = 13
+@export var trip_skill: int = 11
 @export var shove_cost: int = 2
 @export var trip_cost: int = 2
-@export var dual_wield_skill: bool = false  ## trained off-hand: no -5 penalty on the free off-hand attack
-@export var ranged_skill: int = 3       ## used for bow/distance attacks
+@export var dual_wield_skill: bool = false  ## trained off-hand: no OFFHAND_HIT_PENALTY on the free off-hand attack
+@export var ranged_skill: int = 9       ## used for bow/distance attacks
 @export var ranged_cost: int = 3
 @export var ammo: int = 0
 @export var max_ammo: int = 0
@@ -246,13 +262,13 @@ var move_range: int = 4
 const ARROW_BUNDLE_ITEM := "res://resources/items/arrow_bundle.tres"
 ## Moving quietly, and hearing somebody who is. See CombatantStats for what the numbers mean
 ## and roll_stealth / is_unheard_by for how they meet.
-@export var stealth_skill: int = 3
-@export var perception_skill: int = 7
-## What an unremarkable attribute is: CombatantStats defaults every one of them to this, so it
-## is the line an attribute is above or below rather than a number of its own. Read by
-## get_stealth_skill to turn agility into a bonus.
-const AVERAGE_ATTRIBUTE := 3
-@export var throw_skill: int = 3        ## used for thrown weapon attacks
+@export var stealth_skill: int = 9
+@export var perception_skill: int = 10
+## What an unremarkable attribute is on the 3-18 scale: CombatantStats defaults every one of
+## them to this, so it is the line an attribute is above or below rather than a number of its
+## own. Read by get_stealth_skill to turn agility into a bonus.
+const AVERAGE_ATTRIBUTE := 10
+@export var throw_skill: int = 9        ## used for thrown weapon attacks
 ## One time unit — a throw is a single quick action, cheaper than a bow shot (which has to
 ## be nocked and drawn) and cheaper than a melee exchange. Note you also give up the weapon,
 ## so the real price is fetching it back off the floor.
@@ -261,7 +277,7 @@ const AVERAGE_ATTRIBUTE := 3
 ## Time to work a door, a chest or a lever. One tick: cheaper than a swing, because throwing a
 ## door open is not meant to be a decision — it is meant to be the thing you do on the way.
 @export var interact_cost: int = 1
-## Trade skill, not a combat one: added to a 1-5 roll against a lock's difficulty.
+## Trade skill, not a combat one: a d20 roll under this, less the lock's penalty.
 ##
 ## ZERO MEANS UNTRAINED, and untrained does not roll at all — a character with no idea how a
 ## lock works does not get lucky with one. That is what keeps a locked chest a real obstacle
@@ -296,16 +312,18 @@ const AVERAGE_ATTRIBUTE := 3
 ## `intelligence` and `charisma` are the two that still drive nothing; they are carried and
 ## shown so the sheet has a complete block.
 @export_group("Attributes")
-## Shove distance and knock-back resistance (_try_shove / _apply_push).
-@export var strength: int = 3
-## The dodge roll, one-for-one (get_dodge_skill).
-@export var agility: int = 3
-## Max hit points, HP_PER_STAMINA each (_derive_stats).
-@export var stamina: int = 3
-@export var intelligence: int = 3
-## Spell power (get_spell_power) and the mana pool, MANA_PER_WILLPOWER each (_derive_stats).
-@export var willpower: int = 3
-@export var charisma: int = 3
+## All on the 3-18 human scale, 10 being average (AVERAGE_ATTRIBUTE). Monsters may exceed 18.
+## Shove distance, STRENGTH_PER_PUSH_TILE per tile (_try_shove).
+@export var strength: int = 10
+## The dodge skill, one-for-one (get_dodge_skill): agility 14 dodges on a 14 or less.
+@export var agility: int = 10
+## Max hit points (hp_for_stamina) and defence debt (STAMINA_PER_DEBT).
+@export var stamina: int = 10
+@export var intelligence: int = 10
+## Spell skill and spell power (get_spell_skill / get_spell_power) and the mana pool
+## (mana_for_willpower).
+@export var willpower: int = 10
+@export var charisma: int = 10
 ## Body mass, used by shove and trip rather than shown as an attribute.
 @export var weight: int = 2
 
@@ -318,15 +336,19 @@ var is_prone: bool = false
 ## per-move one — see set_sneaking and SneakAbility — so the player picks it once and every step
 ## after is rolled for.
 var sneaking: bool = false
-## The last stealth roll made, and so how quiet this character's current move turned out to be.
-## Meaningless unless `sneaking`. See roll_stealth.
-var _stealth_roll: int = 0
+## The die of the last stealth roll made, and so how quiet this character's current move turned
+## out to be. Meaningless unless `sneaking`. See roll_stealth.
+var _stealth_die: int = 0
+## Each listener's perception die against the current stealth / hiding attempt, by instance id.
+## Cleared whenever the sneak rolls again. See _listener_die.
+var _heard_dice: Dictionary = {}
+var _seen_dice: Dictionary = {}
 
 ## Set while stopped beside cover with a sneak on, and cleared by the first step away.
 ## See _update_hiding.
 var _hiding: bool = false
 ## The die rolled on going to ground, kept APART from the skill and the prone bonus so that
-## dropping flat improves the attempt without buying a fresh die. See get_hide_total.
+## dropping flat improves the attempt without buying a fresh die. See get_hide_skill.
 var _hide_die: int = 0
 ## An animation held on purpose while nothing else is happening — see hold_pose. Empty means
 ## the usual walk/idle driver has the character.
@@ -582,10 +604,21 @@ func _derive_stats() -> void:
 	##
 	## Both pools are set to full here. That is fine at spawn but means this must NOT be called
 	## again mid-fight, or changing an attribute would heal and refill as a side effect.
-	max_hp = maxi(1, stamina * HP_PER_STAMINA)
+	max_hp = hp_for_stamina(stamina)
 	hp = max_hp
-	max_mana = maxi(0, willpower * MANA_PER_WILLPOWER) if can_cast else 0
+	max_mana = mana_for_willpower(willpower) if can_cast else 0
 	mana = max_mana
+
+
+static func hp_for_stamina(sta: int) -> int:
+	## The one formula for a hit-point pool. Static so the town, the party sheet and the class
+	## picker can price a character who has no body yet. See HP_PER_3_STAMINA.
+	return maxi(1, roundi(sta * HP_PER_3_STAMINA / 3.0))
+
+
+static func mana_for_willpower(wil: int) -> int:
+	## The caster's pool. Callers gate on can_cast themselves. See MANA_PER_3_WILLPOWER.
+	return maxi(0, roundi(wil * MANA_PER_3_WILLPOWER / 3.0))
 
 
 ## Restore the armor/resistance bonuses of already-equipped gear after a stat block
@@ -1921,15 +1954,19 @@ func take_damage(amount: int, attacker_skill: int = 0, is_ranged: bool = false,
 
 
 func _attempt_defense(attacker_skill: int, is_ranged: bool = false, attacker: Node = null) -> Dictionary:
-	# The attacker's die is rolled here, on the defender, so this is where it gets handed back
-	# to them: their ability awards its experience once the swing has finished resolving, and
-	# by then this is the only place that knows whether it was a critical.
-	var attack_die := randi_range(1, 5)
+	## Resolve an incoming attack as a d20 CONTEST (see D20): the attacker rolls under their
+	## skill, we roll under our defence, a success beats a failure and between two successes
+	## the higher roll wins, ties to us. Returns {defended, attack_die, defense_die, missed}.
+	##
+	## The attacker's die is rolled here, on the defender, so this is where it gets handed back
+	## to them: their ability awards its experience once the swing has finished resolving, and
+	## by then this is the only place that knows whether it was a critical.
+	var attack_die := D20Script.roll()
 	if attacker != null and attacker.has_method("note_skill_die"):
 		attacker.note_skill_die(attack_die)
-	var attack_roll := attacker_skill + attack_die
-	var effective_dodge: int = get_dodge_skill() - (2 if is_prone else 0)
-	var result := { "defended": false, "attack_roll": attack_roll, "defense_roll": 0 }
+	var effective_dodge: int = get_dodge_skill() - (PRONE_DODGE_PENALTY if is_prone else 0)
+	var result := { "defended": false, "missed": false, "attack_die": attack_die,
+		"attack_skill": attacker_skill, "defense_die": 0 }
 
 	# Partial cover: a short prop (pillar / vessel) on the line from the shooter hinders
 	# ranged & thrown attacks. It boosts an active dodge/parry, and — since even a
@@ -1937,6 +1974,15 @@ func _attempt_defense(attacker_skill: int, is_ranged: bool = false, attacker: No
 	# active defence is possible. Melee (is_ranged == false) is point-blank, so cover is off.
 	var has_cover: bool = is_ranged and attacker != null and _has_partial_cover_from(attacker)
 	var cover_bonus: int = COVER_DEFENSE_BONUS if has_cover else 0
+
+	# A blow that was never going to land is a miss, whatever we do about it. Checked before
+	# anything else so a fumbled swing costs the defender no time, no weapon wear and no
+	# defence debt — the defender did nothing, so nothing is charged for it.
+	if not D20Script.succeeds(attack_die, attacker_skill):
+		_show_defense_result("Miss!")
+		result.defended = true
+		result.missed = true
+		return result
 
 	# Overwhelmed: too much of our next turn is already spent reacting, so there is no time
 	# left to put a blade or a shoulder in the way. This deliberately falls through to the
@@ -1960,15 +2006,16 @@ func _attempt_defense(attacker_skill: int, is_ranged: bool = false, attacker: No
 		# is_guarding(), not a bare stance check: the bonus, the zone that stops enemies, and
 		# the aura on the floor are three faces of one thing and must never disagree about
 		# whether the line is being held. Reading the stance directly let a guardian who was
-		# prone — or overwhelmed, or had lost their weapon — keep parrying at +2 while the
+		# prone — or overwhelmed, or had lost their weapon — keep parrying at +4 while the
 		# floor showed no zone at all.
 		var guard_bonus: int = GUARD_PARRY_BONUS if (is_guarding() and not is_ranged) else 0
 		# Parrying is using a skill, so it teaches like one. Awarded whether or not the parry
 		# lands: turning a blade and failing to turn it are both practice.
-		var parry_die := randi_range(1, 5)
+		var parry_die := D20Script.roll()
 		award_skill_use("parry_skill", is_crit(parry_die))
-		result.defense_roll = get_parry_skill() + parry_die + cover_bonus + guard_bonus
-		if result.defense_roll >= attack_roll:
+		result.defense_die = parry_die
+		var parry_total: int = get_parry_skill() + cover_bonus + guard_bonus
+		if not D20Script.active_wins(attack_die, attacker_skill, parry_die, parry_total):
 			if inventory and inventory.has_method("degrade_equipped_weapon"):
 				inventory.degrade_equipped_weapon()
 			_show_defense_result("Cover parry!" if has_cover else "Parry!")
@@ -1979,8 +2026,10 @@ func _attempt_defense(attacker_skill: int, is_ranged: bool = false, attacker: No
 	else:
 		if is_ranged and not _can_dodge_ranged():
 			return _resolve_cover_only(has_cover, result)
-		result.defense_roll = effective_dodge + randi_range(1, 5) + cover_bonus
-		if result.defense_roll >= attack_roll:
+		var dodge_die := D20Script.roll()
+		result.defense_die = dodge_die
+		if not D20Script.active_wins(attack_die, attacker_skill, dodge_die,
+				effective_dodge + cover_bonus):
 			_show_defense_result("Cover dodge!" if has_cover else "Dodge!")
 			_charge_defense_cost()
 			result.defended = true
@@ -1991,7 +2040,7 @@ func _resolve_cover_only(has_cover: bool, result: Dictionary) -> Dictionary:
 	## Reached when no active defence was possible. A target in partial cover still has a
 	## flat chance for the prop to swallow the shot ("Cover!"); this is passive, so unlike a
 	## dodge/parry it costs no time. Otherwise the hit lands.
-	if has_cover and randi_range(1, 100) <= COVER_SAVE_CHANCE:
+	if has_cover and D20Script.roll() <= COVER_SAVE_TARGET:
 		_show_defense_result("Cover!")
 		result.defended = true
 	return result
@@ -2154,7 +2203,8 @@ func _try_shove(target: Node) -> int:
 	if def_result.defended:
 		return -1
 
-	var push_tiles: int = max(1, strength - target.weight)
+	@warning_ignore("integer_division")
+	var push_tiles: int = max(1, strength / STRENGTH_PER_PUSH_TILE - target.weight)
 	var push_dir: Vector3 = (target.position - position)
 	push_dir.y = 0
 	if push_dir.length() < 0.01:
@@ -2251,8 +2301,9 @@ func defense_debt() -> int:
 
 
 func get_defense_debt_limit() -> int:
-	## Debt we can carry before the guard drops. See DEBT_PER_STAMINA.
-	return stamina * DEBT_PER_STAMINA
+	## Debt we can carry before the guard drops. See STAMINA_PER_DEBT.
+	@warning_ignore("integer_division")
+	return stamina / STAMINA_PER_DEBT
 
 
 func is_overwhelmed() -> bool:
@@ -2597,15 +2648,19 @@ func _is_engaged(target: Node) -> bool:
 	return false
 
 
-func get_spell_power() -> int:
-	## How hard a spell lands, the way attack_skill decides how hard a blade does. Willpower
-	## one-for-one for a caster, and 0 for everyone else — a fighter with a strong will is
-	## stubborn, not magical.
-	##
-	## Nothing casts yet, so this is currently only read by the character sheet. It exists as
-	## the single place a spell should ask, so that when spells arrive they cannot start
-	## inventing their own scaling.
+func get_spell_skill() -> int:
+	## The chance a spell flies true, the way attack_skill is a blade's: willpower one-for-one
+	## on the d20, so a wizard's 15 lands on 1-15 before the target's defence. 0 for a
+	## non-caster — a fighter with a strong will is stubborn, not magical.
 	return willpower if can_cast else 0
+
+
+func get_spell_power() -> int:
+	## How hard a spell lands: a third of willpower (willpower 15 is 5), so the scale matches
+	## a weapon's damage rather than the 3-18 attribute it comes from. Each spell adds its own
+	## bonus on top (see FireboltAbility.DAMAGE_BONUS). 0 for a non-caster.
+	@warning_ignore("integer_division")
+	return willpower / SPELL_POWER_DIVISOR if can_cast else 0
 
 
 func spend_mana(amount: int) -> bool:
@@ -2646,13 +2701,12 @@ func get_stealth_skill() -> int:
 	## Both halves earn their place. Creeping is a CRAFT, so the trained number leads and is the
 	## per-character dial. But it is a craft done with the body, so the nimble are better at it —
 	## which is what makes the ranger the best sneak in this party without anybody having to
-	## write it down: agility 7 against the soldier's 5 and the wizard's 3, on stealth 3 each,
-	## comes out 5 / 4 / 3.
+	## write it down: agility 16 against the soldier's 13 and the wizard's 10, on stealth 9 each,
+	## comes out 12 / 10 / 9.
 	##
-	## HALF the difference rather than all of it, because the attribute spread in this party is
-	## four points and a die is five: at full weight the ranger would never be heard and the
-	## wizard never missed, and the roll would stop being a roll. Halved, against a goblin's
-	## perception of 7, they get through on 80% / 60% / 40% of moves.
+	## HALF the difference rather than all of it, so a nimble body helps without making the
+	## trained skill an afterthought. Against a goblin's perception of 10 they go unheard on
+	## about 68% / 64% / 62% of moves, per goblin listening.
 	##
 	## Nothing WORN feeds it yet, and armour should — a man in plate has no business
 	## out-sneaking one in leather. ItemResource growing a stealth_penalty is where that goes,
@@ -2663,17 +2717,30 @@ func get_stealth_skill() -> int:
 
 
 func roll_stealth() -> int:
-	## Make one attempt at moving quietly, and remember it: skill + 1d5, the same roll the
-	## attack, the parry and the lockpick all make.
+	## Make one attempt at moving quietly, and remember the die: the sneak's half of the d20
+	## contest every listener then has with it (is_unheard_by).
 	##
 	## Remembered rather than returned to a caller, because the roll and the question are asked
 	## by different people at different times. The mover rolls as it sets off (_follow_path);
 	## the listeners ask on their own pulse, which may be a second later and may be several of
-	## them. One roll per move, checked by everybody who might have heard it.
-	var stealth_die := randi_range(1, 5)
-	award_skill_use("stealth_skill", is_crit(stealth_die))
-	_stealth_roll = get_stealth_skill() + stealth_die
-	return _stealth_roll
+	## them. One roll per move for the sneak, and one per move for each listener — see
+	## _listener_die, which is what stops a goblin re-rolling its ears every pulse until it
+	## hears something.
+	_stealth_die = D20Script.roll()
+	award_skill_use("stealth_skill", is_crit(_stealth_die))
+	_heard_dice.clear()
+	return _stealth_die
+
+
+func _listener_die(listener, rolls: Dictionary) -> int:
+	## The listener's perception die against the sneak's current attempt: rolled the first time
+	## that listener asks, then kept until the sneak rolls again. Without the memory a goblin
+	## standing next to a motionless hider would roll every pulse and be certain to notice them
+	## within a minute, which would make holding still the worst thing a sneak could do.
+	var key: int = listener.get_instance_id()
+	if not rolls.has(key):
+		rolls[key] = D20Script.roll()
+	return int(rolls[key])
 
 
 func is_unheard_by(listener) -> bool:
@@ -2687,13 +2754,15 @@ func is_unheard_by(listener) -> bool:
 	## anything asleep, so off a guard's nose there is nothing left to give you away but this
 	## roll.
 	##
-	## Ties go to the sneak, as they do to a lockpick (LootContainer._try_unlock): the roll with
-	## the die in it is the active attempt, and the flat number it beats is a difficulty.
+	## A d20 contest with the LISTENER as the active side: they have to succeed on their
+	## perception AND beat the sneak's roll. Ties go to the sneak, as a parry's do to the
+	## defender — noticing somebody is the thing that has to be made to happen.
 	if not sneaking or not _exploring():
 		return false
 	if listener == null or not ("perception_skill" in listener):
 		return false
-	return _stealth_roll >= listener.perception_skill
+	return not D20Script.active_wins(_listener_die(listener, _heard_dice),
+		listener.perception_skill, _stealth_die, get_stealth_skill())
 
 
 func has_cover_adjacent() -> bool:
@@ -2723,7 +2792,7 @@ func _update_hiding() -> void:
 	## is a creeping figure; one that has stopped beside something is part of the room.
 	##
 	## The die is rolled ONCE, on going to ground, and kept apart from the modifiers — see
-	## get_hide_total. Rolling the whole total here would turn dropping prone into a re-roll,
+	## get_hide_skill. Rolling the whole total here would turn dropping prone into a re-roll,
 	## and prone is free out of combat, so a player could lie down and get up until the number
 	## came out right.
 	var can_hide: bool = sneaking and is_alive and _exploring() and has_cover_adjacent()
@@ -2732,7 +2801,8 @@ func _update_hiding() -> void:
 	_hiding = can_hide
 	if not _hiding:
 		return
-	_hide_die = randi_range(1, 5)
+	_hide_die = D20Script.roll()
+	_seen_dice.clear()
 	_show_action_text("Hidden")
 
 
@@ -2740,12 +2810,12 @@ func is_hiding() -> bool:
 	return _hiding
 
 
-func get_hide_total() -> int:
+func get_hide_skill() -> int:
 	## What this character's hiding place is worth, recomputed live rather than stored: the
-	## skill, less what it costs to be looked straight at, plus the prone bonus, plus the die
-	## rolled on stopping. See HIDE_EXPOSURE_PENALTY.
+	## skill, less what it costs to be looked straight at, plus the prone bonus. The die rolled
+	## on stopping is kept apart (_hide_die) and read against this. See HIDE_EXPOSURE_PENALTY.
 	var prone_bonus: int = HIDE_PRONE_BONUS if is_prone else 0
-	return get_stealth_skill() - HIDE_EXPOSURE_PENALTY + prone_bonus + _hide_die
+	return get_stealth_skill() - HIDE_EXPOSURE_PENALTY + prone_bonus
 
 
 func is_unseen_by(listener) -> bool:
@@ -2757,12 +2827,14 @@ func is_unseen_by(listener) -> bool:
 	## chance at everything: the arc and the pillars decide whether there is anything to roll
 	## for, and only then does this decide how it went.
 	##
-	## Ties go to the hider, as they do to the sneak and the lockpick.
+	## The same contest as is_unheard_by, eyes for ears: the watcher has to win it, ties to the
+	## hider.
 	if not _hiding or not sneaking or not _exploring():
 		return false
 	if listener == null or not ("perception_skill" in listener):
 		return false
-	return get_hide_total() >= listener.perception_skill
+	return not D20Script.active_wins(_listener_die(listener, _seen_dice),
+		listener.perception_skill, _hide_die, get_hide_skill())
 
 
 func set_sneaking(on: bool) -> void:
@@ -3309,7 +3381,7 @@ func award_skill_use(field: String, crit: bool = false) -> void:
 	##
 	## The roof is the interesting part: ordinary uses stop paying after
 	## Progression.QUEST_USE_CAP of them in one quest, so there is nothing to be gained by
-	## standing in a cleared room shoving a wall. A critical — a natural 5 or 1 — pays more and
+	## standing in a cleared room shoving a wall. A critical — a natural 1 or 20 — pays more and
 	## ignores the roof, because an unusually good or unusually bad outcome is the one you
 	## actually learn from.
 	if not is_player_controlled or field == "":
@@ -3338,9 +3410,9 @@ func consume_skill_die() -> int:
 
 
 static func is_crit(die: int) -> bool:
-	## A natural 5 or a natural 1 on the game's one die. Success and failure both count: the
-	## point is that the outcome was decisive, not that it was good.
-	return die == 5 or die == 1
+	## A natural 1 or a natural 20 on the game's d20. Success and failure both count: the
+	## point is that the outcome was decisive, not that it was good. See D20.
+	return D20Script.is_decisive(die)
 
 
 func _die() -> void:

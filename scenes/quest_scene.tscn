@@ -146,8 +146,8 @@ floor_block_on_wall = false
 floor_snap_length = 0.0
 script = ExtResource("4_7y7b0")
 can_guard = true
-agility = 5
-stamina = 4
+agility = 13
+stamina = 14
 
 [node name="Mesh" type="MeshInstance3D" parent="Player" unique_id=1393056996]
 visible = false
@@ -324,16 +324,17 @@ script = ExtResource("4_7y7b0")
 initiative = 8
 character_name = "Archer"
 voice = "male_b"
-attack_skill = 4
-parry_skill = 2
+attack_skill = 11
+parry_skill = 7
 defensive_option = 1
-shove_skill = 2
-trip_skill = 3
+shove_skill = 7
+trip_skill = 9
+ranged_skill = 13
 ammo = 7
 max_ammo = 12
-lockpick_skill = 3
-agility = 7
-stamina = 4
+lockpick_skill = 9
+agility = 16
+stamina = 13
 
 [node name="Mesh" type="MeshInstance3D" parent="Player2" unique_id=1720006444]
 visible = false
@@ -370,14 +371,14 @@ script = ExtResource("4_7y7b0")
 initiative = 8
 character_name = "Wizard"
 voice = "male_c"
-attack_skill = 4
-parry_skill = 2
+attack_skill = 11
+parry_skill = 7
 defensive_option = 1
-shove_skill = 2
-trip_skill = 3
+shove_skill = 7
+trip_skill = 9
 can_cast = true
-intelligence = 5
-willpower = 5
+intelligence = 15
+willpower = 15
 
 [node name="Mesh" type="MeshInstance3D" parent="Wizard" unique_id=47098326]
 visible = false

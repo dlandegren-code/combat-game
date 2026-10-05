@@ -6,6 +6,11 @@ class_name CombatantStats
 ## overriding any per-instance @export values set in the scene.
 ##
 ## Defaults match the base Hero so a blank resource is a sensible starting point.
+##
+## SCALES. Every skill is a d20 roll-under number — 13 succeeds on 1-13, a 65% chance — and
+## contests are won by succeeding higher than the other side (see D20). Attributes are on the
+## human 3-18 scale with 10 as average; monsters may go past 18. Trained skills top out at
+## Progression.SKILL_CAP.
 
 @export var character_name: String = "Hero"
 @export var initiative: int = 10
@@ -21,46 +26,43 @@ class_name CombatantStats
 @export var move_cost_per_tile: int = 1
 
 @export_group("Melee")
-@export var attack_skill: int = 5
+@export var attack_skill: int = 13
 @export var attack_cost: int = 2
-@export var shove_skill: int = 5
+@export var shove_skill: int = 13
 @export var shove_cost: int = 2
-@export var trip_skill: int = 4
+@export var trip_skill: int = 11
 @export var trip_cost: int = 2
-@export var dual_wield_skill: bool = false  ## trained off-hand: no -5 penalty on the free off-hand attack
+@export var dual_wield_skill: bool = false  ## trained off-hand: no OFFHAND_HIT_PENALTY on the free off-hand attack
 
 @export_group("Defense")
 @export var armor: int = 0
 @export var physical_resistance: int = 0  ## percentage 0-100
-@export var parry_skill: int = 4
+@export var parry_skill: int = 11
 ## Ids are load-bearing and append-only — see Stance. Protection additionally needs can_guard.
 @export_enum("Parry", "Dodge", "Protection") var defensive_option: int = 0
 
 ## No ranged_range / throw_range here: reach is a property of the weapon, not the wielder.
 ## See ItemResource.ranged_range / throw_range and Combatant.get_ranged_range().
 @export_group("Ranged")
-@export var ranged_skill: int = 3
+@export var ranged_skill: int = 9
 @export var ranged_cost: int = 3
 @export var ammo: int = 0
 @export var max_ammo: int = 0
 
 @export_group("Stealth")
-## Crossing a room without being heard. Rolled — skill + 1d5, the same shape as every other
-## check in the game — on each move made while sneaking, and compared against the perception of
-## anybody in earshot. It is rolled a second way for HIDING, when a sneak stops beside something
-## and a goblin has a clear look at it. See Combatant.roll_stealth, Combatant.get_hide_total and
+## Crossing a room without being heard. Rolled on the d20 on each move made while sneaking, as
+## the defending side of a contest with the perception of anybody in earshot. It is rolled a second way for HIDING, when a sneak stops beside something
+## and a goblin has a clear look at it. See Combatant.roll_stealth, Combatant.get_hide_skill and
 ## Enemy.notices_intruders.
-@export var stealth_skill: int = 3
-## What it takes to hear somebody sneaking past: a flat difficulty, not a roll of its own.
-##
-## Flat on purpose. One roll is made per MOVE and compared against every listener's own number,
-## so a keen-eared goblin catches what a dull one misses without the same footstep being rolled
-## for twice. Pitched ABOVE the stealth skills so the die always matters: at 7 against a
-## stealth of 5 a ranger is heard on a 1, and a wizard in robes on anything but a 5.
-@export var perception_skill: int = 7
+@export var stealth_skill: int = 9
+## Hearing somebody sneaking past, and spotting somebody hidden. The ACTIVE side of the contest:
+## a listener has to succeed and roll higher than the sneak to notice them. Each listener rolls
+## once per sneaking move (Combatant._listener_die), so a keen-eared goblin catches what a dull
+## one misses without anybody re-rolling the same footstep every pulse.
+@export var perception_skill: int = 10
 
 @export_group("Throw")
-@export var throw_skill: int = 3
+@export var throw_skill: int = 9
 @export var throw_cost: int = 1     ## a throw is one quick action (see Combatant.throw_cost)
 
 @export_group("Interaction")
@@ -84,11 +86,11 @@ class_name CombatantStats
 ## What each attribute drives is documented on Combatant's Attributes group; intelligence and
 ## charisma currently drive nothing.
 @export_group("Attributes")
-@export var strength: int = 3
-@export var agility: int = 3
-@export var stamina: int = 3
-@export var intelligence: int = 3
-@export var willpower: int = 3
-@export var charisma: int = 3
+@export var strength: int = 10
+@export var agility: int = 10
+@export var stamina: int = 10
+@export var intelligence: int = 10
+@export var willpower: int = 10
+@export var charisma: int = 10
 @export var weight: int = 2
 @export var equip_cost: int = 1

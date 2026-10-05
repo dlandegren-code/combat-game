@@ -10,12 +10,13 @@ extends "res://scripts/abilities/ability.gd"
 ## still bat it aside and a pillar still gives cover. That keeps one set of defence rules
 ## rather than a separate one for magic.
 
-## Mana per cast. At 5, a 25-point pool (willpower 5) is five bolts a fight.
+## Mana per cast. At 5, a 25-point pool (willpower 15) is five bolts a fight.
 const MANA_COST := 5
 ## Tiles. Under Combatant.RANGE_FREE_TILES on purpose, so a bolt never takes the distance
 ## penalty — a spell's limit is its reach, not its accuracy falling off.
 const RANGE_TILES := 8
-## Added to the caster's spell power to get damage: a stronger will burns hotter.
+## Added to the caster's spell power (willpower / 3) to get damage: a stronger will burns
+## hotter. A wizard's willpower 15 makes a 7-point bolt.
 const DAMAGE_BONUS := 2
 
 

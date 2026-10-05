@@ -15,13 +15,24 @@ class_name CharacterData
 ## outside QuestScene should have to.
 
 const CombatantStatsScript := preload("res://scripts/combatant_stats.gd")
+const ProgressionScript := preload("res://scripts/progression.gd")
 
 ## Bumped whenever a stored field changes MEANING, so a save written by an older build can be
 ## recognised rather than silently misread. Adding a field with a sensible default does not
 ## need a bump; renaming one, or changing its units, does. Nothing reads saves yet (that is
 ## Phase 2), but the number is stamped from the first day so there is never a save on disk
 ## without one.
-const SCHEMA_VERSION := 1
+##
+## 2: skills moved to d20 roll-under and attributes to the 3-18 scale. A version-1 block is
+## converted on load by _migrate_stats_v1.
+const SCHEMA_VERSION := 2
+
+## The version-1 -> 2 conversion. Skills were added to a 1d5 and compared; they are now read
+## under a d20, so each old point is worth about two new ones plus a base. Attributes averaged
+## 3 and now average 10. Perception was a flat difficulty of 7 and is now an ordinary skill.
+const V1_SKILLS := ["attack_skill", "parry_skill", "shove_skill", "trip_skill", "ranged_skill",
+	"stealth_skill", "throw_skill", "lockpick_skill"]
+const V1_ATTRIBUTES := ["strength", "agility", "stamina", "intelligence", "willpower", "charisma"]
 
 ## What each class LOOKS like: the model wrapper scene under scenes/characters, and any
 ## property that wrapper needs set — the same ones the authored battlefield heroes were built
@@ -526,6 +537,8 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	data.mana = int(d.get("mana", VITALS_FULL))
 	data.ammo = int(d.get("ammo", VITALS_FULL))
 	data.stats = _stats_from_dict(d.get("stats", {}))
+	if int(d.get("schema", 1)) < 2:
+		_migrate_stats_v1(data.stats)
 	data.bag = []
 	for entry in d.get("bag", []):
 		data.bag.append(_item_from_dict(entry))
@@ -557,6 +570,22 @@ static func _stats_from_dict(d: Dictionary) -> Resource:
 		if name in s:
 			s.set(name, d[name])
 	return s
+
+
+static func _migrate_stats_v1(s: Resource) -> void:
+	## Lift a version-1 stat block onto the d20 / 3-18 scales — see V1_SKILLS. Zero stays zero
+	## for a skill (untrained lockpicking is still untrained), and the result is capped where
+	## training would have stopped. Skill xp pots are left as they are: they were earned, and
+	## the cheaper d20 levels simply spend them further.
+	for field in V1_SKILLS:
+		var old: int = int(s.get(field))
+		s.set(field, 0 if old <= 0 else mini(2 * old + 3, ProgressionScript.SKILL_CAP))
+	s.perception_skill = 10 if int(s.perception_skill) <= 7 else 10 + 2 * (int(s.perception_skill) - 7)
+	for field in V1_ATTRIBUTES:
+		var old: int = int(s.get(field))
+		# 3 -> 10 (average), 4 -> 13, 5 -> 15, 7 -> 18: three per point near the middle, easing
+		# off so the old extremes land at the top of the human range rather than past it.
+		s.set(field, clampi(roundi(10.0 + 2.6 * (old - 3) - 0.1 * (old - 3) * (old - 3)), 3, 18))
 
 
 static func _item_to_dict(item) -> Dictionary:

@@ -12,6 +12,7 @@ extends CanvasLayer
 ## Sized through UiScale, rebuilt on resize, hidden until the toolbar's Spells button opens it.
 
 const UiScaleScript := preload("res://scripts/ui_scale.gd")
+const D20Script := preload("res://scripts/d20.gd")
 
 const BACKPLATE := "res://assets/UI/SPR_FantasyWarrior_Box_Background_Shadowed.png"
 const DIVIDER := "res://assets/UI/FantasyMenus/SPR_FantasyMenus_Line_Horizontal_01.png"
@@ -252,8 +253,9 @@ func _process(_delta: float) -> void:
 		_header.text = ""
 		return
 	_title.text = who.character_name + " — Spells"
-	_header.text = "Spell Power %d     Mana %d / %d" % [
-		who.get_spell_power(), who.mana, who.max_mana] if who.can_cast else "Not a caster"
+	_header.text = "Spell Skill %d (%d%%)     Spell Power %d     Mana %d / %d" % [
+		who.get_spell_skill(), D20Script.chance(who.get_spell_skill()), who.get_spell_power(),
+		who.mana, who.max_mana] if who.can_cast else "Not a caster"
 	for e in _entries:
 		var ability = who.abilities[e["index"]]
 		var usable: bool = ability.can_use(who)

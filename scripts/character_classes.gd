@@ -6,7 +6,8 @@ class_name CharacterClasses
 ## The numbers are not invented. They are lifted from the three heroes that were hand-placed
 ## in the old single-scene battlefield, which were the only definition of a starting hero the
 ## game had — so a character created on the creation screen is the same character the test
-## scenario was balanced around.
+## scenario was balanced around — converted to the d20 roll-under skills and 3-18 attributes
+## (see D20 and CombatantStats).
 ##
 ## AUTHORING DATA, and only that. Nothing here is consulted after a character exists: the
 ## moment `make` hands back a CharacterData, that character owns its own stat block and
@@ -22,6 +23,7 @@ const CharacterDataScript := preload("res://scripts/character_data.gd")
 const CombatantStatsScript := preload("res://scripts/combatant_stats.gd")
 const CombatantScript := preload("res://scripts/combatant.gd")
 const InventoryComponentScript := preload("res://scripts/inventory_component.gd")
+const D20Script := preload("res://scripts/d20.gd")
 
 const CLASSES := {
 	"soldier": {
@@ -31,8 +33,8 @@ const CLASSES := {
 		"voice": "male_a",
 		"stats": {
 			"can_guard": true,
-			"agility": 5,
-			"stamina": 4,
+			"agility": 13,
+			"stamina": 14,
 		},
 		"items": [
 			"res://resources/items/rusty_sword.tres",
@@ -48,16 +50,17 @@ const CLASSES := {
 		"voice": "male_b",
 		"stats": {
 			"initiative": 8,
-			"attack_skill": 4,
-			"parry_skill": 2,
+			"attack_skill": 11,
+			"parry_skill": 7,
 			"defensive_option": 1,   ## Dodge — see Stance, where the ids are load-bearing
-			"shove_skill": 2,
-			"trip_skill": 3,
+			"shove_skill": 7,
+			"trip_skill": 9,
+			"ranged_skill": 13,
 			"ammo": 7,
 			"max_ammo": 12,
-			"lockpick_skill": 3,
-			"agility": 7,
-			"stamina": 4,
+			"lockpick_skill": 9,
+			"agility": 16,
+			"stamina": 13,
 		},
 		"items": [
 			"res://resources/items/ranger_dagger.tres",
@@ -74,14 +77,14 @@ const CLASSES := {
 		"voice": "male_c",
 		"stats": {
 			"initiative": 8,
-			"attack_skill": 4,
-			"parry_skill": 2,
+			"attack_skill": 11,
+			"parry_skill": 7,
 			"defensive_option": 1,   ## Dodge
-			"shove_skill": 2,
-			"trip_skill": 3,
+			"shove_skill": 7,
+			"trip_skill": 9,
 			"can_cast": true,
-			"intelligence": 5,
-			"willpower": 5,
+			"intelligence": 15,
+			"willpower": 15,
 		},
 		"items": [
 			"res://resources/items/ranger_dagger.tres",
@@ -151,13 +154,13 @@ static func summary_lines(class_id: String) -> Array:
 	if not CLASSES.has(class_id):
 		return []
 	var s: Resource = _stat_block(CLASSES[class_id])
-	var hp: int = maxi(1, s.stamina * CombatantScript.HP_PER_STAMINA)
-	var mana: int = (s.willpower * CombatantScript.MANA_PER_WILLPOWER) if s.can_cast else 0
+	var hp: int = CombatantScript.hp_for_stamina(s.stamina)
+	var mana: int = CombatantScript.mana_for_willpower(s.willpower) if s.can_cast else 0
+	var defence: int = s.agility if s.defensive_option == 1 else s.parry_skill
 	var lines: Array = [
-		"%d hp   melee %d   ranged %d   %s %d" % [
-			hp, s.attack_skill, s.ranged_skill,
-			"dodge" if s.defensive_option == 1 else "parry",
-			s.agility if s.defensive_option == 1 else s.parry_skill,
+		"%d hp   melee %d%%   ranged %d%%   %s %d%%" % [
+			hp, D20Script.chance(s.attack_skill), D20Script.chance(s.ranged_skill),
+			"dodge" if s.defensive_option == 1 else "parry", D20Script.chance(defence),
 		],
 		"str %d   agi %d   sta %d   int %d   wil %d" % [
 			s.strength, s.agility, s.stamina, s.intelligence, s.willpower,
@@ -169,7 +172,7 @@ static func summary_lines(class_id: String) -> Array:
 	if s.can_guard:
 		extras.append("can guard")
 	if s.lockpick_skill > 0:
-		extras.append("lockpicking %d" % s.lockpick_skill)
+		extras.append("lockpicking %d%%" % D20Script.chance(s.lockpick_skill))
 	if s.max_ammo > 0:
 		extras.append("%d/%d arrows" % [s.ammo, s.max_ammo])
 	if not extras.is_empty():

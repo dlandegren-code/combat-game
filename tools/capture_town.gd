@@ -21,6 +21,13 @@ const SaveGameScript := preload("res://scripts/save_game.gd")
 
 const SHOT := "res://.summer/local/town_preview.png"
 const STATS := "res://.summer/local/town_stats.txt"
+## Extra shots taken after the main one, each from its own camera position.
+const CLOSE_UPS := [
+	{"path": "res://.summer/local/town_fort.png", "from": Vector3(14.0, 8.0, 10.0), "at": Vector3(21.0, 1.5, -6.5)},
+	{"path": "res://.summer/local/town_witch.png", "from": Vector3(-12.5, 5.0, 8.0), "at": Vector3(-16.8, 1.6, -3.0)},
+	{"path": "res://.summer/local/town_general.png", "from": Vector3(6.0, 4.5, 11.5), "at": Vector3(7.6, 1.4, 2.4)},
+	{"path": "res://.summer/local/town_shops.png", "from": Vector3(-3.0, 4.5, 12.5), "at": Vector3(-3.0, 1.4, 2.0)},
+]
 ## Frames to wait before capturing. The scene builds in one, but shadows, the sky and the
 ## preprocessed particle systems all need a few more before they look like themselves.
 const SETTLE_FRAMES := 12
@@ -83,8 +90,28 @@ func _ready() -> void:
 		f.close()
 	print("[Capture] " + " | ".join(stats))
 
+	# After the stats, which are for the town camera's view and nothing else.
+	await _close_ups(town)
+
 	_restore_save()
 	get_tree().quit()
+
+
+func _close_ups(town: Node) -> void:
+	## A nearer look at each building, from the same side the town camera sees it. The main
+	## shot is the one that matters, but at that distance a banner hung the wrong way round
+	## or a stake floating off the grass is a single pixel.
+	var camera := town.get_node_or_null("View") as Camera3D
+	if camera == null:
+		return
+	for shot in CLOSE_UPS:
+		camera.position = shot["from"]
+		camera.look_at(shot["at"], Vector3.UP)
+		for i in range(4):
+			await get_tree().process_frame
+		var path: String = shot["path"]
+		var err := get_viewport().get_texture().get_image().save_png(path)
+		print("[Capture] %s -> %s" % ["ok" if err == OK else "FAILED", path])
 
 
 func _guard_save() -> void:

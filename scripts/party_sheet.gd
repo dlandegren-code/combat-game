@@ -27,6 +27,7 @@ const CharacterDataScript := preload("res://scripts/character_data.gd")
 const CharacterClassesScript := preload("res://scripts/character_classes.gd")
 const CombatantScript := preload("res://scripts/combatant.gd")
 const ProgressionScript := preload("res://scripts/progression.gd")
+const D20Script := preload("res://scripts/d20.gd")
 const PlayerScript := preload("res://scripts/player.gd")
 const InventoryComponentScript := preload("res://scripts/inventory_component.gd")
 const SaveGameScript := preload("res://scripts/save_game.gd")
@@ -267,13 +268,13 @@ func _draw_sheet(column: Node, member) -> void:
 		return
 
 	ScreenPanelScript.heading(column, "Condition")
-	var max_hp: int = maxi(1, int(s.stamina) * CombatantScript.HP_PER_STAMINA)
+	var max_hp: int = CombatantScript.hp_for_stamina(int(s.stamina))
 	var hp: int = max_hp if member.hp == CharacterDataScript.VITALS_FULL else member.hp
 	ScreenPanelScript.label(column, "Hit points: %d of %d" % [hp, max_hp],
 		ScreenPanelScript.BODY_SIZE,
 		ScreenPanelScript.GOOD if hp >= max_hp else ScreenPanelScript.BAD)
 	if s.can_cast:
-		var max_mana: int = maxi(0, int(s.willpower) * CombatantScript.MANA_PER_WILLPOWER)
+		var max_mana: int = CombatantScript.mana_for_willpower(int(s.willpower))
 		var mana: int = max_mana if member.mana == CharacterDataScript.VITALS_FULL else member.mana
 		ScreenPanelScript.label(column, "Mana: %d of %d" % [mana, max_mana])
 	if int(s.max_ammo) > 0:
@@ -308,7 +309,7 @@ func _draw_sheet(column: Node, member) -> void:
 		var level: int = int(s.get(field))
 		var pot: int = member.skill_xp_for(field)
 		var needed: int = ProgressionScript.xp_to_level(level)
-		var line := "%s %d" % [entry["label"], level]
+		var line := "%s %d (%d%%)" % [entry["label"], level, D20Script.chance(level)]
 		if level >= ProgressionScript.SKILL_CAP:
 			line += "   (as high as it goes)"
 		else:
@@ -360,10 +361,13 @@ func _draw_spells(column: Node, member) -> void:
 			ScreenPanelScript.BODY_SIZE, ScreenPanelScript.MUTED)
 		return
 
-	var max_mana: int = maxi(0, int(s.willpower) * CombatantScript.MANA_PER_WILLPOWER)
+	var max_mana: int = CombatantScript.mana_for_willpower(int(s.willpower))
 	var mana: int = max_mana if member.mana == CharacterDataScript.VITALS_FULL else member.mana
-	ScreenPanelScript.label(column, "Mana: %d of %d      Spell power: %d (willpower)" % [
-		mana, max_mana, int(s.willpower)])
+	var wil: int = int(s.willpower)
+	ScreenPanelScript.label(column,
+		"Mana: %d of %d      Spell skill: %d (%d%%)      Spell power: %d (willpower / %d)" % [
+		mana, max_mana, wil, D20Script.chance(wil), wil / CombatantScript.SPELL_POWER_DIVISOR,
+		CombatantScript.SPELL_POWER_DIVISOR])
 	ScreenPanelScript.spacer(column, 6.0)
 
 	# Off the real ability roster, so a second spell appears here the day it is written and

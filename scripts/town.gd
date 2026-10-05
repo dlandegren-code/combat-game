@@ -28,6 +28,7 @@ const PartySheetScript := preload("res://scripts/party_sheet.gd")
 const ShopScript := preload("res://scripts/shop.gd")
 
 const FARM_PREFABS := "res://assets/Synty/PolygonFarm/Prefabs/"
+const DUNGEON_PREFABS := "res://assets/PolygonDungeon/Prefabs/"
 
 const QUEST_SCENE := "res://scenes/quest_scene.tscn"
 const CREATION_SCENE := "res://scenes/character_creation.tscn"
@@ -53,6 +54,10 @@ const TAG_SIDE_GAP := 7.0
 ## goes further than two rows up, because three would reach the shop signs.
 const TAG_ROWS := [0, -1, 1, -2, 2, 3]
 var _save_note := ""
+## Flames a compound wants lit, as [{root, at}] with `at` local to `root`. Collected while the
+## buildings go up and handed to TownAmbience once they are in the tree and have a transform.
+var _fires_local: Array = []
+var _smoke_local: Array = []      ## the same, for chimney smoke
 
 
 func _ready() -> void:
@@ -251,25 +256,91 @@ func _build_dressing() -> void:
 		_place_townsfolk(folk)
 
 
-func _place(entry: Dictionary) -> Node3D:
+func _place(entry: Dictionary, parent: Node3D = null) -> Node3D:
 	var model_name: String = entry["model"]
-	var node: Node3D = null
-	if model_name.begins_with("farm:"):
-		# The farm pack came as a Godot package with its materials already on it, so it needs
-		# none of the LOD-pruning and painting that the raw meadow FBX do.
-		var packed := load(FARM_PREFABS + _farm_path(model_name.trim_prefix("farm:"))) as PackedScene
-		if packed != null:
-			node = packed.instantiate() as Node3D
-	else:
-		node = SyntyModelScript.meadow(model_name)
+	var node := _instance(model_name)
 	if node == null:
 		push_warning("Town: could not place %s" % model_name)
 		return null
 	node.position = entry["position"]
-	node.rotation_degrees = Vector3(0.0, float(entry.get("rotation", 0.0)), 0.0)
-	node.scale = Vector3.ONE * float(entry.get("scale", 1.0))
-	_world.add_child(node)
+	var r = entry.get("rotation", 0.0)
+	node.rotation_degrees = r if r is Vector3 else Vector3(0.0, float(r), 0.0)
+	var s = entry.get("scale", 1.0)
+	node.scale = s if s is Vector3 else Vector3.ONE * float(s)
+	(parent if parent != null else _world).add_child(node)
 	return node
+
+
+func _instance(model_name: String) -> Node3D:
+	if model_name.begins_with("compound:"):
+		return _build_compound(model_name.trim_prefix("compound:"))
+	if model_name.begins_with("res://"):
+		# A bare mesh — the armour pieces cut by tools/build_synty_armor.gd, which carry their
+		# own material.
+		var mesh := load(model_name) as Mesh
+		if mesh == null:
+			return null
+		var mi := MeshInstance3D.new()
+		mi.mesh = mesh
+		return mi
+	if model_name.begins_with("farm:") or model_name.begins_with("dungeon:"):
+		# Both of these came as Godot packages with their materials already on them, so they
+		# need none of the LOD-pruning and painting that the raw meadow FBX do.
+		var path := DUNGEON_PREFABS + model_name.trim_prefix("dungeon:") + ".tscn"
+		if model_name.begins_with("farm:"):
+			path = FARM_PREFABS + _farm_path(model_name.trim_prefix("farm:"))
+		var packed := load(path) as PackedScene
+		return packed.instantiate() as Node3D if packed != null else null
+	return SyntyModelScript.meadow(model_name)
+
+
+func _build_compound(compound: String) -> Node3D:
+	## A building made of several models, laid out in its own local space so the whole thing
+	## stands, turns and is cleared around as one entry in SERVICES.
+	var root := Node3D.new()
+	var spec: Dictionary = TownLayoutScript.COMPOUNDS.get(compound, {})
+	if spec.is_empty():
+		push_warning("Town: no such compound %s" % compound)
+		return root
+	for part in spec["parts"]:
+		_place(part, root)
+	if spec.get("palisade", false):
+		_build_palisade(root)
+	# Each fire or smoke entry is a bare local position, or {at, tint[, light]} to colour it.
+	for entry in spec.get("fires", []):
+		_fires_local.append(_effect(root, entry))
+	for entry in spec.get("smoke", []):
+		_smoke_local.append(_effect(root, entry))
+	return root
+
+
+func _effect(root: Node3D, entry) -> Dictionary:
+	var effect: Dictionary = entry.duplicate() if entry is Dictionary else {"at": entry}
+	effect["root"] = root
+	return effect
+
+
+func _build_palisade(root: Node3D) -> void:
+	## Stakes along TownLayout.PALISADE, one every PALISADE_SPACING, each picked, sunk and
+	## leaned from a fixed seed so the wall comes out the same on every visit.
+	var rng := RandomNumberGenerator.new()
+	rng.seed = TownLayoutScript.PALISADE_SEED
+	var line: Array = TownLayoutScript.PALISADE
+	var stakes: Array = TownLayoutScript.PALISADE_STAKES
+	for i in range(line.size() - 1):
+		var from: Vector3 = line[i]
+		var run: Vector3 = line[i + 1] - from
+		var count := int(floor(run.length() / TownLayoutScript.PALISADE_SPACING))
+		for j in range(count):
+			var stake: Dictionary = stakes[rng.randi() % stakes.size()]
+			var node := _instance(String(stake["model"]))
+			if node == null:
+				return
+			node.position = from + run.normalized() * (TownLayoutScript.PALISADE_SPACING * j)
+			node.position.y = float(stake["y"]) + rng.randf_range(-0.15, 0.15)
+			node.rotation_degrees = Vector3(rng.randf_range(-4.0, 4.0), rng.randf_range(0.0, 360.0),
+				rng.randf_range(-4.0, 4.0))
+			root.add_child(node)
 
 
 func _farm_path(prefab: String) -> String:
@@ -279,7 +350,7 @@ func _farm_path(prefab: String) -> String:
 	if prefab.begins_with("SM_Bld_"):
 		folder = "Buildings"
 	elif prefab.begins_with("SM_Env_"):
-		folder = "Environment"
+		folder = "Environments"
 	elif prefab.begins_with("SM_Chr_"):
 		folder = "Characters"
 	return "%s/%s.tscn" % [folder, prefab]
@@ -376,14 +447,28 @@ func _build_ambience() -> void:
 	ambience.name = "Ambience"
 	add_child(ambience)
 	ambience.setup(_world)
-	# The cabin's chimney, the magician's, then the fire in the middle of the clearing.
-	ambience.add_chimney_smoke(Vector3(-12.2, 4.6, -5.4))
+	# The magician's chimney, then the fire in the middle of the clearing. (The witch's
+	# chimney is part of her compound, below, so it moves when the hut does.)
 	ambience.add_chimney_smoke(Vector3(12.0, 4.4, -9.0), 9)
 	ambience.add_campfire(Vector3(3.0, 0.0, 11.0))
 	# The mercenaries' fire. Its stones and cook tripod are laid out with the rest of the
 	# scenery; this is the flame in them, so the camp reads as occupied from across the
 	# clearing rather than as an empty tent.
 	ambience.add_campfire(TownLayoutScript.MERC_FIRE)
+	for smoke in _smoke_local:
+		var at: Vector3 = (smoke["root"] as Node3D).to_global(smoke["at"])
+		if smoke.has("tint"):
+			ambience.add_chimney_smoke(at, 14, smoke["tint"])
+		else:
+			ambience.add_chimney_smoke(at)
+	# The compounds' fires — the fort's braziers, the forge. add_campfire lifts its flame a quarter metre off `at`, which is
+	# right for a fire on the ground and wrong for one in a bowl, so it is taken back off here.
+	for fire in _fires_local:
+		var at: Vector3 = (fire["root"] as Node3D).to_global(fire["at"]) - Vector3(0, 0.25, 0)
+		if fire.has("tint"):
+			ambience.add_campfire(at, fire["tint"], fire["light"])
+		else:
+			ambience.add_campfire(at)
 	ambience.add_falling_leaves(Vector3(0.0, 9.0, -2.0), Vector3(26.0, 4.0, 18.0))
 	ambience.add_butterflies(Vector3(0.0, 0.0, 2.0), 14.0)
 
@@ -737,4 +822,4 @@ func _rest_price() -> int:
 
 
 func _max_hp_of(member) -> int:
-	return maxi(1, int(member.stats.stamina) * CombatantScript.HP_PER_STAMINA)
+	return CombatantScript.hp_for_stamina(int(member.stats.stamina))

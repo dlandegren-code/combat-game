@@ -21,16 +21,21 @@ class_name Progression
 ## THE ROOF, AND WHY IT IS LOW
 ## An ordinary use earns one XP, and a skill may only earn QUEST_USE_CAP of those in a single
 ## quest. Without that, the best way to train would be to stand in a cleared room shoving a
-## wall, and any system that makes tedium optimal has already lost. A CRITICAL — a natural 5
-## or a natural 1 on the die — pays more and ignores the roof entirely, because the moments
+## wall, and any system that makes tedium optimal has already lost. A CRITICAL — a natural 1
+## or a natural 20 on the d20 — pays more and ignores the roof entirely, because the moments
 ## you actually learn from are the ones that went unusually well or unusually badly.
+##
+## THE SCALE. A skill is a d20 roll-under number (see D20), so one level is one face of the
+## die: five percentage points. Costs below are sized for that — a level is a small step, and
+## taking a fresh hero's main skill from 13 to 20 is about a dozen quests of use.
 
 const CombatantStatsScript := preload("res://scripts/combatant_stats.gd")
 
 ## --- Earning skill XP ---
 const USE_XP := 1
-## A natural 5 or 1. Success and failure both teach, which is why one number covers them.
-const CRIT_XP := 3
+## A natural 1 or 20. Success and failure both teach, which is why one number covers them.
+## Five, because on a d20 it only comes up one roll in ten.
+const CRIT_XP := 5
 ## Ordinary XP a single skill may earn in one quest. Crits are paid on top of this and do not
 ## count against it.
 const QUEST_USE_CAP := 3
@@ -38,22 +43,25 @@ const QUEST_USE_CAP := 3
 const GENERAL_PER_SKILL := 1
 
 ## --- Levelling a skill ---
-## Skill XP to go from `current` to the next level. Cheap to start something, dear to master
-## it: the first level of a skill costs 4 and the fifteenth costs 32.
-const LEVEL_XP_BASE := 4
-const LEVEL_XP_STEP := 2
+## Skill XP to go from `current` to the next level: the current level less two, never under
+## LEVEL_XP_MIN. Cheap to start something, dear to master it: a lockpick's first level costs
+## 2, a hero's melee at 13 costs 11, and the last step to 20 costs 17.
+const LEVEL_XP_BASE := -2
+const LEVEL_XP_STEP := 1
+const LEVEL_XP_MIN := 2
 
 ## --- Training ---
 ## Gold buys skill XP directly. Deliberately a poor deal next to using the skill — a quest
-## where a skill is used and crits once pays about as much as 200 gold of tuition — so that
+## where a skill is used and crits once pays about as much as 120 gold of tuition — so that
 ## training is how you top up a skill you cannot practise, not how you skip the practising.
 const TRAIN_XP := 1
-const TRAIN_GOLD_BASE := 8
-const TRAIN_GOLD_STEP := 3
+const TRAIN_GOLD_BASE := 2
+const TRAIN_GOLD_STEP := 1
 
-## Where training stops. Rolls are skill + 1d5 against skill + 1d5, so the GAP between two
-## numbers decides everything: at 15 against an unskilled 5 the die cannot save the loser.
-const SKILL_CAP := 15
+## Where training stops. 20 is the whole die — though a natural 20 still fails, so the last
+## level buys nothing on a plain roll and only pays for itself against a penalty (range, cover,
+## a scrum).
+const SKILL_CAP := 20
 
 ## What a level of general xp is worth as a badge. Nothing in combat reads it; it exists so a
 ## player can see progress in one number and so Phase 4 can size a quest against a party.
@@ -76,7 +84,7 @@ const REST_GOLD_PER_HP := 2
 ## is a ONE-OFF: there is no upkeep, because a wage per quest would be a second economy to
 ## balance and the thing that actually costs money is keeping them alive and armed.
 const HIRE_GOLD_BASE := 40
-const HIRE_GOLD_PER_SKILL := 22
+const HIRE_GOLD_PER_SKILL := 9   ## per d20 point; a hireling level (5 points) is ~45 gold
 
 ## The skills, in the order the training screen lists them. `field` is the CombatantStats
 ## property; nothing outside this table needs to know the names.
@@ -135,7 +143,7 @@ static func capped_use_award(ordinary_so_far: int, crit: bool) -> int:
 # --- Levelling -------------------------------------------------------------
 
 static func xp_to_level(current: int) -> int:
-	return LEVEL_XP_BASE + LEVEL_XP_STEP * current
+	return maxi(LEVEL_XP_MIN, LEVEL_XP_BASE + LEVEL_XP_STEP * current)
 
 
 static func can_level(member, field: String) -> bool:

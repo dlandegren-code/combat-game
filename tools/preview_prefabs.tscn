@@ -1,0 +1,6 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://tools/preview_prefabs.gd" id="1_p"]
+
+[node name="PreviewPrefabs" type="Node3D"]
+script = ExtResource("1_p")

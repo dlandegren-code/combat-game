@@ -17,6 +17,7 @@ extends CanvasLayer
 
 const UiScaleScript := preload("res://scripts/ui_scale.gd")
 const StanceCat := preload("res://scripts/stance.gd")
+const D20Script := preload("res://scripts/d20.gd")
 
 const BACKPLATE := "res://assets/UI/SPR_FantasyWarrior_Box_Background_Shadowed.png"
 const DIVIDER := "res://assets/UI/FantasyMenus/SPR_FantasyMenus_Line_Horizontal_01.png"
@@ -314,23 +315,25 @@ func _populate(c: Node) -> void:
 	for i in ATTRIBUTES.size():
 		_attr_values[i].text = str(c.get(ATTRIBUTES[i]["key"]))
 
-	# Skills print the bare stat next to the effective one where gear changes it, because that
-	# gap is exactly what the player is choosing equipment for.
+	# Skills print the bare stat next to the gear bonus where gear changes it, because that
+	# gap is exactly what the player is choosing equipment for — and the chance it comes to on
+	# the d20, because that is what the number means.
 	_put("melee", _eff(c.attack_skill, c.get_attack_skill()))
-	_put("ranged", str(c.ranged_skill))
-	_put("throw", str(c.throw_skill))
+	_put("ranged", _eff(c.ranged_skill, c.ranged_skill))
+	_put("throw", _eff(c.throw_skill, c.throw_skill))
 	_put("parry", _eff(c.parry_skill, c.get_parry_skill()))
-	_put("dodge", str(c.get_dodge_skill()))
-	_put("shove", str(c.shove_skill))
-	_put("trip", str(c.trip_skill))
+	_put("dodge", _eff(c.get_dodge_skill(), c.get_dodge_skill()))
+	_put("shove", _eff(c.shove_skill, c.shove_skill))
+	_put("trip", _eff(c.trip_skill, c.trip_skill))
 	_put("dual", "Trained" if c.dual_wield_skill else "—")
 	# Dash rather than zero, same convention: a 0 lockpick is not a bad lockpick, it is somebody
 	# who has never picked a lock — and Combatant.lockpick_skill treats it that way too, refusing
 	# to roll at all rather than rolling badly.
-	_put("lockpick", str(c.lockpick_skill) if c.lockpick_skill > 0 else "—")
+	_put("lockpick", _eff(c.lockpick_skill, c.lockpick_skill) if c.lockpick_skill > 0 else "—")
 	# A non-caster gets a dash rather than a zero: "0" reads as a bad caster, a dash as not a
 	# caster at all. Same convention as the untrained Dual Wield row above.
-	_put("spell", str(c.get_spell_power()) if c.can_cast else "—")
+	_put("spell", (_eff(c.get_spell_skill(), c.get_spell_skill())
+		+ "  pow %d" % c.get_spell_power()) if c.can_cast else "—")
 
 	_put("hp", "%d / %d" % [c.hp, c.max_hp])
 	_put("mana", ("%d / %d" % [c.mana, c.max_mana]) if c.can_cast else "—")
@@ -348,8 +351,12 @@ func _populate(c: Node) -> void:
 
 
 func _eff(base: int, effective: int) -> String:
-	## "4" when gear adds nothing, "4 (6)" when it does.
-	return str(base) if effective == base else "%d (%d)" % [base, effective]
+	## "13 · 65%" when gear adds nothing, "11+4 · 75%" when it does. The percentage is the chance
+	## of the effective skill on the d20, before anybody's defence.
+	var pct: int = D20Script.chance(effective)
+	if effective == base:
+		return "%d · %d%%" % [base, pct]
+	return "%d%+d · %d%%" % [base, effective - base, pct]
 
 
 func _put(id: String, text: String) -> void:

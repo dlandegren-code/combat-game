@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1_item")
 item_name = "Rusty Sword"
-attack_bonus = 1
+attack_bonus = 2
 damage_bonus = 1
 durability = 71

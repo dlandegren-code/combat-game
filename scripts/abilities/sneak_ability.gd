@@ -1,6 +1,8 @@
 extends "res://scripts/abilities/ability.gd"
 ## Creep, or stop creeping. One action for both, for the same reason Prone is one action: it is
 ## the same decision seen from either side.
+
+const D20Script := preload("res://scripts/d20.gd")
 ##
 ## A standing choice rather than a thing you spend a turn on. Turned on, three things are true
 ## at once:
@@ -14,7 +16,7 @@ extends "res://scripts/abilities/ability.gd"
 ## where the roll is finally spent.
 ##
 ## STOPPING BESIDE COVER HIDES YOU: a pillar, a crate, a cask, a shut door. That is one further
-## roll against a goblin that can actually see you, and lying down is worth two points of it.
+## roll against a goblin that can actually see you, and lying down is worth four points of it.
 ## See Combatant._update_hiding and Combatant.is_unseen_by.
 ##
 ## Self-targeted and FREE, so it neither ends the turn nor costs a tick. Creeping is how you
@@ -58,11 +60,12 @@ func get_description(actor) -> String:
 		return "Stop creeping and walk normally. Quicker to the eye, louder to the ear."
 	var quiet: int = actor.get_stealth_skill()
 	if actor.is_hiding():
-		return ("Hidden (%d against their perception). Stop creeping, or take a step, and you "
-			+ "are back in the open.") % actor.get_hide_total()
-	return ("Creep at half pace: every move is rolled against the ears of anything nearby "
-		+ "(stealth %d + 1d5). Stop beside a pillar or a crate to go to ground, and drop "
-		+ "prone for a better job of it.") % quiet
+		var hide: int = actor.get_hide_skill()
+		return ("Hidden (hide %d, %d%%, against their perception). Stop creeping, or take a "
+			+ "step, and you are back in the open.") % [hide, D20Script.chance(hide)]
+	return ("Creep at half pace: every move is a d20 contest against the ears of anything "
+		+ "nearby (stealth %d, %d%%). Stop beside a pillar or a crate to go to ground, and drop "
+		+ "prone for a better job of it.") % [quiet, D20Script.chance(quiet)]
 
 
 func execute(actor, _target) -> void:

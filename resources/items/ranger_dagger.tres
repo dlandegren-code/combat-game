@@ -7,5 +7,5 @@ script = ExtResource("1_item")
 item_name = "Ranger Dagger"
 weapon_sound = 2
 item_type = 0
-attack_bonus = 2
+attack_bonus = 4
 durability = 5

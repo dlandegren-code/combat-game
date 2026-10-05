@@ -610,7 +610,7 @@ func _do_firebolt(target: Node) -> void:
 	# Resolved as a missile: same distance/engaged modifiers and the same defences as an arrow,
 	# rather than magic getting its own parallel rules.
 	var to_hit: int = get_missile_skill(
-		get_spell_power(), target, FireboltAbilityScript.RANGE_TILES)
+		get_spell_skill(), target, FireboltAbilityScript.RANGE_TILES)
 	var dmg: int = get_spell_power() + FireboltAbilityScript.DAMAGE_BONUS
 	# FIRE, so armour does not soak it — but resistance still does.
 	var defended: bool = target.take_damage(dmg, to_hit, true, self, DamageType.FIRE)
