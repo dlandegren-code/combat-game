@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://cbi4b3qi86vtx"]
+
+[ext_resource type="PackedScene" uid="uid://4enfxn0f41yo" path="res://assets/models/hero_realistic/character-hero.glb" id="1_base"]
+
+[node name="CharacterModel" type="Node3D" unique_id=580997415]
+
+[node name="character-hero" parent="." unique_id=1787138955 instance=ExtResource("1_base")]

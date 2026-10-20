@@ -96,3 +96,7 @@ cycle_party={
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+
+[summer]
+
+version="0.7.3"
