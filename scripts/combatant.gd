@@ -2120,7 +2120,9 @@ func _apply_push(push_dir: Vector3, force: int) -> void:
 	for i in range(1, force + 1):
 		var prev: Vector3 = _snap_to_grid(start + dir * GRID_SIZE * (i - 1))
 		var next: Vector3 = _snap_to_grid(start + dir * GRID_SIZE * i)
-		if next.x < ARENA_MIN or next.x > ARENA_MAX or next.z < ARENA_MIN or next.z > ARENA_MAX:
+		# The room's own floor plan, not the old ±14 square: a generated dungeon has floor
+		# well outside it, and walls well inside it.
+		if not _is_in_arena(next):
 			_apply_impact_damage((force - i + 1) * 2)
 			break
 		# Same per-step obstacle-layer ray _find_path uses: stops a diagonal shove from

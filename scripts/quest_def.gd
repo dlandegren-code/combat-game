@@ -13,12 +13,11 @@ class_name QuestDef
 ## and re-derives its offers, rather than keeping five resources alive between screens.
 ##
 ## WHAT IS AND IS NOT HOOKED UP YET
-## `reward_gold` and `reward_xp` are paid, today, by QuestScene when a quest is cleared.
-## `enemy_budget`, `loot_budget` and `theme` are DERIVED but not yet SPENT: the spawner, the
-## loot tables and the parameterised room builder are the next three pieces of Phase 4, and
-## until they exist every accepted quest runs the one authored dungeon. The budgets are here
-## now because they are what those pieces will be written against, and because a tier that
-## only changes the payout is a tier that lies about being harder.
+## `reward_gold` and `reward_xp` are paid by QuestScene when a quest is cleared. The seed, the
+## tier, `theme` and `enemy_budget` build the dungeon: DungeonGenerator lays out the rooms from
+## the seed, sizes the place from the tier, and spends the budget on the theme's enemies
+## (EnemyRoster). `loot_budget` is still derived but not spent, and the theme does not yet
+## reach the tile set — the loot tables and themed dressing are the pieces still to come.
 
 ## The hardest quest the board will ever put up. Tiers are meant to be few and to mean
 ## something: five steps between "a job for a beginner" and "this will probably kill you"
@@ -41,6 +40,8 @@ const REWARD_XP_STEP := 60
 ## Difficulty points for the spawner to spend, in the same currency enemy templates will be
 ## priced in. Ten is the authored dungeon: five goblins at two points each.
 const ENEMY_BUDGET_BASE := 10
+
+const GeneratorScript := preload("res://scripts/dungeon_generator.gd")
 const ENEMY_BUDGET_STEP := 6
 
 ## Gold-value of the loot the generator is to place. Loot is NOT scaled as steeply as the
@@ -59,11 +60,8 @@ const TIER_LABELS := ["", "Simple", "Steady", "Hard", "Grim", "Deadly"]
 
 ## The places a quest can claim to be, with the words each one is named out of.
 ##
-## Theme does not yet reach the battlefield — see the header — so for now it decides the name
-## and nothing else. It is a table rather than a list of strings because that is the shape it
-## needs when the room builder and the spawner start reading it: `enemies` and `palette` are
-## the columns waiting to be added, and adding them to a table nobody reads is how this stays
-## a one-line change rather than a rewrite.
+## Theme decides the name and who lives there: each EnemyTemplate lists the theme ids it turns
+## up in (resources/enemies/). The tile set does not follow it yet.
 const THEMES := [
 	{
 		"id": "dungeon",
@@ -124,6 +122,19 @@ static func generate(from_seed: int, at_tier: int) -> QuestDef:
 	def.reward_gold = _varied(rng, REWARD_GOLD_BASE + REWARD_GOLD_STEP * step)
 	def.reward_xp = _varied(rng, REWARD_XP_BASE + REWARD_XP_STEP * step)
 	return def
+
+
+static func offer(from_seed: int, party_level: int) -> QuestDef:
+	## One job for a board, its tier drawn around the party's level the way offers() draws a
+	## board's worth: one step below so there is always something safe, two above so there is
+	## always something they are not ready for.
+	##
+	## The tier is drawn off its OWN generator, not off generate()'s — so the quest a seed makes
+	## at a given tier is the same quest whichever way that tier was arrived at.
+	var rng := RandomNumberGenerator.new()
+	rng.seed = from_seed ^ 0x7A3D
+	var centre := clampi(party_level, 1, MAX_TIER)
+	return generate(from_seed, clampi(centre + rng.randi_range(-1, 2), 1, MAX_TIER))
 
 
 static func offers(board_seed: int, party_level: int, count: int) -> Array:
@@ -187,12 +198,16 @@ func reward_line() -> String:
 
 
 func danger_line() -> String:
-	## What the party is walking into, in the only terms the board honestly has: a tier and a
-	## rough count. Deliberately vague about the count — "about six" — because the spawner
-	## that will actually fill the place does not exist yet, and a board that promised exactly
-	## six enemies would be the first thing to break when it does.
+	## What the party is walking into: a tier, and how many are down there. The count is the
+	## real one — the generator's roster for this seed (DungeonGenerator.roster), which is
+	## worked out without building the floor plan — but the board still says "about", because
+	## a full dungeon can run out of room to stand somebody in.
 	return "%s — a %s, about %d of them down there" % [
-		tier_label(), theme_label(), roundi(enemy_budget / 2.0)]
+		tier_label(), theme_label(), enemy_count()]
+
+
+func enemy_count() -> int:
+	return GeneratorScript.roster(quest_seed, tier, enemy_budget, theme).size()
 
 
 # --- Carrying one around ---------------------------------------------------

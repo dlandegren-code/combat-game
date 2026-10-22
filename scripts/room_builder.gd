@@ -1,12 +1,31 @@
 @tool
 extends Node3D
-## Builds the dungeon chamber + connected room from Synty modular pieces.
-## Pieces are scaled by SCALE (Synty tiles are a chunky 5 units; scaling them
-## down sits better against the ~1-unit characters). Layout is defined in tiles,
-## so changing SCALE just resizes everything. Floor tile prefabs carry their own
-## material + collision; the ±14 movement bound keeps units inside the chamber.
+## Builds the dungeon a quest describes, from Synty modular pieces.
 ##
-## Regenerates on _ready (runs in-editor via @tool).
+## WHAT IS BUILT is decided elsewhere: DungeonGenerator turns the quest's seed and tier into a
+## DungeonLayout — which tiles are floor, which room each belongs to, where the doors are and
+## what stands where — and this file only turns that into geometry. So it knows how to stand a
+## wall, hang a door, seat a throne and fill a cask, and nothing at all about where any of them
+## should go.
+##
+## Pieces are scaled by SCALE (Synty tiles are a chunky 5 units; scaling them down sits better
+## against the ~1-unit characters), which makes a floor tile 4 world units — the layout's TILE —
+## and every wall module two play squares long.
+##
+## It is still the AUTHORITY the rest of the game asks about the room: is_floor_at (where a unit
+## can stand), idle_spots and patrol_ring (where an idle enemy takes itself), and now
+## region_at (which room a square is in, which is what the alarm is scoped by).
+##
+## Regenerates on _ready (runs in-editor via @tool). In the editor, and in any run with no
+## contract taken, it builds FALLBACK_SEED at tier 1, so the scene always has a dungeon in it.
+
+const LayoutScript := preload("res://scripts/dungeon_layout.gd")
+const GeneratorScript := preload("res://scripts/dungeon_generator.gd")
+const QuestDefScript := preload("res://scripts/quest_def.gd")
+
+## The dungeon built when there is no quest to read one from: the editor, a dev run of the quest
+## scene on its own, and the round-trip test. Fixed, so all three see the same place.
+const FALLBACK_SEED := 1337
 
 const FLOORS_DIR := "res://Assets/PolygonDungeon/Prefabs/Environments/Floors/"
 const MAIN_TILES := ["SM_Env_Tiles_01.tscn", "SM_Env_Tiles_02.tscn", "SM_Env_Tiles_03.tscn"]
@@ -19,10 +38,6 @@ const DOOR_MESH := "res://Assets/PolygonDungeon/Models/SM_Env_Wall_DoorFrame_01.
 ## The leaf that hangs in that frame. One of the pack's plain wooden doors; _02 through _05 are
 ## the same size and swap in without touching anything else.
 const DOOR_LEAF_MESH := "res://Assets/PolygonDungeon/Models/SM_Env_Door_02.res"
-## Where the hole is across the frame module, in the module's own units. Synty's wall pieces are
-## a 5-unit span with the opening centred, so this is half of that rather than a number measured
-## off the art — which is why it survives the mesh being swapped for another frame.
-const DOOR_OPENING_LOCAL_X := 2.5
 const WALL_MAT := "res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres"
 
 # Stone props (same atlas material as the walls). Throne/vessel are solid obstacles;
@@ -30,9 +45,17 @@ const WALL_MAT := "res://Assets/PolygonDungeon/Materials/Dungeon_Material_01_mat
 const THRONE_MESH := "res://Assets/PolygonDungeon/Models/SM_Env_Stone_Throne_01.res"
 const VESSEL_MESH := "res://Assets/PolygonDungeon/Models/SM_Env_Stone_Vessel_01.res"
 const WALL_BANNER_MESH := "res://Assets/PolygonDungeon/Models/SM_Prop_Wall_Banner_01.res"
+## Spare scaling for the throne, on top of SCALE. A throne at bare scale is a dining chair.
+const THRONE_SCALE_MUL := 2.2
+## How high a banner hangs.
+const BANNER_Y := 4.0
 
-# Searchable furniture: the chest and the casks on the south wall — the one opposite the door —
-# and the crates in the north-east corner.
+## The pillars a big room is ringed with: a short collider (see column_obstacle.gd) and the
+## pack's round pillar for looks.
+const ColumnScript := preload("res://scripts/column_obstacle.gd")
+const PILLAR_VISUAL := preload("res://scenes/pillar_visual.tscn")
+
+# Searchable furniture.
 #
 # The pack's PREFABS, not its raw meshes, unlike everything else in this file. A chest is two
 # meshes plus the transform that marries them, and that transform lives in the prefab: the lid
@@ -40,7 +63,7 @@ const WALL_BANNER_MESH := "res://Assets/PolygonDungeon/Models/SM_Prop_Wall_Banne
 # out the front of the chest. Barrels and crates come through the same door for consistency.
 const CHEST_PREFAB := "res://Assets/PolygonDungeon/Prefabs/Props/SM_Prop_Chest_01.tscn"
 
-## The barrels along the south wall, working east from the chest.
+## The barrels in a stores room, one prefab after another along the wall.
 const BARREL_PREFABS := [
 	"res://Assets/PolygonDungeon/Prefabs/Props/SM_Prop_Barrel_01.tscn",
 	"res://Assets/PolygonDungeon/Prefabs/Props/SM_Prop_Barrel_02.tscn",
@@ -49,12 +72,9 @@ const BARREL_PREFABS := [
 
 ## What comes out of a barrel: drink, and nothing but.
 ##
-## One of these per barrel, picked at random when the room is built — see _build_containers.
-## A cask holds ONE liquid all the way down, so a barrel of beer gives beer and only beer; the
-## random part is which barrel turns out to be the beer.
-##
-## Swords and breastplates live in the crates in the corner now. A cooper does not store a
-## shield in a cask.
+## One of these per barrel, picked when the room is built. A cask holds ONE liquid all the way
+## down, so a barrel of beer gives beer and only beer; the random part is which barrel turns out
+## to be the beer. Swords and breastplates live in the crates.
 const BARREL_LIQUIDS := [
 	"res://resources/items/bottle_of_beer.tres",
 	"res://resources/items/bottle_of_water.tres",
@@ -66,44 +86,21 @@ const BARREL_LIQUIDS := [
 ## out-heal the chest.
 const BARREL_BOTTLES := 3
 
-## Crates stacked in the north-east corner, where the kit that used to be in the barrels lives
-## now. Unlocked, every one of them: this is the loot you get for looking round the room, and
-## the lock is what makes the chest the chest.
-##
-## Set against the two walls that meet there rather than in a row, so the corner reads as
-## somebody's untidy store and not as a shop shelf: two on the east wall, one on the north,
-## each yawed to face the room it is leaning out of. Every square listed is outside the ±14
-## play bound (see Combatant.ARENA_MAX), so blocking them costs no floor — exactly as the
-## south-wall furniture does at z = -15, and both are still reachable from the corner square.
+## The crates there are, and how many draws each gets. Unlocked, every one of them: this is the
+## loot you get for looking round the room, and the lock is what makes the chest the chest.
 ##
 ## The pack ships no crate with a separate lid mesh, so these have no lid to swing and get
-## searched the way a barrel is (LootContainer._find_lid). One of the three is the pack's
-## open-topped metal crate, which is the closest the art gets to saying "already unlocked".
+## searched the way a barrel is (LootContainer._find_lid). One is the pack's open-topped metal
+## crate, which is the closest the art gets to saying "already unlocked".
 const CRATES := [
-	{
-		"prefab": "res://Assets/PolygonDungeon/Prefabs/Props/SM_Prop_Crate_Wood_01.tscn",
-		"x": 15.0, "z": 13.0, "yaw": 270.0, "rolls": 2,
-	},
-	{
-		"prefab": "res://Assets/PolygonDungeon/Prefabs/Props/SM_Prop_Crate_Metal_Open_01.tscn",
-		"x": 15.0, "z": 11.0, "yaw": 270.0, "rolls": 1,
-	},
-	{
-		"prefab": "res://Assets/PolygonDungeon/Prefabs/Props/SM_Prop_Crate_Wood_03.tscn",
-		"x": 13.0, "z": 15.0, "yaw": 180.0, "rolls": 2,
-	},
+	{"prefab": "res://Assets/PolygonDungeon/Prefabs/Props/SM_Prop_Crate_Wood_01.tscn", "rolls": 2},
+	{"prefab": "res://Assets/PolygonDungeon/Prefabs/Props/SM_Prop_Crate_Metal_Open_01.tscn", "rolls": 1},
+	{"prefab": "res://Assets/PolygonDungeon/Prefabs/Props/SM_Prop_Crate_Wood_03.tscn", "rolls": 2},
 ]
 
-## What a crate might have in it. Drawn from at random, so which crate gives what is settled by
-## where it stands (LootContainer seeds itself off its position) rather than by the run.
-##
-## Gear, plus the one exception: a health potion. Not drink in the barrel sense — nobody kegs
-## the stuff — and it is the only reason to bother with a crate when you are hurt rather than
-## under-equipped, so it earns its slot. Beer, water and wine stay strictly in the casks
-## (BARREL_LIQUIDS).
-##
-## Ordinary kit on purpose: a crate is the consolation prize for searching the room, and the
-## thing worth having is still behind the lock.
+## What a crate might have in it. Gear, plus the one exception: a health potion — the only
+## reason to bother with a crate when you are hurt rather than under-equipped. Ordinary kit on
+## purpose: a crate is the consolation prize, and the thing worth having is behind the lock.
 const CRATE_LOOT := [
 	"res://resources/items/health_potion.tres",
 	"res://resources/items/rusty_sword.tres",
@@ -122,7 +119,7 @@ const CRATE_LOOT := [
 const CRATE_SCALE_MUL := 1.25
 
 ## What the locked chest has in it. Two draws from the good stuff — this is what the key on the
-## boss is FOR, and it has to be worth crossing the room and killing him for.
+## boss is FOR, and it has to be worth crossing the dungeon and killing him for.
 const CHEST_LOOT := [
 	"res://resources/items/boss_cleaver.tres",
 	"res://resources/items/reinforced_leather_armor.tres",
@@ -131,40 +128,29 @@ const CHEST_LOOT := [
 	"res://resources/items/ranger_dagger.tres",
 ]
 
-## The lock on the chest, and the key that opens it. The id is shared with iron_key.tres by
-## hand — there is no registry of locks, and for one chest a registry would be ceremony.
-## Spare scaling for the chest, on top of SCALE, the way the throne has its own scale_mul in
-## _build_props.
-##
-## Body and lid together come to 0.57 world units unscaled, against a barrel's 0.83. Doubled,
-## the chest stands about 1.14 — taller than the barrels beside it, which is the call: a
-## treasure chest is the thing on that wall worth walking over to, and it should look it.
+## Spare scaling for the chest, on top of SCALE. Doubled, the chest stands about 1.14 — taller
+## than the barrels, which is the call: a treasure chest is the thing worth walking over to.
 const CHEST_SCALE_MUL := 2.0
 
 ## Whether the chest starts shut AND locked. True: getting in means the boss's key or a lockpick
-## roll against CHEST_LOCK_PENALTY. Flip to false to open and shut it freely, which is what
-## it was set to briefly while the lid animation was being looked at.
+## roll against CHEST_LOCK_PENALTY.
 const CHEST_STARTS_LOCKED := true
 
+## The lock on the chest, and the key that opens it. The id is shared with iron_key.tres by
+## hand — there is no registry of locks, and for one chest a registry would be ceremony.
 const CHEST_KEY_ID := "dungeon_chest"
 ## Taken off the lockpick skill before the d20 is read: the archer's starting 9 picks it on a
 ## 5 or less (25%), and nobody untrained gets to roll at all.
 const CHEST_LOCK_PENALTY := 4
 
 const SCALE := 0.8                 # dial the whole environment's size here
-const TILE := 5.0 * SCALE          # world units per tile (= 4.0 at 0.8)
+const TILE := 5.0 * SCALE          # world units per tile (= 4.0 at 0.8) — DungeonLayout.TILE
 const FLOOR_Y := 0.0
-const SEED := 1337
-
-const CHAMBER_TILES := 8           # 8x8 chamber, centered on origin
-const ROOM_TILES := 3              # 3x3 room, north of the chamber
-const ROOM_X0 := -8.0              # room's near-x corner (aligned to the door segment)
-const DOOR_X0 := -4.0              # chamber north wall segment that holds the doorway
 
 const LAYER_OBSTACLE := 4          # matches Combatant.LAYER_OBSTACLE (blocks move + LOS)
-## Combatant.GRID_SIZE: the play grid the doorway has to line up with. The environment is built
-## on TILE (4.0) and played on this (2.0), so one wall module spans exactly two squares — which
-## is the whole reason a doorway needs deciding rather than just leaving a hole.
+## Combatant.GRID_SIZE: the play grid. The environment is built on TILE (4.0) and played on
+## this (2.0), so one wall module spans exactly two squares — which is the whole reason a
+## doorway needs deciding rather than just leaving a hole.
 const GRID := 2.0
 ## How far a doorway jamb reaches past the edge of the doorway square, in world units. See
 ## _place_doorway_jambs — it exists to close the seam a diagonal step can otherwise graze.
@@ -173,12 +159,12 @@ const JAMB_OVERLAP := 0.06
 const DoorScript := preload("res://scripts/door.gd")
 const LootContainerScript := preload("res://scripts/loot_container.gd")
 
-## How far off the wall a patrol walks its beat, in world units. Outside the ring of pillars
-## (which stand at 3 and 5 either side of the middle) and a stride clear of the masonry, so the
-## route is walkable the whole way round without the pathfinder having to thread anything.
-const PATROL_INSET := 7.0
+const DIRS := [Vector2i(0, 1), Vector2i(1, 0), Vector2i(0, -1), Vector2i(-1, 0)]
 
 var _rng := RandomNumberGenerator.new()
+
+## The dungeon being built. See DungeonLayout.
+var layout: RefCounted = null
 
 ## Somewhere an idle enemy might take itself, and what to look at once it gets there, keyed by
 ## what a body would be doing there. Filled as the room is BUILT, from the same positions the
@@ -192,190 +178,223 @@ func _ready() -> void:
 
 func _build() -> void:
 	for c in get_children():
+		remove_child(c)
 		c.queue_free()
-	_rng.seed = SEED
 	_idle_spots.clear()
-	_build_chamber()
-	_build_room()
+	layout = _choose_layout()
+	_rng.seed = layout.quest_seed
+	_build_floors()
 	_build_walls()
-	_build_door()
-	_build_props()
-	_build_containers()
+	_build_features()
 	_build_idle_corners()
 
 
-# --- Where an idle enemy might take itself ---------------------------------
+func _choose_layout() -> RefCounted:
+	## The quest the party is on, or the fallback dungeon when there is none.
+	##
+	## Read off the GameState autoload by path rather than by name, because this script also
+	## runs in the editor (@tool), where the autoload does not exist.
+	var quest_seed := FALLBACK_SEED
+	var tier := 1
+	var budget: int = QuestDefScript.ENEMY_BUDGET_BASE
+	var theme := "dungeon"
+	if not Engine.is_editor_hint():
+		var gs := get_node_or_null("/root/GameState")
+		var q = gs.current_quest if gs != null else null
+		if q != null:
+			quest_seed = q.quest_seed
+			tier = q.tier
+			budget = q.enemy_budget
+			theme = q.theme
+	return GeneratorScript.generate(quest_seed, tier, budget, theme)
 
-func idle_spots(kind: String) -> Array:
+
+# --- What the rest of the game asks ----------------------------------------
+
+func is_floor_at(x: float, z: float) -> bool:
+	## Whether a play-grid square has dungeon floor under it. THE authority on where a unit can
+	## be put, asked by Combatant._is_in_arena.
+	return layout != null and layout.is_floor_at(x, z)
+
+
+func region_at(x: float, z: float) -> int:
+	## Which room or corridor a square is in, by DungeonLayout region id; -1 for rock.
+	return layout.region_at(x, z) if layout != null else -1
+
+
+func party_spawns() -> Array:
+	return layout.party_spawns if layout != null else []
+
+
+func enemy_spawns() -> Array:
+	return layout.enemies if layout != null else []
+
+
+func pickups() -> Array:
+	return layout.pickups if layout != null else []
+
+
+func floor_tiles() -> Array:
+	return layout.tiles.keys() if layout != null else []
+
+
+func idle_spots(kind: String, room: int = -1) -> Array:
 	## Squares worth loitering at, by what a body would be doing there:
 	##
 	##   "seat"    the throne — the squares in front of it, facing out over the hall
 	##   "stores"  the chest, the casks and the crates — the square you stand on to work one
-	##   "corner"  the corners of the chamber, for anybody minded to lie down out of the way
+	##   "corner"  the corners of a room, for anybody minded to lie down out of the way
 	##
-	## Each entry is {"at": Vector3, "face": Vector3, "perch": Vector3}: the square to stand on,
-	## the point to turn towards from it, and — for a spot you get ON rather than stand beside —
-	## where to put yourself once you are there, or INF for nowhere but the square itself. The
-	## first two are given rather than the enemy guessing, because they do not follow from each
-	## other: you face INTO the room from the throne and INTO the wall at a cask, and the room is
-	## the only thing that knows which is which.
+	## Each entry is {"at": Vector3, "face": Vector3, "perch": Vector3, "room": int}: the square
+	## to stand on, the point to turn towards from it, and — for a spot you get ON rather than
+	## stand beside — where to put yourself once you are there, or INF for nowhere but the square
+	## itself.
 	##
-	## Empty for a kind nothing registered, which every caller has to cope with anyway: this is
-	## scenery, and a level without a throne in it is a legal level.
-	return _idle_spots.get(kind, [])
+	## `room` keeps an enemy in its own room: a goblin going to lean on the casks should not
+	## cross three rooms and a corridor to find some. -1 for anywhere.
+	var all: Array = _idle_spots.get(kind, [])
+	if room < 0:
+		return all
+	var out: Array = []
+	for s in all:
+		if int(s["room"]) == room:
+			out.append(s)
+	return out
 
 
-func patrol_ring() -> Array[Vector3]:
-	## A beat round the chamber, for a patroller the scene did not author a route for.
-	##
-	## Derived from the chamber rather than written down, so it cannot come to describe the old
-	## floor plan — and so that WHICH enemies patrol can be decided at runtime (see
-	## CombatManager._cast_idle_roles) without every one of them needing a route in the scene.
-	## A patrol_route set by hand still wins: a beat that matters to the level is level design.
-	var r: float = CHAMBER_TILES / 2.0 * TILE - PATROL_INSET
+func patrol_ring(room: int = -1) -> Array[Vector3]:
+	## A beat round a room, for a patroller the scene did not author a route for. Derived from
+	## the room rather than written down, so WHICH enemies patrol can be decided at runtime (see
+	## CombatManager._cast_idle_roles). -1 means the biggest room.
 	var ring: Array[Vector3] = []
-	for corner in [Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1), Vector2(-1, -1)]:
-		ring.append(Vector3(corner.x * r, FLOOR_Y, corner.y * r))
+	if layout == null:
+		return ring
+	var pick: Dictionary = {}
+	if room >= 0 and room < layout.regions.size():
+		pick = layout.regions[room]
+	if pick.is_empty() or not pick.has("patrol"):
+		var best := -1
+		for r in layout.rooms():
+			var area: int = r["rect"].size.x * r["rect"].size.y
+			if area > best:
+				best = area
+				pick = r
+	for p in pick.get("patrol", []):
+		ring.append(p)
 	return ring
 
 
-func _add_idle_spot(kind: String, at: Vector3, face: Vector3,
+func _room_centre(room: int) -> Vector3:
+	if layout == null or room < 0 or room >= layout.regions.size():
+		return Vector3.ZERO
+	return LayoutScript.centre_of(layout.regions[room]["rect"])
+
+
+func _add_idle_spot(kind: String, at: Vector3, face: Vector3, room: int,
 		perch: Vector3 = Vector3.INF) -> void:
 	if not _idle_spots.has(kind):
 		_idle_spots[kind] = []
-	_idle_spots[kind].append({"at": at, "face": face, "perch": perch})
+	_idle_spots[kind].append({"at": at, "face": face, "perch": perch, "room": room})
 
 
-func _spot_beside(x: float, z: float, kind: String) -> void:
+func _spot_beside(at: Vector3, normal: Vector3, room: int, kind: String) -> void:
 	## Register the square in front of a piece of furniture standing against a wall: one step
-	## from it towards the middle of the chamber, facing back at it.
-	##
-	## Worked out from which wall the thing is against rather than from a yaw, because that is
-	## what decides where you can stand: the south-wall furniture is approached from the north
-	## and the corner crates from whichever side is not masonry.
-	var half: float = CHAMBER_TILES / 2.0 * TILE
-	var at := Vector3(x, FLOOR_Y, z)
-	if absf(z) > half - TILE:
-		at.z -= signf(z) * GRID
-	if absf(x) > half - TILE:
-		at.x -= signf(x) * GRID
-	_add_idle_spot(kind, at, Vector3(x, FLOOR_Y, z))
+	## from it into the room, facing back at it.
+	_add_idle_spot(kind, at + normal * GRID, at, room)
 
 
 func _build_idle_corners() -> void:
-	## The four inside corners of the chamber. Out of the way by definition, which is what makes
+	## The free inside corners of every room. Out of the way by definition, which is what makes
 	## them the place to have a lie-down: a goblin dozing in the middle of the floor is in the
 	## way of everything, including the fight it is about to be in.
-	var c: float = CHAMBER_TILES / 2.0 * TILE - GRID / 2.0    # 15: the last square inside
-	for sx in [-1.0, 1.0]:
-		for sz in [-1.0, 1.0]:
-			_add_idle_spot("corner", Vector3(sx * c, FLOOR_Y, sz * c), Vector3.ZERO)
+	for r in layout.rooms():
+		for s in r.get("corners", []):
+			_add_idle_spot("corner", s, _room_centre(r["id"]), r["id"])
 
 
-func _build_chamber() -> void:
-	var x0 := -CHAMBER_TILES / 2.0 * TILE      # -16
-	# The center 2x2 (indices mid-1, mid) is left for the circle.
-	@warning_ignore("integer_division")
-	var mid := CHAMBER_TILES / 2               # 4
-	for r in range(CHAMBER_TILES):
-		for c in range(CHAMBER_TILES):
-			if (c == mid - 1 or c == mid) and (r == mid - 1 or r == mid):
-				continue
-			_place_tile(_random_main_tile(), x0 + c * TILE, x0 + r * TILE, 0.0)
-	# Center circle: four quarter-circle tiles, each rotated so its arc faces the
-	# shared origin -> one filled circle two tiles wide.
-	_place_tile(CIRCLE_QUARTER, TILE, TILE, 180.0)
-	_place_tile(CIRCLE_QUARTER, TILE, -TILE, 270.0)
-	_place_tile(CIRCLE_QUARTER, -TILE, -TILE, 0.0)
-	_place_tile(CIRCLE_QUARTER, -TILE, TILE, 90.0)
+# --- Floors ----------------------------------------------------------------
+
+func _build_floors() -> void:
+	# A round floor, where a room has one, takes the 2x2 tiles about its centre: four
+	# quarter-circle tiles, each rotated so its arc faces the shared point.
+	var circled := {}
+	for f in layout.features:
+		if f["type"] != "circle":
+			continue
+		var c: Vector3 = f["at"]
+		var ct := LayoutScript.tile_of(c.x, c.z)
+		for dz in [-1, 0]:
+			for dx in [-1, 0]:
+				circled[ct + Vector2i(dx, dz)] = true
+		_place_tile(CIRCLE_QUARTER, c.x + TILE, c.z + TILE, 180.0)
+		_place_tile(CIRCLE_QUARTER, c.x + TILE, c.z - TILE, 270.0)
+		_place_tile(CIRCLE_QUARTER, c.x - TILE, c.z - TILE, 0.0)
+		_place_tile(CIRCLE_QUARTER, c.x - TILE, c.z + TILE, 90.0)
+
+	for t in layout.tiles:
+		if circled.has(t):
+			continue
+		var region: Dictionary = layout.regions[layout.tiles[t]]
+		var rect: Rect2i = region["rect"]
+		var tile: String = _random_main_tile()
+		# The odd-sized room's middle tile gets the pack's centrepiece.
+		if region["kind"] == "room" and rect.size.x % 2 == 1 and rect.size.y % 2 == 1 \
+				and t == rect.position + rect.size / 2:
+			tile = ROOM_CENTER_TILE
+		_place_tile(tile, t.x * TILE, t.y * TILE, 0.0)
 
 
-func _build_room() -> void:
-	var x0 := ROOM_X0                                     # aligned so the door is the center tile
-	var z0 := CHAMBER_TILES / 2.0 * TILE                  # 16 (chamber's north edge)
-	@warning_ignore("integer_division")
-	var mid := ROOM_TILES / 2                             # 1
-	for r in range(ROOM_TILES):
-		for c in range(ROOM_TILES):
-			var tile: String = ROOM_CENTER_TILE if (c == mid and r == mid) else _random_main_tile()
-			_place_tile(tile, x0 + c * TILE, z0 + r * TILE, 0.0)
-
+# --- Walls and doorways ----------------------------------------------------
 
 func _build_walls() -> void:
-	var half := CHAMBER_TILES / 2.0 * TILE                # 16
-	# Chamber south & north walls (run along +X). North has the doorway.
-	for i in range(CHAMBER_TILES):
-		var x := -half + i * TILE
-		_place_wall(WALL_MESH, x, -half, 0.0)
-		var north_mesh := DOOR_MESH if is_equal_approx(x, DOOR_X0) else WALL_MESH
-		_place_wall(north_mesh, x, half, 0.0)
-	# Chamber east & west walls (rotated 90 -> run along Z).
-	for i in range(CHAMBER_TILES):
-		var z := half - i * TILE
-		_place_wall(WALL_MESH, half, z, 90.0)
-		_place_wall(WALL_MESH, -half, z, 90.0)
-	# Room walls: north side + the two sides; the south side is the shared chamber
-	# wall (with the doorway), so it's left open here.
-	var rx_east := ROOM_X0 + ROOM_TILES * TILE            # 4
-	var rz_north := half + ROOM_TILES * TILE              # 28
-	for i in range(ROOM_TILES):
-		_place_wall(WALL_MESH, ROOM_X0 + i * TILE, rz_north, 0.0)   # room north
-		var z := rz_north - i * TILE
-		_place_wall(WALL_MESH, rx_east, z, 90.0)                    # room east
-		_place_wall(WALL_MESH, ROOM_X0, z, 90.0)                    # room west
+	## A wall along every tile edge that has floor on one side and rock on the other, or that
+	## divides two different rooms — except where the layout says there is a way through.
+	var doorways := {}
+	for d in layout.doors:
+		doorways[LayoutScript.edge_key(d["a"], d["b"])] = d
+	var done := {}
+	for t in layout.tiles:
+		for dir in DIRS:
+			var n: Vector2i = t + dir
+			var key := LayoutScript.edge_key(t, n)
+			if done.has(key):
+				continue
+			done[key] = true
+			if layout.tiles.has(n) and layout.tiles[n] == layout.tiles[t]:
+				continue
+			if doorways.has(key):
+				_build_doorway(doorways[key])
+				continue
+			var at := _edge_module(t, dir)
+			_place_wall(WALL_MESH, at.x, at.z, at.y)
 
 
-func is_floor_at(x: float, z: float) -> bool:
-	## Whether a play-grid square has dungeon floor under it: the chamber, or the room through
-	## the north door.
-	##
-	## THE authority on where a unit can be put, asked by Combatant._is_in_arena — which was a
-	## ±14 square before this existed and therefore said no to every square of the room. Worked
-	## out from the same CHAMBER_TILES / ROOM_TILES / ROOM_X0 the geometry is BUILT from, so a
-	## change to the floor plan cannot leave the play area describing the old one.
-	##
-	## Strictly inside, so a square whose centre sits exactly on a wall line is out. Play
-	## squares are on odd coordinates and the walls on multiples of TILE, so in practice this
-	## only ever decides the boundary cases the two grids create.
-	var half := CHAMBER_TILES / 2.0 * TILE                # 16
-	if _inside(x, -half, half) and _inside(z, -half, half):
-		return true
-	var room_x1 := ROOM_X0 + ROOM_TILES * TILE            # 4
-	var room_z1 := half + ROOM_TILES * TILE               # 28
-	return _inside(x, ROOM_X0, room_x1) and _inside(z, half, room_z1)
+func _edge_module(t: Vector2i, dir: Vector2i) -> Vector3:
+	## Where the wall module for one edge of a tile goes, as (x, yaw, z). Synty wall modules
+	## start at their left edge: one at yaw 0 runs +x from its origin, one at yaw 90 runs -z.
+	if dir == Vector2i(0, 1):
+		return Vector3(t.x * TILE, 0.0, (t.y + 1) * TILE)
+	if dir == Vector2i(0, -1):
+		return Vector3(t.x * TILE, 0.0, t.y * TILE)
+	if dir == Vector2i(1, 0):
+		return Vector3((t.x + 1) * TILE, 90.0, (t.y + 1) * TILE)
+	return Vector3(t.x * TILE, 90.0, (t.y + 1) * TILE)
 
 
-func _inside(v: float, lo: float, hi: float) -> bool:
-	return v > lo and v < hi
+func _build_doorway(door: Dictionary) -> void:
+	## A doorframe module, and — where the layout says so — a door hung in it. The geometry is
+	## the layout's (DungeonLayout.door_geometry), so the square the door seals and the squares
+	## the generator kept clear of furniture are the same squares by construction.
+	var g: Dictionary = LayoutScript.door_geometry(door)
+	var at: Vector3 = g["module_at"]
+	_place_wall(DOOR_MESH, at.x, at.z, g["yaw"], g["gap_u"])
+	if door.get("leaf", false):
+		DoorScript.build(self, g["seal_at"], g["leaf_offset"], g["yaw"],
+			DOOR_LEAF_MESH, WALL_MAT, SCALE)
 
 
-func doorway_cell_x() -> float:
-	## Centre of the single grid square the doorway occupies, worked out from the hole in the
-	## art with the same snap the movement code uses (Combatant._snap_to_grid). The hole is
-	## centred on the LINE between two squares, so this picks one of them — and everything
-	## else, jambs and door alike, is built from the answer so they cannot disagree.
-	var opening_x := DOOR_X0 + DOOR_OPENING_LOCAL_X * SCALE
-	return (floor(opening_x / GRID) + 0.5) * GRID
-
-
-func _build_door() -> void:
-	## Hang a door in the one doorway, worked out from the same DOOR_X0 the frame is placed
-	## from. Sited here rather than inside _build_walls so the wall loop stays a wall loop.
-	##
-	## The frame piece runs from DOOR_X0 to DOOR_X0 + TILE along +X (Synty wall modules have
-	## their origin on the left edge, not the middle), so the opening is DOOR_OPENING_LOCAL_X
-	## into it. Yaw is 0 to match the north wall the frame sits in.
-	var half := CHAMBER_TILES / 2.0 * TILE                # 16
-	var opening_x := DOOR_X0 + DOOR_OPENING_LOCAL_X * SCALE
-	var cell_x := doorway_cell_x()
-	# The door stands on the square it seals; the leaf hangs over the hole in the art, half a
-	# square away. See the header of door.gd for why those are not the same place.
-	DoorScript.build(
-		self, Vector3(cell_x, FLOOR_Y, half), opening_x - cell_x, 0.0,
-		DOOR_LEAF_MESH, WALL_MAT, SCALE)
-
-
-func _place_wall(mesh_path: String, x: float, z: float, rot_y_deg: float) -> void:
+func _place_wall(mesh_path: String, x: float, z: float, rot_y_deg: float,
+		gap_u: float = 0.0) -> void:
 	var m: Mesh = load(mesh_path)
 	if m == null:
 		return
@@ -389,13 +408,11 @@ func _place_wall(mesh_path: String, x: float, z: float, rot_y_deg: float) -> voi
 	# Solid walls block movement + line of sight (obstacle layer 4). The box is sized from the
 	# mesh AABB and rides the MeshInstance's scale, so it matches.
 	#
-	# The doorway module is the exception, and it used to be handled by skipping its collider
-	# entirely. That was wrong: a module is 4 units, the play grid is 2, so leaving the WHOLE
-	# module open made a two-square hole in a wall whose art shows a one-square door. Units
-	# walked through the masonry beside the door, and shot through it. It now gets jambs — see
-	# _place_doorway_jambs — and only the doorway square itself is left open.
+	# The doorway module is the exception: a module is 4 units and the play grid is 2, so
+	# leaving the WHOLE module open would make a two-square hole in a wall whose art shows a
+	# one-square door. It gets jambs instead — see _place_doorway_jambs.
 	if mesh_path == DOOR_MESH:
-		_place_doorway_jambs(mi, m, x)
+		_place_doorway_jambs(mi, m, gap_u)
 		return
 	var aabb := m.get_aabb()
 	var body := StaticBody3D.new()
@@ -410,28 +427,26 @@ func _place_wall(mesh_path: String, x: float, z: float, rot_y_deg: float) -> voi
 	mi.add_child(body)
 
 
-func _place_doorway_jambs(mi: MeshInstance3D, m: Mesh, module_x: float) -> void:
+func _place_doorway_jambs(mi: MeshInstance3D, m: Mesh, gap_u: float) -> void:
 	## Wall the solid parts of a doorway module and leave exactly one grid square open.
 	##
-	## Derived rather than measured: take the module's own span, take the square the doorway
-	## snaps to, and make a collider out of whatever is left over on each side. So it stays
-	## right if the module, DOOR_X0 or SCALE change, and it is the same arithmetic the pathing
-	## uses to decide which square a position is in.
+	## `gap_u` is the centre of the doorway square measured ALONG the module from its origin, in
+	## world units, whichever way the module is turned — so this works the same for a wall
+	## running along x and one running along z.
 	var aabb := m.get_aabb()
-	var lo: float = module_x + aabb.position.x * SCALE
+	var lo: float = aabb.position.x * SCALE
 	var hi: float = lo + aabb.size.x * SCALE
 	# Each jamb reaches a hair PAST the doorway square rather than stopping dead on its edge.
 	# A diagonal step from the square beside the doorway to the square beyond it crosses the
 	# wall plane exactly on that edge, and a ray that grazes the seam between two boxes reports
-	# whatever floating point feels like — which is how units were cutting the corner of the
-	# jamb into the room, open door or shut. The overlap is far too small to trouble the ray
-	# down the middle of the doorway square, a whole unit away.
-	var gap_lo: float = doorway_cell_x() - GRID / 2.0 + JAMB_OVERLAP
-	var gap_hi: float = doorway_cell_x() + GRID / 2.0 - JAMB_OVERLAP
+	# whatever floating point feels like. The overlap is far too small to trouble the ray down
+	# the middle of the doorway square, a whole unit away.
+	var gap_lo: float = gap_u - GRID / 2.0 + JAMB_OVERLAP
+	var gap_hi: float = gap_u + GRID / 2.0 - JAMB_OVERLAP
 	for span in [[lo, gap_lo], [gap_hi, hi]]:
 		var width: float = span[1] - span[0]
 		# A sliver is the module's own overlap with its neighbour, which that neighbour's
-		# collider already covers. Building a box for it would only add contacts.
+		# collider already covers.
 		if width < 0.1:
 			continue
 		var body := StaticBody3D.new()
@@ -439,47 +454,124 @@ func _place_doorway_jambs(mi: MeshInstance3D, m: Mesh, module_x: float) -> void:
 		body.collision_mask = 0
 		var cs := CollisionShape3D.new()
 		var box := BoxShape3D.new()
-		# Everything here is in the module's OWN units, not world units, because the shape
-		# hangs off the MeshInstance and inherits its SCALE — the same convention the plain
-		# wall collider above uses. Only `width` arrives in world units, so only `width` is
-		# divided back out. Sizing the box in world units instead makes every jamb 20% too
-		# narrow, which leaves precisely enough room for a diagonal step to clip its corner.
+		# In the module's OWN units, because the shape hangs off the MeshInstance and inherits
+		# its SCALE. Only `width` and the span arrive in world units, so only they are divided
+		# back out.
 		box.size = Vector3(width / SCALE, aabb.size.y, aabb.size.z)
 		cs.shape = box
 		cs.position = Vector3(
-			((span[0] + span[1]) / 2.0 - module_x) / SCALE,
+			(span[0] + span[1]) / 2.0 / SCALE,
 			aabb.get_center().y,
 			aabb.get_center().z)
 		body.add_child(cs)
 		mi.add_child(body)
 
 
-func _build_props() -> void:
-	var half := CHAMBER_TILES / 2.0 * TILE                # 16
-	# Throne centered on the vessel's x = 0 axis, spanning the two cells straddling that
-	# line (x = -1 and x = 1), against the south wall, facing north. Placed WITHOUT a
-	# collider (solid = false): its two cells are reserved explicitly below, so exactly
-	# those squares block. A collider's footprint would spill into the neighbours.
-	_place_prop(THRONE_MESH, 0.0, -half + 1.0, 0.0, false, FLOOR_Y, false, 2.2)
-	_reserve_cell(-1.0, -half + 1.0)
-	_reserve_cell(1.0, -half + 1.0)
-	# The two squares in front of it, looking out over the hall — where somebody holding this
-	# room would put himself. Not the throne's OWN squares: those are reserved above, which is
-	# to say they are wall as far as walking is concerned, and a boss standing on one would be
-	# standing on a square the rules say nothing can cross.
-	var seat: Vector3 = _throne_seat(0.0, -half + 1.0, 2.2)
-	for x in [-1.0, 1.0]:
-		_add_idle_spot("seat", Vector3(x, FLOOR_Y, -half + 1.0 + GRID), Vector3.ZERO, seat)
-	# Wall banners flanking the widened throne, hung high on the same wall (solid).
-	# Rotated 180 so the decorated face points into the room, not at the wall.
-	_place_prop(WALL_BANNER_MESH, -3.0, -half + 0.3, 180.0, true, 4.0)
-	_place_prop(WALL_BANNER_MESH, 3.0, -half + 0.3, 180.0, true, 4.0)
-	# Stone vessel on the circle's center crossing: block diagonal cuts through it (via
-	# the collider) but do NOT reserve a cell, so the four squares around it stay walkable.
-	_place_prop(VESSEL_MESH, 0.0, 0.0, 0.0, true, FLOOR_Y, false)
+# --- Furniture -------------------------------------------------------------
+
+static func _yaw_facing(normal: Vector3) -> float:
+	## The yaw that turns a prop's front (+z) to face along `normal`.
+	return rad_to_deg(atan2(normal.x, normal.z))
 
 
-func _throne_seat(x: float, z: float, scale_mul: float) -> Vector3:
+func _build_features() -> void:
+	var barrel_index := 0
+	for f in layout.features:
+		var at: Vector3 = f["at"]
+		var n: Vector3 = f["normal"]
+		var room: int = f["room"]
+		match String(f["type"]):
+			"throne":
+				_build_throne(at, n, room, f["squares"])
+			"banner":
+				# Rotated so the decorated face points into the room, not at the wall.
+				_place_prop(WALL_BANNER_MESH, at.x, at.z, _yaw_facing(n) + 180.0, false, BANNER_Y)
+			"vessel":
+				# On a grid crossing: blocks diagonal cuts through it (the collider) but does NOT
+				# reserve a cell, so the four squares around it stay walkable.
+				_place_prop(VESSEL_MESH, at.x, at.z, 0.0, true, FLOOR_Y, false)
+			"pillar":
+				_place_column(at)
+			"chest":
+				_build_chest(at, n, room)
+			"barrel":
+				_build_barrel(at, n, room, barrel_index)
+				barrel_index += 1
+			"crate":
+				_build_crate(at, n, room)
+
+
+func _build_throne(at: Vector3, normal: Vector3, room: int, squares: Array) -> void:
+	## Placed WITHOUT a collider: its two squares are reserved explicitly, so exactly those
+	## squares block. A collider's footprint would spill into the neighbours.
+	_place_prop(THRONE_MESH, at.x, at.z, _yaw_facing(normal), false, FLOOR_Y, false,
+		THRONE_SCALE_MUL)
+	for s in squares:
+		_reserve_cell(s.x, s.z)
+	# The squares in front of it, looking out over the hall — where somebody holding this room
+	# would put himself. Not the throne's OWN squares: those are reserved above.
+	var seat := _throne_seat(at, normal, THRONE_SCALE_MUL)
+	for s in squares:
+		_add_idle_spot("seat", s + normal * GRID, _room_centre(room), room, seat)
+
+
+func _build_chest(at: Vector3, normal: Vector3, room: int) -> void:
+	var chest = LootContainerScript.new()
+	# The y here is a placeholder: a container settles onto the floor surface itself.
+	# The chest's lid hinges at its local -Z, the side against the wall, and swings open over
+	# the +Z side you stand on.
+	chest.configure(at, _yaw_facing(normal), CHEST_PREFAB, SCALE * CHEST_SCALE_MUL)
+	chest.open_verb = "Open"
+	chest.locked = CHEST_STARTS_LOCKED
+	chest.key_id = CHEST_KEY_ID
+	chest.lock_penalty = CHEST_LOCK_PENALTY
+	chest.loot = CHEST_LOOT
+	chest.loot_rolls = 2
+	# Added last: _ready() builds the geometry, and it must not run before the fields above
+	# are in place.
+	add_child(chest)
+	_spot_beside(at, normal, room, "stores")
+
+
+func _build_barrel(at: Vector3, normal: Vector3, room: int, index: int) -> void:
+	## Which liquid is rolled HERE, once per barrel, rather than left to the container: a `loot`
+	## list of one means every bottle drawn is the same, which is what makes a barrel of wine a
+	## barrel of wine. Rolled off the room's own _rng, so the casks come out the same way every
+	## time the same quest is built.
+	var barrel = LootContainerScript.new()
+	barrel.configure(at, _yaw_facing(normal), BARREL_PREFABS[index % BARREL_PREFABS.size()], SCALE)
+	barrel.loot = [BARREL_LIQUIDS[_rng.randi() % BARREL_LIQUIDS.size()]]
+	barrel.loot_rolls = BARREL_BOTTLES
+	add_child(barrel)
+	_spot_beside(at, normal, room, "stores")
+
+
+func _build_crate(at: Vector3, normal: Vector3, room: int) -> void:
+	var entry: Dictionary = CRATES[_rng.randi() % CRATES.size()]
+	var crate = LootContainerScript.new()
+	crate.configure(at, _yaw_facing(normal), entry["prefab"], SCALE * CRATE_SCALE_MUL)
+	crate.loot = CRATE_LOOT
+	crate.loot_rolls = entry["rolls"]
+	add_child(crate)
+	_spot_beside(at, normal, room, "stores")
+
+
+func _place_column(at: Vector3) -> void:
+	## A pillar, built the way the hand-placed ones in the old chamber were: a short cylinder on
+	## the obstacle layer (column_obstacle.gd puts it in "obstacles") and the pack's round pillar.
+	var body := StaticBody3D.new()
+	body.set_script(ColumnScript)
+	body.name = "Column"
+	body.collision_layer = LAYER_OBSTACLE
+	body.position = Vector3(at.x, FLOOR_Y, at.z)
+	var cs := CollisionShape3D.new()
+	cs.shape = CylinderShape3D.new()
+	body.add_child(cs)
+	body.add_child(PILLAR_VISUAL.instantiate())
+	add_child(body)
+
+
+func _throne_seat(at: Vector3, normal: Vector3, scale_mul: float) -> Vector3:
 	## Where on the throne somebody sits: the middle of the seat plate, at the height of it.
 	##
 	## Worth deriving rather than writing down, because the throne is placed from THIS file's
@@ -489,23 +581,18 @@ func _throne_seat(x: float, z: float, scale_mul: float) -> Vector3:
 	##
 	## Two scans of the mesh, and both are confined to the MIDDLE THIRD of its width, which is
 	## the whole trick: a chair's arms are higher than its seat, and a body sits between them.
-	## Scanning the full width finds the arms and seats the boss on top of them — on this throne
-	## that is 1.50 against a seat at 0.82, most of a body's height too high, and it looked
-	## exactly like what it was.
 	##
 	## The SEAT PLATE is then the highest point of the throne that is forward of the throne's own
 	## middle: a chair is a block you sit on with a slab behind it, so everything above the seat
-	## is backrest, and everything above the seat is therefore BEHIND the middle. On this mesh
-	## the arms top out at 0.857 of 1.89 and the seat plate at 0.465, a flat central surface of
-	## 38 vertices.
+	## is backrest, and everything above the seat is therefore BEHIND the middle.
 	##
 	## The SEAT DEPTH is what is left between the front of the backrest and the front of the
-	## throne, and the sitter goes in the middle of it — far enough forward not to be inside the
-	## slab, far enough back not to be perched on the lip.
+	## throne, and the sitter goes in the middle of it.
 	##
 	## The y returned is a HEIGHT ABOVE THE FLOOR, not a world y, and it is the height of the
 	## SURFACE: what a body has to do to rest its own weight on that surface is the body's
-	## business, and a surprisingly involved one — see Enemy._seated_hip_drop.
+	## business — see Enemy._seated_hip_drop. The forward offset is along `normal`, the way the
+	## throne was turned to face.
 	var m: Mesh = load(THRONE_MESH)
 	if m == null:
 		return Vector3.INF
@@ -532,67 +619,10 @@ func _throne_seat(x: float, z: float, scale_mul: float) -> Vector3:
 	if back_z == -INF:
 		back_z = aabb.position.z
 	var s: float = SCALE * scale_mul
-	return Vector3(x, seat_y * s, z + (back_z + aabb.end.z) * 0.5 * s)
-
-
-func _build_containers() -> void:
-	## Chest and casks along the south wall — the far side of the room from the door, so
-	## crossing to them means crossing the fight — and crates in the north-east corner.
-	##
-	## Three kinds of container, and the split is deliberate: the barrels are drink and only
-	## drink (BARREL_LIQUIDS), the crates are gear and the odd health potion (CRATE_LOOT), and
-	## the one thing worth crossing the room for is locked in the chest.
-	##
-	## Sited clear of the throne, which already holds the two squares either side of x = 0 (see
-	## _build_props), and facing north into the room so their loot spills into the floor rather
-	## than into the masonry behind them.
-	var wall_z := -CHAMBER_TILES / 2.0 * TILE + 1.0     # -15, level with the throne
-	var chest = LootContainerScript.new()
-	# The y here is a placeholder: a container settles onto the floor surface itself, because
-	# FLOOR_Y is under it. See LootContainer.FLOOR_SURFACE_Y.
-	# Yaw 0 faces them into the room: the chest's lid hinges at its local -Z, which is the side
-	# against the wall, and swings open over the +Z side you stand on.
-	chest.configure(Vector3(-5.0, FLOOR_Y, wall_z), 0.0,
-		CHEST_PREFAB, SCALE * CHEST_SCALE_MUL)
-	chest.open_verb = "Open"
-	chest.locked = CHEST_STARTS_LOCKED
-	chest.key_id = CHEST_KEY_ID
-	chest.lock_penalty = CHEST_LOCK_PENALTY
-	chest.loot = CHEST_LOOT
-	chest.loot_rolls = 2
-	# Added last: _ready() builds the geometry, and it must not run before the fields above
-	# are in place.
-	add_child(chest)
-	_spot_beside(-5.0, wall_z, "stores")
-
-	# Barrels beside it, working east along the same wall. Casks: what comes out of one is
-	# bottled drink, and one cask is one liquid.
-	#
-	# Which liquid is rolled HERE, once per barrel, rather than left to the container: a `loot`
-	# list of one means every bottle LootContainer draws is the same, which is what makes a
-	# barrel of wine a barrel of wine instead of a mixed crate of three. Rolled off the room's
-	# own _rng, so the casks come out the same way every run of the same SEED — the same
-	# promise the rest of this file already makes about which floor tile lands where. Change
-	# SEED to reshuffle them.
-	for i in range(BARREL_PREFABS.size()):
-		var barrel = LootContainerScript.new()
-		barrel.configure(Vector3(5.0 + i * 2.0, FLOOR_Y, wall_z), 0.0,
-			BARREL_PREFABS[i], SCALE)
-		barrel.loot = [BARREL_LIQUIDS[_rng.randi() % BARREL_LIQUIDS.size()]]
-		barrel.loot_rolls = BARREL_BOTTLES
-		add_child(barrel)
-		_spot_beside(5.0 + i * 2.0, wall_z, "stores")
-
-	# And the crates in the north-east corner, where the gear is. Unlocked, so no key_id and no
-	# lock_penalty: they open to anyone who walks over and looks.
-	for entry in CRATES:
-		var crate = LootContainerScript.new()
-		crate.configure(Vector3(entry["x"], FLOOR_Y, entry["z"]), entry["yaw"],
-			entry["prefab"], SCALE * CRATE_SCALE_MUL)
-		crate.loot = CRATE_LOOT
-		crate.loot_rolls = entry["rolls"]
-		add_child(crate)
-		_spot_beside(entry["x"], entry["z"], "stores")
+	var forward: float = (back_z + aabb.end.z) * 0.5 * s
+	var out := at + normal * forward
+	out.y = seat_y * s
+	return out
 
 
 func _reserve_cell(x: float, z: float) -> void:

@@ -29,6 +29,9 @@ const QuestDefScript := preload("res://scripts/quest_def.gd")
 const HirelingScript := preload("res://scripts/hireling.gd")
 const PartySheetScript := preload("res://scripts/party_sheet.gd")
 const ShopScript := preload("res://scripts/shop.gd")
+const GeneratorScript := preload("res://scripts/dungeon_generator.gd")
+const LayoutScript := preload("res://scripts/dungeon_layout.gd")
+const RosterScript := preload("res://scripts/enemy_roster.gd")
 
 ## A save path of this test's own. The real one belongs to whoever is playing, and a dev tool
 ## has no business writing to it.
@@ -206,6 +209,9 @@ func _run() -> void:
 	# --- Quests as described things, and the board they are pinned to --------------------
 	await _run_quest_checks()
 
+	# --- The dungeon a quest builds, and the alarm scoped to its rooms --------------------
+	await _run_dungeon_checks()
+
 	# --- Hiring, and taking the people hired underground ---------------------------------
 	await _run_hire_checks()
 
@@ -375,26 +381,31 @@ func _run_quest_checks() -> void:
 	# --- The board as GameState keeps it ---------------------------------------------------
 	GameState.clear()
 	GameState.add_member(CharacterClassesScript.make("soldier", "Contractor"))
-	_check(GameState.board_seed == 0, "a new game has no board yet")
-	var pinned: Array = GameState.quest_board()
-	_check(GameState.board_seed != 0, "reading the board rolls one")
-	_check(pinned.size() == GameState.BOARD_OFFERS, "with the town's usual number of jobs")
-	_check(GameState.quest_board()[0].title == pinned[0].title,
+	_check(GameState.quest_offers.is_empty(), "a new game has no board yet")
+	var pinned: Array = GameState.quest_board().duplicate()
+	_check(pinned.size() == GameState.BOARD_OFFERS and GameState.BOARD_OFFERS == 3,
+		"reading the board pins up three jobs")
+	_check(_seeds_of(GameState.quest_board()) == _seeds_of(pinned),
 		"and reading it again shows the same jobs")
-	var was := GameState.board_seed
-	GameState.reroll_board()
-	_check(GameState.board_seed != was and GameState.board_seed != 0,
-		"rerolling puts up a different board")
+	var torn = pinned[1]
+	_check(GameState.discard_offer(torn), "a job can be torn down")
+	var after: Array = GameState.quest_board()
+	_check(after.size() == GameState.BOARD_OFFERS, "and a new one goes up in its place")
+	_check(not _seeds_of(after).has(torn.quest_seed), "the torn-down job is gone")
+	_check(_seeds_of(after).has(pinned[0].quest_seed) and _seeds_of(after).has(pinned[2].quest_seed),
+		"and the other two are still up")
+	_check(not GameState.discard_offer(torn), "a job cannot be torn down twice")
 
 	# --- Taking a job, and being paid for it -----------------------------------------------
 	# Through the real settlement path (QuestScene.settle), because the question is not whether
 	# the arithmetic is right but whether the contract reaches it.
-	var job = QuestDefScript.generate(31_337, 3)
+	var job = GameState.quest_board()[0]
+	var others: Array = _seeds_of(GameState.quest_board())
+	others.erase(job.quest_seed)
 	GameState.accept_quest(job)
 	_check(GameState.current_quest == job, "a job taken off the board is the job the party is on")
 	var gold_before: int = GameState.gold
 	var xp_before: int = GameState.party[0].xp
-	var board_before: int = GameState.board_seed
 
 	var quest := await _enter_quest()
 	var settlement: Dictionary = await _leave_quest(quest, "victory")
@@ -405,10 +416,13 @@ func _run_quest_checks() -> void:
 	_check(settlement.get("quest_paid", false), "and the results screen is told it was settled")
 	_check(String(settlement.get("quest", "")) == job.title, "and which job it was")
 	_check(GameState.current_quest == null, "the party is not on a quest any more")
-	_check(GameState.board_seed != board_before, "and the board has gone up fresh")
+	var board_now: Array = _seeds_of(GameState.quest_board())
+	_check(not board_now.has(job.quest_seed), "and the job done has come off the board")
+	_check(board_now.size() == GameState.BOARD_OFFERS and board_now.has(others[0])
+		and board_now.has(others[1]), "with a new one up in its place and the rest untouched")
 
 	# --- Walking out of a job you took -----------------------------------------------------
-	var abandoned = QuestDefScript.generate(4_711, 2)
+	var abandoned = GameState.quest_board()[0]
 	GameState.accept_quest(abandoned)
 	gold_before = GameState.gold
 	xp_before = GameState.party[0].xp
@@ -419,6 +433,8 @@ func _run_quest_checks() -> void:
 	_check(not settlement.get("quest_paid", true), "and the results screen says so")
 	_check(String(settlement.get("quest", "")) == abandoned.title,
 		"while still naming the job that was dropped")
+	_check(_seeds_of(GameState.quest_board()).has(abandoned.quest_seed),
+		"and the job is still up on the board to go back to")
 
 	# --- A trip through the gate on the party's own account --------------------------------
 	_check(GameState.current_quest == null, "no contract after the last one was dropped")
@@ -428,6 +444,237 @@ func _run_quest_checks() -> void:
 	_check(String(settlement.get("quest", "")) == "",
 		"an uncontracted trip settles with no job attached")
 	_check(GameState.gold == gold_before, "and pays only for what was killed")
+
+
+func _run_dungeon_checks() -> void:
+	## The generated dungeon. Most of it is checked on the LAYOUT — pure data, no scene — across
+	## every tier and a spread of seeds, because the bugs that matter here are the ones a
+	## particular seed produces: a room nobody can reach, a goblin in a wall, a chest in a doorway.
+	## Then one real quest is built, to check the bodies match the data and the alarm wakes one
+	## room and not the dungeon.
+	# --- The enemy templates themselves ---
+	var templates: Array = RosterScript.all()
+	_check(templates.size() == RosterScript.TEMPLATES.size(),
+		"every enemy template loads (%d of %d)" % [templates.size(), RosterScript.TEMPLATES.size()])
+	var well_formed := true
+	var keyed := true
+	var ids := {}
+	for t in templates:
+		if t.id == "" or ids.has(t.id) or t.model_scene == null or t.stats == null \
+				or t.cost < 1 or t.themes.is_empty() or t.gear.size() > 4:
+			well_formed = false
+			_say("    template not well formed: %s" % t.id)
+		ids[t.id] = true
+		if t.is_boss:
+			var has_key := false
+			for g in t.gear:
+				if g != null and g.resource_path.ends_with("iron_key.tres"):
+					has_key = true
+			if not has_key:
+				keyed = false
+				_say("    boss without the chest key: %s" % t.id)
+	_check(well_formed, "each has a unique id, a body, a stat block, a cost, a theme and at most four items")
+	_check(keyed, "and every boss carries the key to the boss room's chest")
+	var themed := true
+	for entry in QuestDefScript.THEMES:
+		var theme := String(entry["id"])
+		if RosterScript.candidates(theme, 1, true).is_empty() \
+				or RosterScript.candidates(theme, 1, false).is_empty():
+			themed = false
+			_say("    theme with no tier-1 boss or rank and file: %s" % theme)
+	_check(themed, "every quest theme has a boss and rank and file from tier 1")
+
+	var a = GeneratorScript.generate(9001, 3, 22)
+	var b = GeneratorScript.generate(9001, 3, 22)
+	_check(_layout_sig(a) == _layout_sig(b), "the same seed builds the same dungeon")
+	var c = GeneratorScript.generate(9002, 3, 22)
+	_check(_layout_sig(a) != _layout_sig(c), "and a different seed a different one")
+
+	var connected := true
+	var roles := true
+	var bodies_ok := true
+	var furniture_ok := true
+	var counts_ok := true
+	var party_room := true
+	var on_theme := true
+	var bigger := true
+	var smallest := {}
+	var problems: Array = []
+	for tier in range(1, QuestDefScript.MAX_TIER + 1):
+		var fewest := 99
+		for i in range(12):
+			var quest_seed := 1000 + tier * 100 + i
+			var budget: int = QuestDefScript.ENEMY_BUDGET_BASE \
+				+ QuestDefScript.ENEMY_BUDGET_STEP * (tier - 1)
+			var theme := String(QuestDefScript.THEMES[i % QuestDefScript.THEMES.size()]["id"])
+			var L = GeneratorScript.generate(quest_seed, tier, budget, theme)
+			for e in L.enemies:
+				var t = RosterScript.find(String(e["kind"]))
+				if t == null or not t.fits(theme, tier):
+					on_theme = false
+					problems.append("seed %d %s in a tier-%d %s" % [quest_seed, e["kind"], tier, theme])
+			fewest = mini(fewest, L.rooms().size())
+			if not _all_reachable(L):
+				connected = false
+				problems.append("seed %d unreachable floor" % quest_seed)
+			if L.room_with_role("boss").is_empty() or L.room_with_role("entrance").is_empty():
+				roles = false
+			var used := {}
+			var thresholds := {}
+			for t in L.door_squares():
+				thresholds[Vector2i(roundi(t.x), roundi(t.z))] = true
+				if not L.is_floor_at(t.x, t.z):
+					bodies_ok = false
+					problems.append("seed %d doorway onto rock" % quest_seed)
+			for e in L.enemies:
+				var k := Vector2i(roundi(e["at"].x), roundi(e["at"].z))
+				if not L.is_floor_at(e["at"].x, e["at"].z) or used.has(k) \
+						or L.region_at(e["at"].x, e["at"].z) != int(e["room"]):
+					bodies_ok = false
+					problems.append("seed %d enemy misplaced at %s" % [quest_seed, e["at"]])
+				used[k] = true
+			for sq in L.party_spawns:
+				var k := Vector2i(roundi(sq.x), roundi(sq.z))
+				if not L.is_floor_at(sq.x, sq.z) or used.has(k) \
+						or L.region_at(sq.x, sq.z) != L.room_with_role("entrance")["id"]:
+					party_room = false
+				used[k] = true
+			if L.party_spawns.size() < GameState.PARTY_MAX:
+				party_room = false
+			for f in L.features:
+				for sq in f["squares"]:
+					var k := Vector2i(roundi(sq.x), roundi(sq.z))
+					if not L.is_floor_at(sq.x, sq.z) or used.has(k) or thresholds.has(k):
+						furniture_ok = false
+						problems.append("seed %d %s misplaced at %s" % [quest_seed, f["type"], sq])
+					used[k] = true
+			var roster: Array = GeneratorScript.roster(quest_seed, tier, budget, theme)
+			var spent := 0
+			for kind in roster:
+				spent += RosterScript.find(String(kind)).cost
+			var lead = RosterScript.find(String(L.enemies[0]["kind"])) if not L.enemies.is_empty() else null
+			if L.enemies.is_empty() or L.enemies.size() > roster.size() or spent > budget \
+					or lead == null or not lead.is_boss:
+				counts_ok = false
+		smallest[tier] = fewest
+		if tier > 1 and smallest[tier] < smallest[tier - 1]:
+			bigger = false
+	_check(connected, "every floor tile of every dungeon can be walked to from the entrance")
+	_check(roles, "every dungeon has an entrance and a boss room")
+	_check(bodies_ok, "every enemy stands on floor, in its own room, alone, and every doorway opens onto floor")
+	_check(furniture_ok, "no furniture in a doorway, on rock, or on top of anything else")
+	_check(party_room, "a full party arrives in the entrance, a square each")
+	_check(counts_ok, "the boss is there, the roster stays inside the budget, and nobody is placed who was not on it")
+	_check(on_theme, "every enemy placed belongs to the quest's theme and tier")
+	_check(bigger, "harder tiers do not build smaller dungeons (%s)" % str(smallest))
+	for line in problems.slice(0, 6):
+		_say("    " + line)
+
+	# --- A real one, and its alarm ---------------------------------------------------------
+	GameState.clear()
+	GameState.add_member(CharacterClassesScript.make("soldier", "Delver"))
+	var def = QuestDefScript.generate(424_242, 3)
+	GameState.accept_quest(def)
+	var quest := await _enter_quest()
+	var room: Node = quest.get_node("DungeonRoom")
+	var cm: Node = quest.get_node("CombatManager")
+	var enemies: Array = []
+	for n in get_tree().get_nodes_in_group("enemies"):
+		if is_instance_valid(n) and quest.is_ancestor_of(n):
+			enemies.append(n)
+	_check(enemies.size() == room.enemy_spawns().size() and enemies.size() > 1,
+		"every enemy the layout placed has a body (%d)" % enemies.size())
+	var homed := true
+	for e in enemies:
+		if not room.is_floor_at(e.position.x, e.position.z) \
+				or room.region_at(e.position.x, e.position.z) != e.home_room:
+			homed = false
+	_check(homed, "and each one stands in the room it belongs to")
+	var dressed := true
+	var spawns: Array = room.enemy_spawns()
+	for i in range(mini(enemies.size(), spawns.size())):
+		var t = RosterScript.find(String(spawns[i]["kind"]))
+		var e: Node = enemies[i]
+		if t == null or e.get_node_or_null("CharacterModel") == null \
+				or not String(e.character_name).begins_with(t.display_name) \
+				or e.enemy_type != t.ai or e.inventory == null or e.inventory.get_equipped_weapon() == null:
+			dressed = false
+			_say("    enemy not dressed as %s: %s" % [spawns[i]["kind"], e.character_name])
+	_check(dressed, "and is dressed as its template: body, name, fighting style and a weapon in hand")
+	var hero: Node = quest._party_views[0]
+	_check(room.region_at(hero.position.x, hero.position.z)
+		== room.layout.room_with_role("entrance")["id"], "the party comes in at the entrance")
+	_check(cm.is_exploring(), "and nobody has noticed them yet")
+
+	var first: Node = enemies[0]
+	var woken_room: int = first.home_room
+	cm.raise_alarm(first)
+	var right_room := true
+	var others_asleep := true
+	var someone_else := false
+	for e in enemies:
+		if e.home_room == woken_room and not e.alerted:
+			right_room = false
+		if e.home_room != woken_room:
+			someone_else = true
+			if e.alerted:
+				others_asleep = false
+	_check(not cm.is_exploring(), "a shout starts a fight")
+	_check(right_room, "and wakes everybody in that room")
+	_check(someone_else and others_asleep, "and nobody in any other room")
+
+	for e in enemies:
+		if e.home_room == woken_room:
+			e.is_alive = false
+			cm.on_character_died(e)
+	_check(cm.is_exploring(), "clearing that room puts the party back to exploring")
+	_check(not quest.field_is_held(), "without the dungeon counting as held")
+
+	var second: Node = null
+	for e in enemies:
+		if e.is_alive:
+			second = e
+			break
+	if second != null:
+		cm.raise_alarm(hero, second)
+		await get_tree().process_frame
+		cm.turn_done(1)
+		_check(second.alerted, "a hero's blow wakes the room it lands in")
+	for e in enemies:
+		if e.is_alive:
+			e.alerted = true
+			e.is_alive = false
+			cm.on_character_died(e)
+	_check(quest.field_is_held(), "and the last one down holds the whole dungeon")
+	await _leave_quest(quest, "retreat")
+
+
+func _layout_sig(L) -> String:
+	return "%s|%s|%s|%s" % [str(L.tiles.keys()), str(L.doors), str(L.enemies), str(L.features.size())]
+
+
+func _all_reachable(L) -> bool:
+	## Every floor tile, walking only within a region or through one of its doorways.
+	var entrance: Dictionary = L.room_with_role("entrance")
+	if entrance.is_empty():
+		return false
+	var through := {}
+	for d in L.doors:
+		through[LayoutScript.edge_key(d["a"], d["b"])] = true
+	var start: Vector2i = entrance["rect"].position
+	var seen := {start: true}
+	var queue: Array = [start]
+	while not queue.is_empty():
+		var t: Vector2i = queue.pop_back()
+		for step in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var n: Vector2i = t + step
+			if seen.has(n) or not L.tiles.has(n):
+				continue
+			if L.tiles[n] != L.tiles[t] and not through.has(LayoutScript.edge_key(t, n)):
+				continue
+			seen[n] = true
+			queue.append(n)
+	return seen.size() == L.tiles.size()
 
 
 func _run_hire_checks() -> void:
@@ -875,15 +1122,15 @@ func _run_screen_checks() -> void:
 	# change here would free the test along with the board — so what it can honestly check is
 	# that the board draws the jobs GameState says are pinned up, one takeable button each.
 	# The taking itself is covered against the real settlement path in _run_quest_checks.
-	GameState.reroll_board()
 	var offers: Array = GameState.quest_board()
 	var board_screen: Node = await _mount("res://scenes/quest_board.tscn")
 	_check(_has_buttons(board_screen), "the notice board draws")
 	var all_pinned := true
 	for offer in offers:
-		if _find_button(board_screen, "Take: %s" % offer.title) == null:
+		if _find_button(board_screen, "Take: %s" % offer.title) == null \
+				or _find_button(board_screen, "Discard: %s" % offer.title) == null:
 			all_pinned = false
-	_check(all_pinned, "with a button for every one of the %d jobs going" % offers.size())
+	_check(all_pinned, "with a Take and a Discard for every one of the %d jobs going" % offers.size())
 	_check(_find_button(board_screen, "Back to town") != null, "and a way to walk away")
 	_free(board_screen)
 
@@ -1207,9 +1454,7 @@ func _run_save_checks() -> void:
 	var before_skill_xp: int = GameState.party[0].skill_xp_for("attack_skill")
 	# The board goes in the save so the jobs a player walked away from are still there when
 	# they come back, rather than the game quietly reshuffling the notices overnight.
-	GameState.reroll_board()
-	var before_board: int = GameState.board_seed
-	var before_offers: Array = GameState.quest_board()
+	var before_offers: Array = GameState.quest_board().duplicate()
 	GameState.reroll_camp()
 	var before_camp: int = GameState.camp_seed
 	var before_roster: Array = GameState.hire_roster()
@@ -1253,7 +1498,7 @@ func _run_save_checks() -> void:
 		"each skill own experience survives the save format")
 	_check(GameState.party[0].stats != null and GameState.party[0].id != "",
 		"the loaded character still has a stat block and an id")
-	_check(GameState.board_seed == before_board, "the notice board came back")
+	_check(_seeds_of(GameState.quest_offers) == _seeds_of(before_offers), "the notice board came back")
 	var reloaded_offers: Array = GameState.quest_board()
 	var same_jobs := reloaded_offers.size() == before_offers.size()
 	for i in range(reloaded_offers.size()):
@@ -1326,6 +1571,13 @@ func _leave_quest(quest: Node, outcome: String = "retreat") -> Dictionary:
 
 
 # --- Small helpers ----------------------------------------------------------
+
+func _seeds_of(quests: Array) -> Array:
+	var out: Array = []
+	for q in quests:
+		out.append(q.quest_seed)
+	return out
+
 
 func _authored_count(quest: Node) -> int:
 	var n := 0

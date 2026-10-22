@@ -1,0 +1,27 @@
+[gd_resource type="Resource" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemy_template.gd" id="1_tpl"]
+[ext_resource type="PackedScene" path="res://scenes/characters/soldier_model.tscn" id="2_model"]
+[ext_resource type="Resource" path="res://resources/stats/sellsword_stats.tres" id="3_stats"]
+[ext_resource type="Resource" path="res://resources/items/rusty_sword.tres" id="4_rusty_sword"]
+[ext_resource type="Resource" path="res://resources/items/wooden_shield.tres" id="5_wooden_shield"]
+[ext_resource type="Resource" path="res://resources/items/leather_armor.tres" id="6_leather_armor"]
+[ext_resource type="Resource" path="res://resources/items/knight_helmet.tres" id="7_knight_helmet"]
+
+[resource]
+script = ExtResource("1_tpl")
+id = "sellsword"
+display_name = "Sellsword"
+ai = 0
+model_scene = ExtResource("2_model")
+model_props = {}
+stats = ExtResource("3_stats")
+gear = Array[Resource]([ExtResource("4_rusty_sword"), ExtResource("5_wooden_shield"), ExtResource("6_leather_armor"), ExtResource("7_knight_helmet")])
+size = 1.0
+tint = Color(0.85, 0.8, 0.75, 1)
+voice = "male_d"
+cost = 5
+themes = PackedStringArray("dungeon")
+min_tier = 2
+weight = 1.0
+is_boss = false

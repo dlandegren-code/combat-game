@@ -6,6 +6,22 @@ enum EnemyType { GOBLIN, ARCHER, BOSS }
 
 @export var enemy_type: int = EnemyType.GOBLIN
 
+## Which room of the generated dungeon this one belongs to, by DungeonLayout region id. The
+## alarm is scoped by it — a shout wakes the room it was shouted in, not the whole dungeon (see
+## CombatManager._alert_room) — and so is where it idles: its beat is its own room's, and so
+## are the casks it goes to lean on. -1 for an enemy nobody assigned one, which is treated as
+## belonging everywhere, the way every enemy did before there was more than one room.
+@export var home_room: int = -1
+
+## How big the body is, as a plain scale on the CharacterModel. Zero leaves it to the body type
+## (_apply_enemy_visual), which is what the hand-built goblins used; an enemy dressed from an
+## EnemyTemplate sets it, because a human archer must not be shrunk to a goblin archer's size.
+@export var body_scale: float = 0.0
+
+## Multiplied into every colour of the model, once it has been built. White is no change. The
+## cheap half of telling a ghoul from a goblin when they share a body.
+@export var tint: Color = Color(1, 1, 1, 1)
+
 enum Action { MOVE, ATTACK, SHOVE, TRIP, RANGED, THROW }
 
 ## Distance (in tiles) an archer is happy to shoot from. At or beyond this it just looses an
@@ -26,8 +42,10 @@ const ARCHER_PREFERRED_DIST := RANGE_FREE_TILES
 # was: take_turn and the AI below, untouched.
 #
 # The two never overlap. `alerted` is set once, by CombatManager.raise_alarm, for every enemy
-# at once: one goblin seeing you is the whole room knowing, which is what a shout is for and
-# is far easier to reason about than per-enemy awareness spreading through a crowd.
+# in the same ROOM at once (home_room): one goblin seeing you is the whole room knowing, which
+# is what a shout is for and is far easier to reason about than per-enemy awareness spreading
+# through a crowd. The next room along has a shut door between it and the shouting, and finds
+# out when somebody walks in.
 
 enum IdleRole {
 	SENTRY,    ## Loiters. Kept as the scene default; identical to WANDERER since _idle_loiter.
@@ -391,7 +409,7 @@ func _room_idle_spots(kind: String) -> Array:
 	var room := get_parent().get_node_or_null("DungeonRoom") if get_parent() else null
 	if room == null or not room.has_method("idle_spots"):
 		return []
-	return room.idle_spots(kind)
+	return room.idle_spots(kind, home_room)
 
 
 func _idle_set_goal(tile: Vector3, face: Vector3, settle: String = "",
@@ -615,7 +633,7 @@ func _room_patrol_ring() -> Array:
 	var room := get_parent().get_node_or_null("DungeonRoom") if get_parent() else null
 	if room == null or not room.has_method("patrol_ring"):
 		return []
-	return room.patrol_ring()
+	return room.patrol_ring(home_room)
 
 
 func keeps_to_its_post() -> bool:
@@ -714,6 +732,13 @@ func _apply_enemy_visual() -> void:
 	var model_node: Node3D = get_node_or_null("CharacterModel")
 	var old_mesh: MeshInstance3D = get_node_or_null("Mesh")
 
+	if body_scale > 0.0:
+		var s := Vector3(body_scale, body_scale, body_scale)
+		if model_node: model_node.scale = s
+		if old_mesh: old_mesh.scale = s
+		_apply_tint(model_node)
+		return
+	_apply_tint(model_node)
 	match enemy_type:
 		EnemyType.GOBLIN:
 			if model_node: model_node.scale = Vector3(1, 1, 1)
@@ -724,6 +749,25 @@ func _apply_enemy_visual() -> void:
 		EnemyType.BOSS:
 			if model_node: model_node.scale = Vector3(1.3, 1.25, 1.3)
 			if old_mesh: old_mesh.scale = Vector3(1.3, 1.25, 1.3)
+
+
+func _apply_tint(model_node: Node) -> void:
+	## Darken or colour every surface of the body by `tint`. Each material is duplicated first:
+	## the model scenes share theirs, and tinting the original would turn every goblin in the
+	## dungeon into a ghoul.
+	if model_node == null or tint == Color(1, 1, 1, 1):
+		return
+	for mi in model_node.find_children("*", "MeshInstance3D", true, false):
+		var mesh_inst := mi as MeshInstance3D
+		if mesh_inst.mesh == null:
+			continue
+		for i in range(mesh_inst.mesh.get_surface_count()):
+			var mat := mesh_inst.get_active_material(i) as StandardMaterial3D
+			if mat == null:
+				continue
+			var own := mat.duplicate() as StandardMaterial3D
+			own.albedo_color = own.albedo_color * tint
+			mesh_inst.set_surface_override_material(i, own)
 
 
 func enable_turn() -> void:

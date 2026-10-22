@@ -74,7 +74,7 @@ todos:
     content: >-
       Phase 4: enemy template data files (stats, model scene, abilities,
       difficulty cost, loot table) + a spawner that spends the enemy budget
-    status: pending
+    status: completed
   - id: loot-tables
     content: >-
       Phase 4: loot tables per theme/difficulty; generator places loot
@@ -84,7 +84,7 @@ todos:
     content: >-
       Phase 4: parameterize room_builder.gd - seed + difficulty + theme ->
       layout + spawn points + loot points (room-and-corridor patterns first)
-    status: pending
+    status: completed
   - id: party-hirelings
     content: >-
       Phase 5: GameState.party becomes multi-member; hire screen in town; quest
@@ -975,3 +975,98 @@ added outside the editor, whatever is done to provoke it. Every texture in the
 re-skin therefore had to come from the thirty sprites that happened to be imported
 on the first scan. If that ever unsticks, the frames worth revisiting are a circle
 for the system cluster and a second box shape for the hotbar.
+
+## Phase 4: the dungeon is generated (2026-10-20)
+
+Step A of the generation plan, plus room-scoped alarms and a persistent quest
+board. Every contract now builds its own dungeon from its seed and tier.
+
+- `scripts/dungeon_layout.gd` — a dungeon as DATA: floor tiles -> region id,
+  regions (rooms + corridors, with role and depth), doors, party/enemy spawns,
+  features (throne, banner, chest, barrel, crate, pillar, vessel, circle) and
+  pickups. `door_geometry()` is the one place a doorway's module, seal square,
+  leaf offset and jamb gap are worked out, so builder and generator agree.
+- `scripts/dungeon_generator.gd` — rooms-and-corridors grown from a 3x3
+  entrance; `3 + tier` rooms, 3-5 tiles a side (boss room 4-6, hung off the
+  deepest room). One door per connection, open arch at the far end of a
+  corridor. Roles: entrance, one stores room, fights, boss. `roster()` spends
+  `enemy_budget` (goblin 2, archer 3, boss 4) on its own RNG so the board can
+  quote the real count without building the floor plan.
+- `scripts/room_builder.gd` — now draws whatever layout it is given: floors,
+  walls on every edge between rock/other region, doorframes with jambs on
+  either axis, doors, and the furniture by role. Same authority API as before
+  (`is_floor_at`, `idle_spots(kind, room)`, `patrol_ring(room)`) plus
+  `region_at`, `party_spawns`, `enemy_spawns`, `pickups`, `floor_tiles`. With
+  no quest (editor, test, dev run) it builds FALLBACK_SEED 1337 at tier 1.
+- `scenes/enemies/{goblin,archer,boss}.tscn` — the three authored enemies as
+  prefabs. QuestScene spawns them from the layout with `home_room` set. This is
+  the minimal half of `enemy-templates`: no theme weighting or per-template
+  loot table yet.
+- ALARMS ARE ROOM-SCOPED (CombatManager). A shout wakes `home_room` only; the
+  fight is party vs ALERTED enemies; clearing them stands down to exploration
+  with the rest asleep. A new room joins a running fight at current_tick
+  (`_join_fight`, also checked between turns by `_wake_watchers`). `fight_won`
+  now means the whole dungeon is empty, emitted once via `_declare_held`.
+  One patroller per room instead of per level.
+- QUEST BOARD: `GameState.quest_offers` holds 3 QuestDefs that persist until
+  discarded (new Discard button) or cleared; either refills the gap
+  (`QuestDef.offer`). Retreat/defeat keep the job up. Save schema 3 stores
+  them as `quests`. The town gate ("adventure") now opens the board.
+- Fixed in passing: shove used the old ±14 bound instead of `_is_in_arena`.
+
+LEFTOVER: the authored enemies, 8 columns and GroundShield are still nodes in
+quest_scene.tscn — MCP RemoveNode failed on them, and the scene was open in
+the editor. `QuestScene._retire_authored_scenery` removes them at runtime;
+deleting them in the editor makes that a no-op.
+
+KNOWN GAPS: walls are full height, so in a multi-room map a wall between the
+camera and the party can hide them (no cut-away yet). Theme does not reach the
+tile set or enemy mix; loot_budget is still unspent.
+
+Verified: 894 checks, 889 pass. New ones: same seed same layout, different
+seed different layout; across 60 seeds x 5 tiers every floor tile reachable
+from the entrance through doors, entrance + boss room present, enemies on
+floor in their own room, no furniture in a doorway, a full party fits in the
+entrance; a real quest's bodies match the layout; one shout wakes one room
+only; clearing it stands down without holding the dungeon; a hero's blow
+wakes the target's room; the last kill holds the dungeon; discard/complete/
+retreat behaviour of the board and its save round-trip. The 5 failures are
+pre-existing: three archer checks still expect lockpick 3 / 20 hp (the stats
+rework made it 9 / 22), and two parry checks depend on an unseeded d20.
+
+## Phase 4: enemy templates (2026-10-22)
+
+Who is in a dungeon is now data, chosen by the quest's THEME.
+
+- `scripts/enemy_template.gd` — one enemy as a Resource: id, display_name, ai
+  (Enemy.EnemyType), model_scene + model_props, stats, gear (<= 4, boss MUST
+  carry iron_key), size, tint, voice; and for the generator cost, themes,
+  min_tier, weight, is_boss. No class_name (preloaded by path).
+- `resources/enemies/*.tres` — twelve templates, listed in order in
+  `scripts/enemy_roster.gd` (new ones go at the END; the order is part of the
+  seed contract). Warren: goblin, goblin archer, goblin brute (t2+), Goblin
+  Warchief. Dungeon: bandit, bandit archer, sellsword (t2+), Bandit Captain
+  (t2+; the Warchief covers t1), goblins and goblin archers too. Crypt: ghoul,
+  grave robber (archer), cultist (staff), Crypt Lord. New stat blocks in
+  resources/stats/ for brute, bandit, bandit archer, sellsword, captain,
+  ghoul, cultist, crypt lord.
+- `scenes/enemies/enemy_base.tscn` replaces the three hard-wired prefabs;
+  `QuestScene._dress` puts the template's model, stats, AI, gear, size and
+  tint on it before it enters the tree. `Enemy.body_scale` (absolute, 0 =
+  old per-type scale) and `Enemy.tint` (duplicated materials, multiplied).
+- `DungeonGenerator.roster(seed, tier, budget, theme)` buys the boss first
+  from the theme's bosses, then rank and file by weight among what is still
+  affordable. Layout enemies' `kind` is a template id. The board's enemy
+  count is theme-aware.
+
+WHY NOT THE POLYGONDUNGEON CHARACTERS YET: the 16 Synty bodies (skeletons,
+ghosts, golem, goblin shaman/warchief...) have a humanoid GeneralSkeleton but
+no animations in the project. The game plays Kenney clip names (idle, walk,
+die, sit, crouch, attack-melee-right/left, attack-kick-right,
+holding-both-shoot, pick-up, interact-right). The user's library has Synty
+"ANIMATION - Sword Combat" (F:/_dev/ai_summerengine/_graphics/Synty/, zipped)
+for the same rig: idles, attacks, blocks, parries, dodges, hit reacts,
+knockdown, stun, four deaths — but NO walk, bow, sit, crouch or pick-up. So a
+Synty enemy needs an animation import plus a locomotion source and a clip-name
+map; that is its own task. Templates already take any model_scene, so once a
+Synty body animates, adding skeletons is new .tres files only.

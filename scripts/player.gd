@@ -472,7 +472,8 @@ func _handle_click(screen_pos: Vector2) -> void:
 	if foe != null and is_instance_valid(foe) and _is_hostile(foe):
 		var cm := _combat_mgr()
 		if cm and cm.has_method("raise_alarm"):
-			cm.raise_alarm(self)
+			# The foe as well as the hero: the room that wakes is the one the blow lands in.
+			cm.raise_alarm(self, foe)
 
 	if res.slot == Action.MOVE:
 		_begin_action(Action.MOVE)

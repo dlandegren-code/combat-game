@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="CombatantStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combatant_stats.gd" id="1_stats"]
+
+[resource]
+script = ExtResource("1_stats")
+character_name = "Cultist"
+initiative = 6
+attack_dmg = 3
+move_speed = 4.0
+move_range = 4
+move_cost_per_tile = 1
+attack_skill = 8
+attack_cost = 2
+shove_skill = 7
+shove_cost = 2
+trip_skill = 5
+trip_cost = 2
+armor = 0
+physical_resistance = 0
+parry_skill = 7
+defensive_option = 1
+ranged_skill = 9
+ranged_cost = 3
+ammo = 0
+max_ammo = 0
+throw_skill = 9
+throw_cost = 1
+strength = 6
+weight = 1
+equip_cost = 1
+agility = 10
+stamina = 7

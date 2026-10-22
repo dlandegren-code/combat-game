@@ -23,13 +23,16 @@ const HirelingScript := preload("res://scripts/hireling.gd")
 ## 2 added the quest board's seed and the mercenary camp's. A version-1 save has neither, and
 ## both read as "nothing rolled yet" — which rolls a fresh one on the first visit, the same
 ## thing that happens to a new game.
-const SCHEMA_VERSION := 2
+##
+## 3 replaced the board's seed with the quests themselves (`quests`), because they now stay up
+## until they are discarded or cleared rather than all being re-rolled on every return. A
+## version-2 save has no list, and reads as an empty board, which fills itself on first look.
+const SCHEMA_VERSION := 3
 
-## How many jobs are pinned up at once. Enough that there is a choice and a reason to weigh
-## one against another, few enough that the board is read rather than scanned — and few enough
-## that a party with no good option has to go and earn a level rather than hunt the list for
-## the one quest that suits them.
-const BOARD_OFFERS := 4
+## How many jobs are pinned up at once. Few enough that each one is read, and few enough that a
+## party with no good option has to throw one away — or go and earn a level — rather than hunt
+## the list for the one quest that suits them.
+const BOARD_OFFERS := 3
 
 ## How many bodies can go down at once, the hero included. Four because that is what the
 ## battlefield was built and balanced for — the authored scenario stands three heroes against
@@ -60,16 +63,17 @@ var gold: int = 0
 ## `extends`). The preload above is the dependable way to reach the same script.
 var current_quest = null
 
-## What the quest board is showing. ONE number, because a board is its offers and its offers
-## are derived from it (QuestDef.offers) — so the board can be closed, walked away from, saved
-## and come back to without five quests being kept alive in between.
+## What the quest board is showing: BOARD_OFFERS QuestDefs, oldest first.
 ##
-## Zero means "no board yet". It is rolled on the first visit and re-rolled whenever the party
-## comes back from a quest, which is what makes the notice board worth reading again: the jobs
-## that were on it were taken, or went to somebody else while you were underground.
-var board_seed: int = 0
+## They STAY. A job goes up when there is a gap on the board and comes down only when it is
+## cleared (complete_offer) or thrown away (discard_offer), and either one puts a fresh job up
+## in its place. So a dungeon the party walked out of is still there to go back into, and the
+## board changes because the player changed it rather than behind their back.
+##
+## Each is a seed and a tier (QuestDef.to_dict), so keeping three of them is keeping six ints.
+var quest_offers: Array = []
 
-## Who is at the mercenary camp, kept exactly the way the board is and for the same reasons:
+## Who is at the mercenary camp, kept the way the board used to be, and for the same reasons:
 ## one number, re-derived on every read, re-rolled when the party comes back from a quest. The
 ## people who were sitting round that fire took other work while you were underground.
 var camp_seed: int = 0
@@ -126,37 +130,69 @@ func clear() -> void:
 	party = []
 	gold = 0
 	current_quest = null
-	board_seed = 0
+	quest_offers = []
 	camp_seed = 0
 	last_result = {}
 	party_changed.emit()
 
 
 # --- The quest board -------------------------------------------------------
-# What is ON the board is QuestDef's business and DRAWING it is the board screen's. All that
-# lives here is the seed, because that is the part that has to outlive both of them.
+# What a quest IS is QuestDef's business and DRAWING the board is the board screen's. What lives
+# here is the list, because that is the part that has to outlive both of them.
 
 func quest_board() -> Array:
-	## The offers currently pinned up, rolling a board if there is not one yet.
+	## The jobs pinned up, topping the board up to BOARD_OFFERS first.
+	_fill_board()
+	return quest_offers
+
+
+func discard_offer(def) -> bool:
+	## Take a job down without doing it, and put a new one up. False when it is not on the board.
+	if not _take_down(def):
+		return false
+	_fill_board()
+	return true
+
+
+func complete_offer(def) -> void:
+	## A job done comes off the board, and something new goes up in its place.
+	_take_down(def)
+	_fill_board()
+
+
+func _take_down(def) -> bool:
+	if def == null:
+		return false
+	for i in range(quest_offers.size()):
+		if quest_offers[i].quest_seed == def.quest_seed:
+			quest_offers.remove_at(i)
+			return true
+	return false
+
+
+func _fill_board() -> void:
+	## Pin a new job up in every gap.
 	##
-	## Sized off the main character, not the party: a hireling's level is the hireling's, and a
-	## veteran taking on a porter should not find the board suddenly offering easier work.
-	if board_seed == 0:
-		reroll_board()
+	## Each is rolled at the main character's level as it stands NOW, not the party's: a
+	## hireling's level is the hireling's, and a veteran taking on a porter should not find the
+	## board suddenly offering easier work. A job already up keeps the tier it went up at — the
+	## board is not re-graded behind the player's back.
+	##
+	## randi() rather than the clock for the seed: two jobs rolled in the same second must not
+	## be the same job. Zero is never used, and no seed already on the board is reused.
 	var level: int = main_character().level if has_party() else 1
-	return QuestDefScript.offers(board_seed, level, BOARD_OFFERS)
+	while quest_offers.size() < BOARD_OFFERS:
+		var quest_seed := randi()
+		if quest_seed == 0 or _on_board(quest_seed):
+			continue
+		quest_offers.append(QuestDefScript.offer(quest_seed, level))
 
 
-func reroll_board() -> void:
-	## New jobs on the board. Called on the first visit and on every return from a quest.
-	##
-	## randi() rather than the clock: two boards rolled in the same second must not be the
-	## same board, and a run started at midnight must not get a different game from one
-	## started at noon.
-	board_seed = randi()
-	if board_seed == 0:
-		# Zero is the "no board" marker, so it is the one number this cannot return.
-		board_seed = 1
+func _on_board(quest_seed: int) -> bool:
+	for q in quest_offers:
+		if q.quest_seed == quest_seed:
+			return true
+	return false
 
 
 # --- The mercenary camp ----------------------------------------------------
@@ -275,13 +311,16 @@ func to_dict() -> Dictionary:
 	var members: Array = []
 	for member in party:
 		members.append(member.to_dict())
+	var quests: Array = []
+	for q in quest_offers:
+		quests.append(q.to_dict())
 	return {
 		"schema": SCHEMA_VERSION,
 		"gold": gold,
 		"party": members,
 		# The board, but not the quest: saving happens in town, and in town there is no quest
 		# to be on. A save that carried one would be a save of a run that was abandoned.
-		"board_seed": board_seed,
+		"quests": quests,
 		"camp_seed": camp_seed,
 	}
 
@@ -291,7 +330,11 @@ func from_dict(d: Dictionary) -> void:
 	for entry in d.get("party", []):
 		party.append(CharacterDataScript.from_dict(entry))
 	gold = int(d.get("gold", 0))
-	board_seed = int(d.get("board_seed", 0))
+	quest_offers = []
+	for entry in d.get("quests", []):
+		var q = QuestDefScript.from_dict(entry)
+		if q != null:
+			quest_offers.append(q)
 	camp_seed = int(d.get("camp_seed", 0))
 	current_quest = null
 	last_result = {}

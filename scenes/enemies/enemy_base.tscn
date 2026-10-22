@@ -1,0 +1,38 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemy.gd" id="1_enemy"]
+[ext_resource type="Script" path="res://scripts/inventory_component.gd" id="2_inv"]
+
+[sub_resource type="StandardMaterial3D" id="mat_enemy"]
+albedo_color = Color(0.85, 0.2, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="mesh_enemy"]
+size = Vector3(0.8, 2, 0.8)
+
+[sub_resource type="BoxShape3D" id="shape_character"]
+size = Vector3(0.8, 2, 0.8)
+
+[node name="Enemy" type="CharacterBody3D"]
+collision_layer = 2
+wall_min_slide_angle = 0.0
+floor_stop_on_slope = false
+floor_block_on_wall = false
+floor_snap_length = 0.0
+script = ExtResource("1_enemy")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+visible = false
+material_override = SubResource("mat_enemy")
+mesh = SubResource("mesh_enemy")
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+shape = SubResource("shape_character")
+
+[node name="HealthBar" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
+billboard = 2
+text = "10/10"
+font_size = 36
+
+[node name="Inventory" type="Node" parent="."]
+script = ExtResource("2_inv")

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemy_template.gd" id="1_tpl"]
+[ext_resource type="PackedScene" path="res://scenes/characters/soldier_model.tscn" id="2_model"]
+[ext_resource type="Resource" path="res://resources/stats/captain_stats.tres" id="3_stats"]
+[ext_resource type="Resource" path="res://resources/items/boss_cleaver.tres" id="4_boss_cleaver"]
+[ext_resource type="Resource" path="res://resources/items/reinforced_leather_armor.tres" id="5_reinforced_leather_armor"]
+[ext_resource type="Resource" path="res://resources/items/iron_key.tres" id="6_iron_key"]
+
+[resource]
+script = ExtResource("1_tpl")
+id = "bandit_captain"
+display_name = "Bandit Captain"
+ai = 2
+model_scene = ExtResource("2_model")
+model_props = {}
+stats = ExtResource("3_stats")
+gear = Array[Resource]([ExtResource("4_boss_cleaver"), ExtResource("5_reinforced_leather_armor"), ExtResource("6_iron_key")])
+size = 1.15
+tint = Color(0.7, 0.6, 0.55, 1)
+voice = "male_d"
+cost = 4
+themes = PackedStringArray("dungeon")
+min_tier = 2
+weight = 1.0
+is_boss = true

@@ -20,6 +20,11 @@ const CharacterDataScript := preload("res://scripts/character_data.gd")
 const ProgressionScript := preload("res://scripts/progression.gd")
 const HERO_SCENE := preload("res://scenes/characters/hero.tscn")
 
+## The body every generated enemy is made from: a bare enemy with no model, no stats and an
+## empty pack. Dressed from an EnemyTemplate (_dress) before it enters the tree.
+const ENEMY_BASE := preload("res://scenes/enemies/enemy_base.tscn")
+const RosterScript := preload("res://scripts/enemy_roster.gd")
+
 ## Where the party goes when the quest ends: the results screen, which reports what happened
 ## and then sends them on to town.
 const RESULTS_SCENE := "res://scenes/results_screen.tscn"
@@ -55,12 +60,19 @@ var _gear_on_arrival: Array = []
 
 
 func _ready() -> void:
+	# The dungeon is already built: DungeonRoom is a child, and children are ready before their
+	# parent. So the spawn points it worked out are there to be read.
+	var marks := _entrance_marks()
+	if not marks.is_empty():
+		_retire_authored_scenery()
 	var authored := _authored_heroes()
 	if GameState.has_party():
-		_party_views = _spawn_party(authored)
+		_party_views = _spawn_party(authored, marks)
 	else:
 		_party_views = authored
 		_seed_party(authored)
+		_move_to_marks(authored, marks)
+	_spawn_enemies()
 	_gear_on_arrival = _carried_names()
 	_watch_the_fight()
 
@@ -93,6 +105,103 @@ func _on_party_wiped() -> void:
 
 # --- Hydration -------------------------------------------------------------
 
+func _entrance_marks() -> Array:
+	## Where the party comes in: the generated dungeon's entrance, when there is one.
+	var room := get_node_or_null("DungeonRoom")
+	if room != null and room.has_method("party_spawns"):
+		return room.party_spawns().duplicate()
+	return []
+
+
+func _move_to_marks(bodies: Array, marks: Array) -> void:
+	## Stand the authored heroes in the entrance on the seeding run. Their hand-placed squares
+	## were the old chamber's, and the chamber is not there any more.
+	for i in range(mini(bodies.size(), marks.size())):
+		var node: Node3D = bodies[i]
+		node.position = marks[i]
+		if "target_position" in node:
+			node.target_position = marks[i]
+
+
+func _spawn_enemies() -> void:
+	## One body for every enemy the dungeon's layout placed, told which room it belongs to.
+	##
+	## Before CombatManager boots (deferred) so they are dealt into the order like anything
+	## else, and positioned before entering the tree so an enemy's idle "home" is where it
+	## actually stands (Enemy._pre_setup reads it in _ready).
+	var room := get_node_or_null("DungeonRoom")
+	if room == null or not room.has_method("enemy_spawns"):
+		return
+	var spawned: Array = []
+	var per_name := {}
+	for e in room.enemy_spawns():
+		var template = RosterScript.find(String(e["kind"]))
+		if template == null:
+			push_warning("QuestScene: no enemy template '%s'" % e["kind"])
+			continue
+		var node := _dress(template)
+		node.position = e["at"]
+		node.home_room = int(e["room"])
+		node.name = "%s%d" % [String(template.id).to_pascal_case(), spawned.size() + 1]
+		add_child(node)
+		if template.display_name != "":
+			node.character_name = template.display_name
+		spawned.append(node)
+		per_name[node.character_name] = int(per_name.get(node.character_name, 0)) + 1
+	# Number the rank and file so the initiative order can tell them apart — after the fact,
+	# because the name comes off the stats resource in _ready. A lone boss keeps his own.
+	var numbered := {}
+	for node in spawned:
+		var base: String = node.character_name
+		if int(per_name[base]) > 1:
+			numbered[base] = int(numbered.get(base, 0)) + 1
+			node.character_name = "%s %d" % [base, numbered[base]]
+
+
+func _dress(template) -> Node:
+	## A bare enemy, made into what `template` describes. Everything here has to be in place
+	## BEFORE the body enters the tree: Combatant._ready derives hit points from the stat block,
+	## builds the weapon sockets off the model's skeleton, and the inventory equips its starting
+	## items in its own _ready — all of which run inside add_child.
+	var node := ENEMY_BASE.instantiate()
+	node.stats = template.stats
+	node.enemy_type = template.ai
+	node.voice = template.voice
+	node.body_scale = template.size
+	node.tint = template.tint
+	var model: Node3D = template.model_scene.instantiate()
+	model.name = "CharacterModel"
+	model.position = CharacterDataScript.MODEL_OFFSET
+	for prop in template.model_props:
+		model.set(prop, template.model_props[prop])
+	node.add_child(model)
+	var inv := node.get_node("Inventory")
+	for i in range(mini(template.gear.size(), 4)):
+		inv.set("starting_item_%d" % (i + 1), template.gear[i])
+	return node
+
+
+const ColumnScript := preload("res://scripts/column_obstacle.gd")
+const GroundItemScript := preload("res://scripts/ground_item.gd")
+
+
+func _retire_authored_scenery() -> void:
+	## Take out what the old hand-built battlefield still has in the scene file: its four
+	## enemies, its eight pillars and the shield on its floor. They stood in the old chamber, and
+	## in a generated dungeon those squares are as likely to be solid rock as not. The dungeon
+	## brings its own (RoomBuilder, _spawn_enemies).
+	##
+	## Done here rather than by deleting them from quest_scene.tscn because the scene could not
+	## be edited safely while it was open in the editor; once they are deleted there, this finds
+	## nothing to do. The CombatManager's own pickups are spawned later (deferred), so they are
+	## not caught by the ground-item test.
+	for child in get_children():
+		var script = child.get_script()
+		var is_enemy: bool = child is CharacterBody3D and child.get("is_player_controlled") == false
+		if is_enemy or script == ColumnScript or script == GroundItemScript:
+			_retire(child)
+
+
 func _authored_heroes() -> Array:
 	## The party the test scenario was built with: hand-placed, player-controlled bodies, in
 	## scene order. That order is also the party order, which makes their positions the
@@ -123,16 +232,16 @@ func _seed_party(authored: Array) -> void:
 	print("[Quest] Party seeded from the authored battlefield: %s" % _view_names())
 
 
-func _spawn_party(authored: Array) -> Array:
+func _spawn_party(authored: Array, entrance: Array = []) -> Array:
 	## Build one body per party member, and retire the authored ones.
 	##
-	## The authored heroes are kept only for their POSITIONS — a hand-placed body is the old
-	## scenario's idea of where the party comes in, and standing the real party on those
-	## squares keeps the test scenario playable. Phase 4's generator will hand over real
-	## spawn points instead.
-	var marks: Array = []
-	for node in authored:
-		marks.append(node.position)
+	## The squares come from the dungeon's entrance (`entrance`, from the generated layout).
+	## Without one — a scene with no generated room — the authored heroes' positions stand in,
+	## the old scenario's idea of where the party comes in.
+	var marks: Array = entrance.duplicate()
+	if marks.is_empty():
+		for node in authored:
+			marks.append(node.position)
 	for node in authored:
 		_retire(node)
 
@@ -301,11 +410,11 @@ func settle(outcome: String = "retreat") -> Dictionary:
 		"quest_xp": contract.reward_xp if paid else 0,
 	}
 	GameState.abandon_quest()
-	# A new board for the next visit. The jobs that were pinned up when the party went
-	# underground are not the jobs that are pinned up when they come back — somebody else took
-	# them, or they went stale. This is also what stops a party from clearing the same
-	# contract twice by walking straight back out of town.
-	GameState.reroll_board()
+	# A cleared job comes off the board, and a new one goes up in its place. One walked out of
+	# — or lost — stays pinned up, to be tried again or thrown away (QuestBoard's Discard).
+	# Taking it down only on CLEARING is also what stops a contract being paid twice.
+	if paid:
+		GameState.complete_offer(contract)
 	# And new faces at the mercenary camp, for the same reason: the sell-swords who were
 	# sitting round that fire took other work while the party was underground.
 	GameState.reroll_camp()

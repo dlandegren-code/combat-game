@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dayxge20c7ah7"]
+
+[ext_resource type="Script" uid="uid://h11g8lbveu3p" path="res://tools/rescan_filesystem.gd" id="1"]
+
+[node name="RescanFilesystem" type="Node" unique_id=614790540]
+script = ExtResource("1")

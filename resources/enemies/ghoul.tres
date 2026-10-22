@@ -1,0 +1,24 @@
+[gd_resource type="Resource" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemy_template.gd" id="1_tpl"]
+[ext_resource type="PackedScene" path="res://scenes/characters/orc_model.tscn" id="2_model"]
+[ext_resource type="Resource" path="res://resources/stats/ghoul_stats.tres" id="3_stats"]
+[ext_resource type="Resource" path="res://resources/items/goblin_dagger.tres" id="4_goblin_dagger"]
+
+[resource]
+script = ExtResource("1_tpl")
+id = "ghoul"
+display_name = "Ghoul"
+ai = 0
+model_scene = ExtResource("2_model")
+model_props = {}
+stats = ExtResource("3_stats")
+gear = Array[Resource]([ExtResource("4_goblin_dagger")])
+size = 1.0
+tint = Color(0.72, 0.8, 0.78, 1)
+voice = "male_d"
+cost = 2
+themes = PackedStringArray("crypt")
+min_tier = 1
+weight = 3.0
+is_boss = false

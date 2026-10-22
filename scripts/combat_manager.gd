@@ -15,6 +15,14 @@ extends Node
 ## and "the goblins lose interest" is still nobody's code. When the last enemy falls there is
 ## nothing left to guarantee, so the clock stops and the dungeon goes back to being explored.
 ##
+## The alarm is ROOM-SCOPED. A dungeon is several rooms behind shut doors, and a shout raised in
+## one wakes the enemies of that room (Enemy.home_room) and nobody else; the rest go on milling
+## about until somebody walks in on them. A fight is the party against the ENGAGED enemies — the
+## alerted ones — and is won when those are down, which puts the party back to exploring with
+## the rest of the dungeon still asleep. A room that wakes while a fight is already on (a hero
+## swings at somebody new, or the next room sees them through the door) joins the order where
+## the clock stands — see _join_fight.
+##
 ## Both modes drive the SAME current_combatant and turn_changed signal, deliberately. Every
 ## piece of UI — the toolbar, the party portraits, the character and spell sheets — is already
 ## written against "who is active", and in exploration the active hero is simply the selected
@@ -30,6 +38,9 @@ signal turn_changed(combatant: Node)
 ## fight_won is NOT "quest cleared": the last goblin falling leaves a room with a chest in it
 ## and loot on the floor, and the party is meant to go and collect it. So this says the way
 ## out is open, and something above decides when to take it. See _stand_down.
+##
+## It goes when the LAST enemy in the dungeon falls, not when a room is cleared: clearing one
+## room of several is a stand-down, and the dungeon is not held while anybody is left in it.
 ##
 ## party_wiped IS final. There is nobody left to give an order to, so there is no play left
 ## and the only question is how the defeat is reported.
@@ -65,6 +76,10 @@ var _idle_timer: Timer
 ## Set when the alarm goes up UNDER a hero's action — see raise_alarm. The order then starts
 ## when that action reports in rather than on top of it.
 var _combat_pending := false
+## The room that booked alarm is for. -1 is everybody.
+var _pending_room := -1
+## Whether fight_won has gone out. Once per dungeon: see _declare_held.
+var _held := false
 
 
 func _ready() -> void:
@@ -114,7 +129,10 @@ func _cast_idle_roles() -> void:
 	##
 	## The boss is not in the draw. He has a throne, and a warlord doing laps of his own hall is
 	## not a warlord.
-	var pool: Array = []
+	##
+	## One per ROOM, now that there is more than one: each room is its own little guardroom, and
+	## a patroller's beat is its own room's (RoomBuilder.patrol_ring).
+	var pools := {}
 	for c in combatants:
 		if not is_instance_valid(c) or c.is_player_controlled or not c.is_alive:
 			continue
@@ -123,10 +141,15 @@ func _cast_idle_roles() -> void:
 		if c.has_method("keeps_to_its_post") and c.keeps_to_its_post():
 			c.cast_idle_role(false)
 			continue
-		pool.append(c)
-	pool.shuffle()
-	for i in range(pool.size()):
-		pool[i].cast_idle_role(i == 0)
+		var room := _room_of(c)
+		if not pools.has(room):
+			pools[room] = []
+		pools[room].append(c)
+	for room in pools:
+		var pool: Array = pools[room]
+		pool.shuffle()
+		for i in range(pool.size()):
+			pool[i].cast_idle_role(i == 0)
 
 
 func _start_exploration() -> void:
@@ -183,11 +206,55 @@ func _check_party_wiped() -> bool:
 
 
 func enemies_alive() -> bool:
-	## Is there anybody left to fight? The condition the fight ends on — see _stand_down.
+	## Is there anybody left in the whole dungeon? The condition the QUEST is held on — see
+	## fight_won. The condition a FIGHT ends on is engaged_enemies_alive.
 	for c in combatants:
 		if is_instance_valid(c) and c.is_alive and not c.is_player_controlled:
 			return true
 	return false
+
+
+func engaged_enemies_alive() -> bool:
+	## Is anybody who is actually IN this fight still standing? See _stand_down.
+	for c in combatants:
+		if is_instance_valid(c) and c.is_alive and not c.is_player_controlled and _is_engaged(c):
+			return true
+	return false
+
+
+func _is_engaged(c) -> bool:
+	## In the fight: every hero, and every enemy that has heard the alarm.
+	if not is_instance_valid(c):
+		return false
+	if c.is_player_controlled:
+		return true
+	return c.get("alerted") == true
+
+
+func _room_of(c) -> int:
+	if c == null or not is_instance_valid(c):
+		return -1
+	var room = c.get("home_room")
+	return int(room) if room != null else -1
+
+
+func _alert_room(room: int) -> Array:
+	## Wake every enemy in `room` that is not awake already, and return them.
+	##
+	## -1 wakes everybody, and so does an enemy with no room of its own — so a scene with no
+	## generated dungeon in it still has the one alarm for everybody that it always had.
+	var woken: Array = []
+	for c in combatants:
+		if not is_instance_valid(c) or c.is_player_controlled or not c.is_alive:
+			continue
+		if not ("alerted" in c) or c.alerted:
+			continue
+		var theirs := _room_of(c)
+		if room >= 0 and theirs >= 0 and theirs != room:
+			continue
+		c.alerted = true
+		woken.append(c)
+	return woken
 
 
 func set_explorer(who: Node) -> void:
@@ -248,7 +315,7 @@ func _is_idle_enemy(c) -> bool:
 	return is_instance_valid(c) and c.is_alive and not c.is_player_controlled
 
 
-func raise_alarm(by: Node = null) -> void:
+func raise_alarm(by: Node = null, target: Node = null) -> void:
 	## Exploration is over. Called two ways, and they are NOT the same call.
 	##
 	## An enemy noticing somebody (_idle_pulse) happens between actions, with nothing running,
@@ -267,15 +334,31 @@ func raise_alarm(by: Node = null) -> void:
 	## So a player-raised alarm changes nothing yet. The action finishes as an exploration
 	## action — full movement, correct route, sounds where they belong — and turn_done does the
 	## actual switch when it reports in.
-	if mode == Mode.COMBAT or _combat_pending or game_over:
+	##
+	## WHICH room wakes: the target's, when a hero has picked a fight with somebody, and
+	## otherwise the shouter's. Mid-fight, a room not yet in it joins (see _join_fight).
+	if game_over:
 		return
-	if by != null and "is_player_controlled" in by and by.is_player_controlled:
+	var by_hero: bool = by != null and "is_player_controlled" in by and by.is_player_controlled
+	var room := -1
+	if target != null:
+		room = _room_of(target)
+	elif by != null and not by_hero:
+		room = _room_of(by)
+	if mode == Mode.COMBAT:
+		_join_fight(room, null if by_hero else by)
+		return
+	if _combat_pending:
+		return
+	if by_hero:
 		_combat_pending = true
+		_pending_room = room
 		return
-	_engage(by)
+	_engage(by, null, 0, room)
 
 
-func _engage(shouted_by: Node, opening_actor: Node = null, opening_cost: int = 0) -> void:
+func _engage(shouted_by: Node, opening_actor: Node = null, opening_cost: int = 0,
+		room: int = -1) -> void:
 	## Do the switch: the whole room knows, the clock starts, the order begins.
 	##
 	## `shouted_by` is whoever gets the "Alarm!" caption, or null for nobody — a fight the
@@ -291,11 +374,10 @@ func _engage(shouted_by: Node, opening_actor: Node = null, opening_cost: int = 0
 		_idle_timer.stop()
 	if initiative_panel:
 		initiative_panel.visible = true
+	_alert_room(room)
 	for c in combatants:
-		if not is_instance_valid(c):
+		if not _is_engaged(c):
 			continue
-		if "alerted" in c:
-			c.alerted = true
 		# A sneak does not survive the alarm, and it must not: Sneak greys out in combat
 		# (there is nobody left to creep past), so a character who carried the flag across
 		# would be stuck at half movement for the whole fight with no way to switch it off.
@@ -317,9 +399,40 @@ func _engage(shouted_by: Node, opening_actor: Node = null, opening_cost: int = 0
 	_begin_combat()
 
 
+func _join_fight(room: int, shouted_by: Node = null) -> void:
+	## A room that was asleep wakes into a fight already going on.
+	##
+	## Its enemies come in where the clock stands, so they act after whoever is acting now and
+	## before anybody who has already spent time — the place a fresh combatant is dealt at the
+	## start of a fight, moved to the present.
+	var woken := _alert_room(room)
+	if woken.is_empty():
+		return
+	for c in woken:
+		c.next_turn_at = current_tick
+		c.action_turn_at = current_tick
+		if c.has_method("disable_turn"):
+			c.disable_turn()
+	var shouter: Node = shouted_by if shouted_by != null else woken[0]
+	if shouter.has_method("_show_action_text"):
+		shouter._show_action_text("Alarm!")
+	_update_initiative_display()
+
+
+func _wake_watchers() -> void:
+	## Mid-fight, the rooms not in it are still looking about. Anybody who can now see or hear a
+	## hero brings their room in. Asked between turns, the only time the order can take new
+	## people without somebody being dealt in under an action that is still running.
+	for c in combatants:
+		if not _is_idle_enemy(c) or c.get("alerted") == true:
+			continue
+		if c.has_method("notices_intruders") and c.notices_intruders():
+			_join_fight(_room_of(c), c)
+
+
 func _begin_combat() -> void:
 	for c in combatants:
-		if is_instance_valid(c) and c.has_method("disable_turn"):
+		if is_instance_valid(c) and c.has_method("disable_turn") and _is_engaged(c):
 			c.disable_turn()
 	current_combatant = null
 	_start_combat()
@@ -343,15 +456,18 @@ func _stand_down() -> void:
 	# A fight that was booked but never begun must not begin now: a hero who killed the last
 	# enemy with the opening blow of an ambush has _combat_pending set and an alarm still owed.
 	_combat_pending = false
+	_pending_room = -1
 	if initiative_panel:
 		initiative_panel.visible = false
 	if _idle_timer:
 		_idle_timer.start()
-	# The field is held. Announced before the tidying-up below so that whoever is running the
-	# quest hears it at the moment the fight ends rather than a few statements later, and note
-	# that it says the fight is won and not that the quest is over — there is still a room to
-	# search. See the signal's own comment.
-	fight_won.emit()
+	# The field is held — if this was the last of them. Announced before the tidying-up below so
+	# that whoever is running the quest hears it at the moment the fight ends, and note that it
+	# says the fight is won and not that the quest is over — there is still a room to search.
+	# A room cleared with more of the dungeon still asleep is a stand-down and nothing more.
+	var cleared := not enemies_alive()
+	if cleared:
+		_declare_held()
 	# The clock is wound back to where _start_exploration leaves it, and this is not cosmetic:
 	# defense_debt() is derived from the gap between next_turn_at and current_tick, so a hero
 	# who ended the fight owing two ticks of parries would carry that debt into exploration —
@@ -386,7 +502,15 @@ func _stand_down() -> void:
 	# Symmetric with _engage's "Alarm!": the caption that starts a fight comes from whoever
 	# shouted, and the one that ends it from whoever is left holding the field.
 	if who.has_method("_show_action_text"):
-		who._show_action_text("Victory!")
+		who._show_action_text("Victory!" if cleared else "Room cleared")
+
+
+func _declare_held() -> void:
+	## Nobody left in the dungeon. Announced once, however many routes arrive here.
+	if _held:
+		return
+	_held = true
+	fight_won.emit()
 
 
 func _collect_combatants() -> void:
@@ -420,7 +544,7 @@ func _activate_next() -> void:
 	# a clean turn boundary — the clock has just stopped, nothing is mid-action — and because
 	# every route out of a combat turn comes through it, whichever side's blow ended the fight
 	# and whether or not the corpse has finished falling. See _stand_down.
-	if mode == Mode.COMBAT and not enemies_alive():
+	if mode == Mode.COMBAT and not engaged_enemies_alive():
 		_stand_down()
 		return
 
@@ -430,7 +554,7 @@ func _activate_next() -> void:
 	var best_init: int = -1
 
 	for c in combatants:
-		if not is_instance_valid(c) or not c.is_alive:
+		if not is_instance_valid(c) or not c.is_alive or not _is_engaged(c):
 			continue
 		if c.next_turn_at < best_tick:
 			best_tick = c.next_turn_at
@@ -486,7 +610,9 @@ func turn_done(cost: int) -> void:
 		# as it would have if nothing had been started. THIS is where the room wakes up — see
 		# raise_alarm for why it cannot happen any earlier.
 		_combat_pending = false
-		_engage(null, current_combatant, cost)
+		var room := _pending_room
+		_pending_room = -1
+		_engage(null, current_combatant, cost, room)
 		return
 
 	if mode == Mode.EXPLORATION:
@@ -511,6 +637,7 @@ func turn_done(cost: int) -> void:
 	# the latter is debt — see Combatant.defense_debt.
 	current_combatant.action_turn_at = current_combatant.next_turn_at
 	current_combatant = null
+	_wake_watchers()
 	_activate_next.call_deferred()
 
 
@@ -526,7 +653,7 @@ func on_character_died(who: Node) -> void:
 		turn_label.text = "Defeat! All heroes have fallen."
 		_update_initiative_display()
 		return
-	if not enemies_alive():
+	if mode == Mode.COMBAT and not engaged_enemies_alive():
 		# Won, so the party stands down rather than the game ending — see _stand_down.
 		#
 		# Usually already done by the time this runs: _die() awaits the death animation before
@@ -536,6 +663,10 @@ func on_character_died(who: Node) -> void:
 		# _stand_down is written to be safe either way.
 		_stand_down()
 		return
+	if mode == Mode.EXPLORATION and not _combat_pending and not enemies_alive():
+		# The last of them died with no fight on — nobody else in the dungeon to have heard it.
+		# There is no fight to stand down from, but the dungeon is held all the same.
+		_declare_held()
 
 	# If dead combatant was the current actor, advance
 	if current_combatant == who:
@@ -555,7 +686,12 @@ func _update_initiative_display() -> void:
 	for child in order_list.get_children():
 		child.queue_free()
 
-	var sorted := combatants.duplicate()
+	# Only who is in the fight: goblins asleep three rooms away are not in the order and must not
+	# look as if they were.
+	var sorted: Array = []
+	for c in combatants:
+		if _is_engaged(c):
+			sorted.append(c)
 	sorted.sort_custom(func(a, b):
 		if a.next_turn_at != b.next_turn_at:
 			return a.next_turn_at < b.next_turn_at
@@ -633,6 +769,15 @@ func _update_turn_label(combatant: Node) -> void:
 
 func _spawn_ground_items() -> void:
 	## Spawn pickups on the battlefield at combat start (data-driven from .tres).
+	##
+	## Where the room says, in a generated dungeon (RoomBuilder.pickups); the old authored
+	## scatter only for a scene without one.
+	var room := get_parent().get_node_or_null("DungeonRoom")
+	if room != null and room.has_method("pickups"):
+		for p in room.pickups():
+			var at: Vector3 = p["at"]
+			_spawn_item(String(p["path"]), Vector3(at.x, 0.2, at.z))
+		return
 	_spawn_item("res://resources/items/health_potion.tres", Vector3(-1, 0.2, 5))
 	_spawn_item("res://resources/items/arrow_bundle.tres", Vector3(3, 0.2, -3))
 	_spawn_item("res://resources/items/quiver.tres", Vector3(4, 0.2, -3))

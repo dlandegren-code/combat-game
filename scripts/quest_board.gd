@@ -2,19 +2,16 @@ extends Control
 ## The notice board: the jobs going in Riverwatch, and the screen where a party decides which
 ## one it is good enough for.
 ##
-## The board owns NOTHING. What is pinned up is derived from GameState.board_seed every time
-## this screen is opened (GameState.quest_board), so closing it and opening it again shows the
-## same four jobs, and the only way the list changes is the party coming back from a quest.
-## That is the whole reason a quest is a seed and a tier — see QuestDef.
+## It is also the way OUT of town: the gate opens this screen, because every trip underground
+## is now a trip into a particular place.
 ##
-## WHAT TAKING A JOB DOES TODAY
-## It sets GameState.current_quest and runs the one authored dungeon, because the generator
-## that would build the place described is the next piece of Phase 4. So the tier, the theme
-## and the enemy budget are on the card and not yet in the room. The one part that IS real is
-## the contract: clear the dungeon with a job accepted and the reward is paid, walk out early
-## and it is not. That is deliberate — the payment side is the part the rest of the game
-## (results screen, save, economy) has to be wired through, and wiring it through a fixed room
-## is how the generator lands later as a change to one scene rather than to six files.
+## The board owns NOTHING. What is pinned up is GameState.quest_offers — three jobs that stay
+## until they are cleared or thrown away, each a seed and a tier (see QuestDef). Discarding one
+## takes it down and pins a new one up in its place, on the spot.
+##
+## Taking a job sets GameState.current_quest and goes underground, where RoomBuilder builds the
+## dungeon from that same seed and tier. Clear it and the reward is paid and the job comes off
+## the board; walk out early and it is not, and the job is still there for another try.
 
 const ScreenPanelScript := preload("res://scripts/ui_kit.gd")
 const SaveGameScript := preload("res://scripts/save_game.gd")
@@ -44,12 +41,14 @@ func _build() -> void:
 		ScreenPanelScript.BODY_SIZE, ScreenPanelScript.MUTED)
 	ScreenPanelScript.separator(column)
 
-	for offer in GameState.quest_board():
+	var shown: Array = GameState.quest_board().duplicate()
+	shown.sort_custom(func(a, b): return a.tier < b.tier)
+	for offer in shown:
 		_draw_offer(column, offer)
 
 	ScreenPanelScript.spacer(column, 6.0)
 	ScreenPanelScript.label(column,
-		"New notices go up while you are away. These will be gone when you get back.",
+		"A notice stays up until the job is done or you tear it down.",
 		ScreenPanelScript.BODY_SIZE, ScreenPanelScript.MUTED)
 	ScreenPanelScript.separator(column)
 	ScreenPanelScript.button(column, "Back to town", _on_back)
@@ -65,6 +64,7 @@ func _draw_offer(column: Node, offer) -> void:
 	# pressing buttons has to have buttons that say which one they are, or a test that presses
 	# the wrong one passes exactly as happily as one that presses the right one.
 	ScreenPanelScript.button(column, "Take: %s" % offer.title, _on_take.bind(offer))
+	ScreenPanelScript.button(column, "Discard: %s" % offer.title, _on_discard.bind(offer))
 	ScreenPanelScript.spacer(column, 6.0)
 
 
@@ -89,6 +89,19 @@ func _on_take(offer) -> void:
 	SaveGameScript.save()
 	print("[Board] taken: %s (tier %d, seed %d)" % [offer.title, offer.tier, offer.quest_seed])
 	get_tree().change_scene_to_file(QUEST_SCENE)
+
+
+func _on_discard(offer) -> void:
+	## Tear the notice down and redraw with the new one in its place. Saved, because the board
+	## IS saved state now — a discard undone by quitting would be a free reroll.
+	if not GameState.discard_offer(offer):
+		return
+	SaveGameScript.save()
+	print("[Board] discarded: %s (tier %d, seed %d)" % [offer.title, offer.tier, offer.quest_seed])
+	for child in get_children():
+		remove_child(child)
+		child.queue_free()
+	_build()
 
 
 func _on_back() -> void:

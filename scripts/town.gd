@@ -746,7 +746,9 @@ func _on_service(entry: Dictionary) -> void:
 		"hire":
 			get_tree().change_scene_to_file(CAMP_SCENE)
 		"adventure":
-			get_tree().change_scene_to_file(QUEST_SCENE)
+			# Out through the gate means into a particular dungeon, so the gate is the notice
+			# board: pick one of the jobs pinned up and that is where the party goes.
+			get_tree().change_scene_to_file(BOARD_SCENE)
 		"rest":
 			_on_rest()
 		_:

@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="CombatantStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combatant_stats.gd" id="1_stats"]
+
+[resource]
+script = ExtResource("1_stats")
+character_name = "Sellsword"
+initiative = 7
+attack_dmg = 4
+move_speed = 4.0
+move_range = 4
+move_cost_per_tile = 1
+attack_skill = 12
+attack_cost = 2
+shove_skill = 10
+shove_cost = 2
+trip_skill = 8
+trip_cost = 2
+armor = 1
+physical_resistance = 0
+parry_skill = 11
+defensive_option = 0
+ranged_skill = 9
+ranged_cost = 3
+ammo = 0
+max_ammo = 0
+throw_skill = 9
+throw_cost = 1
+strength = 12
+weight = 3
+equip_cost = 1
+agility = 11
+stamina = 12
