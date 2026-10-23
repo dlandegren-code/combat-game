@@ -1,0 +1,25 @@
+[gd_resource type="Resource" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemy_template.gd" id="1_tpl"]
+[ext_resource type="PackedScene" path="res://scenes/characters/polygon_model.tscn" id="2_model"]
+[ext_resource type="Resource" path="res://resources/stats/bandit_stats.tres" id="3_stats"]
+[ext_resource type="Resource" path="res://resources/items/viking_axe.tres" id="4_viking_axe"]
+[ext_resource type="Resource" path="res://resources/items/round_shield.tres" id="5_round_shield"]
+
+[resource]
+script = ExtResource("1_tpl")
+id = "viking_raider"
+display_name = "Raider"
+ai = 0
+model_scene = ExtResource("2_model")
+model_props = {"source": "res://assets/vikings/characters/VikingRealm_Characters.fbx", "texture": "res://assets/vikings/textures/PolygonVikingRealm_Texture_01_A.png", "character_pool": ["SM_Chr_Warrior_Male_01", "SM_Chr_Warrior_Male_02"], "head_attachments": [["res://assets/vikings/attachments/SM_Chr_Attach_Helmet_01.fbx", "res://assets/vikings/attachments/SM_Chr_Attach_Helmet_02.fbx", "res://assets/vikings/attachments/SM_Chr_Attach_Helmet_03.fbx", "res://assets/vikings/attachments/SM_Chr_Attach_Helmet_04.fbx"], ["res://assets/vikings/attachments/SM_Chr_Attach_Beard_01.fbx", "res://assets/vikings/attachments/SM_Chr_Attach_Beard_02.fbx", "res://assets/vikings/attachments/SM_Chr_Attach_Beard_03.fbx", "res://assets/vikings/attachments/SM_Chr_Attach_Beard_04.fbx", "res://assets/vikings/attachments/SM_Chr_Attach_Beard_05.fbx", ""]]}
+stats = ExtResource("3_stats")
+gear = Array[Resource]([ExtResource("4_viking_axe"), ExtResource("5_round_shield")])
+size = 1.0
+tint = Color(1, 1, 1, 1)
+voice = "male_b"
+cost = 2
+themes = PackedStringArray("raiders")
+min_tier = 1
+weight = 2.5
+is_boss = false

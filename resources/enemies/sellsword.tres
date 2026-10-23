@@ -1,7 +1,7 @@
 [gd_resource type="Resource" load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemy_template.gd" id="1_tpl"]
-[ext_resource type="PackedScene" path="res://scenes/characters/soldier_model.tscn" id="2_model"]
+[ext_resource type="PackedScene" path="res://scenes/characters/sidekick_model.tscn" id="2_model"]
 [ext_resource type="Resource" path="res://resources/stats/sellsword_stats.tres" id="3_stats"]
 [ext_resource type="Resource" path="res://resources/items/rusty_sword.tres" id="4_rusty_sword"]
 [ext_resource type="Resource" path="res://resources/items/wooden_shield.tres" id="5_wooden_shield"]
@@ -14,11 +14,11 @@ id = "sellsword"
 display_name = "Sellsword"
 ai = 0
 model_scene = ExtResource("2_model")
-model_props = {}
+model_props = {"hair": "SK_HUMN_BASE_03_02HAIR_HU01", "facial_hair": "SK_HUMN_BASE_06_09FCHR_HU01", "skin_palette": "T_HumanSpecies_02ColorMap.png", "outfit": ["SK_FANT_KNGT_06_10TORS_HU01", "SK_FANT_KNGT_04_17HIPS_HU01", "SK_FANT_KNGT_04_18LEGL_HU01", "SK_FANT_KNGT_04_19LEGR_HU01", "SK_FANT_KNGT_04_20FOTL_HU01", "SK_FANT_KNGT_04_21FOTR_HU01"]}
 stats = ExtResource("3_stats")
 gear = Array[Resource]([ExtResource("4_rusty_sword"), ExtResource("5_wooden_shield"), ExtResource("6_leather_armor"), ExtResource("7_knight_helmet")])
 size = 1.0
-tint = Color(0.85, 0.8, 0.75, 1)
+tint = Color(1, 1, 1, 1)
 voice = "male_d"
 cost = 5
 themes = PackedStringArray("dungeon")

@@ -12,7 +12,8 @@ func can_target(actor, target) -> bool:
 	return target != null and actor._is_adjacent(target.position)
 
 func execute(actor, target) -> void:
-	actor._play_attack_anim("attack-kick-right")
+	# A sweeping kick where the body has one; the Kenney rigs have the one kick for everything.
+	actor._play_attack_anim("kick-roundhouse", "attack-kick-right")
 	actor._try_trip(target)
 
 

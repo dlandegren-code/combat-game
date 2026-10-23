@@ -1070,3 +1070,230 @@ knockdown, stun, four deaths — but NO walk, bow, sit, crouch or pick-up. So a
 Synty enemy needs an animation import plus a locomotion source and a clip-name
 map; that is its own task. Templates already take any model_scene, so once a
 Synty body animates, adding skeletons is new .tres files only.
+
+## Route B: Sidekick bodies with gear-driven looks (2026-10-22)
+
+DECISION (user): character looks come from ITEMS, not models. Characters move to
+Synty Sidekick modular bodies: a bare body cut into slots (head, hair, torso,
+upper/lower arms, hands, hips, legs, feet...), with gear that REPLACES slots and
+adds attachments (pauldrons, knee guards, helmets). Kenney bodies are retired as
+this lands.
+
+Done so far — prototype + animation, nothing in the game itself changed yet:
+
+- `assets/sidekick/` — base human (BASE_01), knight outfit (KNGT_17), villain
+  hood, species/starter colormaps, six Sword Combat Sidekick clips. Extracted
+  from the user's SIDEKICK Starter unitypackage and Sword Combat zip
+  (F:/_dev/ai_summerengine/_graphics/Synty/).
+- `scripts/sidekick_body.gd` — assembles a body on ONE skeleton from part
+  meshes (Skins bind by bone name). Parts ship DIFFERENT skeletons (body 88
+  bones, beard 91, hair/cape 92 — the extras are strand and cloth bones), so
+  `_merge_bones` unions them; without it the beard stretched to the floor.
+  GEAR table = test items (slots / attach / hides). CLIPS table maps the
+  game's clip names (walk, attack-melee-right, holding-both-shoot, ...) to
+  source clips; `shared_library()` builds them once and re-points tracks at
+  "Skeleton3D".
+- ANIMATION: Quaternius Universal Animation Library 1 + 2, Standard, CC0
+  (OpenGameArt), in `assets/animations/quaternius/` with their licences.
+  Every rig (Sidekick parts, Sword Combat clips, UAL1 Rigify, UAL2 mannequin)
+  is imported with a humanoid BoneMap (`assets/animations/bonemaps/`) and the
+  same rest fixer (fix_silhouette on, make_unique off), set in `_subresources`
+  of each .import. So all tracks are in profile names and clips cross rigs.
+  Verified by eye: idle, walk, run, crouch-walk, sit, pick-up, interact, chest
+  open, three melee attacks, throw, cast, hit, block, dodge, knockdown, get-up,
+  drink, death, zombie idle/walk/scratch.
+- STAND-INS: no bow clip exists in either library (holding-both-shoot uses
+  Pistol_Shoot) and no kick (attack-kick-right uses Punch_Cross).
+- Tools: `tools/editor_bridge.*` (ask the editor to scan / reimport via a
+  request file — the fix for THE IMPORT PROBLEM), `tools/preview_sidekick*`
+  (gear line-up, clip grid with FOCUS close-ups, screenshots to
+  .summer/local/), `tools/inspect_sidekick.*`.
+
+Next: wire SidekickBody into Combatant as the CharacterModel (scale ~0.6 to
+the board, weapon sockets on prop_r/prop_l, clip names already match), then
+turn GEAR into ItemResource fields so worn items drive the look.
+
+## Route B wired in: heroes and human enemies are Sidekick bodies (2026-10-22)
+
+- `scenes/characters/sidekick_model.tscn` + `scripts/sidekick_body.gd` (now
+  the production class): builds itself in _ready (before its Combatant), at
+  MODEL_SCALE 0.5 (x CHARACTER_SCALE 1.6 = 0.8, the environment's own scale).
+  Slots are Sidekick's part codes ("10TORS", "29ASHL"...): a worn part with a
+  body code replaces that slot, an attachment code (22-34) is added. Exports:
+  hair / brows / facial_hair / skin_palette / outfit (plain clothes worn under
+  gear) / show_quiver. API: socket_bone(kind), wears_gear(), wear_items(items),
+  part_in(code). A DUPLICATE (party portrait) adopts its parts instead of
+  building twice. Each part is drawn with its set's palette
+  (T_FantasyKnights_0N), the bare body with the species palette.
+- `ItemResource` group "Worn Look": worn_parts, worn_hides (slot codes),
+  worn_palette, worn_model_path (Synty weapon mesh held on prop_r / prop_l at
+  native scale), worn_position / worn_rotation / worn_scale.
+  Armour: leather = Knight 06 tunic; reinforced = Knight 05 jacket +
+  pauldrons; heavy = Knight 03 plate (torso, arms, gauntlets, pauldrons,
+  elbows); greaves = Knight 01 legs + knees + boots; knight helm = starter
+  knight helm (hides hair, ears). Weapons: Synty meshes (straightsword, shivs,
+  machete, small hammer, gem staff, plank shield). Bows keep the old bow.fbx
+  (white, no Synty bow exists), tuned to (0,90,0) x0.55; shield (90,0,0).
+- `Combatant`: `_body` = a CharacterModel with wears_gear; sockets go on its
+  socket_bone()s; armour/legs/helmet go to wear_items (helmets with parts skip
+  the helmet socket and the Kenney head fitting); items without a worn model
+  are scaled by WORN_ITEM_SCALE 2.6 and placed by worn_*. Socket children are
+  removed from the tree before queue_free (a same-frame copy used to carry
+  the old weapon too).
+- Classes (`CharacterData.CLASS_BODIES`) all use the Sidekick body with their
+  own hair / beard / skin and the plain CLOTHES (Knight 06 tunic, Knight 04
+  trousers + boots); the wizard adds a tabard front, the archer a quiver.
+  `LEGACY_BODIES` keeps the Kenney paths only so the authored heroes in
+  quest_scene.tscn still map to a class. `CharacterData.worn_items()` for
+  places with no Combatant (the town line-up dresses from it).
+- Human enemy templates (bandit, bandit archer, sellsword, captain, grave
+  robber, cultist, crypt lord) use the Sidekick body; their gear items give
+  the look. Goblins, ghouls, brutes and the warchief stay Kenney.
+- Portrait framing has Sidekick factors (Head bone is at the neck, not
+  mid-torso).
+- Fantasy Knights pack imported: `assets/sidekick/knights/` (sets 01-15) and
+  hair/beard styles BASE_02-10 in `assets/sidekick/base/`, palettes in
+  `assets/sidekick/textures/`. Imported with pre-written .import files that
+  already carry the bone map.
+- Tools: `tools/preview_sidekick` is now the OUTFIT CATALOGUE; `preview_held`
+  tunes held items (TUNE mode: one item in several rotations);
+  `capture_quest` screenshots a real party + enemies in a real dungeon.
+
+Verified: 910 checks; the only failures are the three stale archer-stat
+checks (lockpick 3 / 20 hp vs the stats rework's 9 / 22). New checks: a hero
+spawns in a dressing body; heavy armour swaps the torso and adds pauldrons
+and taking it off restores the clothes; a helmet hides the hair and gives it
+back; a copied body adopts rather than rebuilds; the Crypt Lord stands in
+Knight 03 plate from his heavy armour.
+
+Open: bow mesh is untextured; no kick or bow clips (stand-ins); goblins etc.
+still Kenney; wizard robe is only a tabard; nothing yet uses worn_palette.
+
+### Mixamo clips fill the bow and kick gaps (2026-10-22)
+
+17 clips the user downloaded from Mixamo (FBX, without skin) in
+`assets/animations/mixamo/`, imported through `bonemaps/mixamo_bonemap.tres`
+(bones arrive as mixamorig_Hips etc.; one clip per file, named mixamo_com).
+Mapped in SidekickBody.CLIPS: holding-both-shoot = Standing Draw Arrow,
+attack-kick-right = Standing Melee Attack Kick Ver. 2, crouch = Crouch Idle 01,
+cast = Standing 2H Magic Attack 02; spares bow-aim, bow-ready, kick-roundhouse,
+kick-front, kick-shield, cast-channel / cast-alt / cast-ready, idle-relaxed,
+hit-light(-2), hit-heavy, zombie-hit. No stand-ins left.
+`Combatant._play_attack_anim(name, fallback)` plays the fallback on a body that
+lacks the clip and waits on nothing if neither exists (it used to hang mid-
+attack). Firebolt casts ("cast", falls back to holding-both-shoot on Kenney),
+trip uses the roundhouse, throw uses OverhandThrow — each with the old clip as
+fallback for Kenney bodies.
+
+### Ghouls are Sidekick bodies with the zombie clips (2026-10-22)
+
+`SidekickBody.clip_overrides` (game clip name -> CLIPS name, its own
+AnimationLibrary aliasing the shared clips) lets one body play different moves
+under the names Combatant asks for. The ghoul template: Sidekick body, bald,
+`T_Ghoul_ColorMap.png` (the species palette with skin swatches turned
+grey-green, lips bruised, irises yellow — generated from T_HumanSpecies_01),
+Knight 05 rag shorts, no gear (bare-handed, dodge stance; ghoul_stats
+attack_dmg 3 -> 4 for the knife it no longer has), overrides idle / walk / run
+-> zombie-idle / zombie-walk, every melee attack -> zombie-attack, hit ->
+zombie-hit. Portraits re-frame a Sidekick bust once its clip has posed it (a
+stooped idle dropped the head out of the first framing).
+
+### Skeletons: POLYGON Dungeon characters on the same clips (2026-10-22)
+
+`scripts/polygon_body.gd` + `scenes/characters/polygon_model.tscn`: one
+character from the POLYGON Dungeon pack (`character` export = its mesh name in
+any character prefab — they all hold all 16 meshes), on the prefab's
+GeneralSkeleton renamed to Skeleton3D. The pack was already imported through
+the humanoid retarget, so the shared clips (`SidekickBody.library_with`, now
+static, with clip_overrides) drive it unchanged. It ADDS prop_r / prop_l under
+RightHand / LeftHand at the Sidekick rig's own rest, so items' worn_* grips fit
+both rigs. wears_gear() is true (held items use the body path), wear_items is a
+no-op (outfits are modelled on). TRAP: the prefab meshes point at their
+skeleton by the old unique name; after the rename they must be re-pointed to
+"..", or the skeleton animates and the mesh stays in bind (T) pose.
+Crypt templates (appended to the roster): skeleton_warrior (Soldier 01, sword
++ shield, idle-armed, cost 2), skeleton_archer (Soldier 02, bow, cost 3),
+skeleton_knight (Knight, warhammer + shield + heavy armour for the armour
+value, tier 2+, cost 5), skeleton_thrall (Slave, bare-handed, zombie clips,
+cost 1). Stats in resources/stats/skeleton_*_stats.tres. Tools:
+`tools/preview_enemies` (templates dressed by QuestScene._dress, idle + attack
+shots), `tools/probe_body` (are a body's bones actually posed?).
+Ghosts, the golem, goblin shaman/warchief are the same one-line templates away.
+
+### Ghosts and the golem (2026-10-22)
+
+More PolygonBody templates, appended to the roster. ghost (Ghost 01, crypt,
+cost 3) and wraith (Ghost 02, crypt, tier 2+, cost 4): 50% physical
+resistance, few hp, bare-handed, dodge stance; clips idle-relaxed, zombie
+walk / scratch, hit-light; `PolygonBody.hover` (0.25) floats and bobs the
+skeleton node (not the CharacterModel, which Combatant moves for the shove
+stagger). rock_golem (Rock Golem, dungeon theme, tier 3+, cost 6, size 1.35):
+armour 3, 20% resistance, initiative 2, move 3, attack_dmg 7, shove 14;
+attacks are fists — new CLIPS "punch" (UAL1 Punch_Cross) and "punch-jab".
+Stats: resources/stats/ghost_stats, wraith_stats, golem_stats.
+
+### Goblin Shaman (a caster) and the Warchief's real body (2026-10-22)
+
+Enemy casting: an ARCHER-AI enemy whose stats have can_cast fires the
+wizard's firebolt instead of arrows (`Enemy._cast_bolt`, same to-hit / spell
+power / fire rules as Player._do_firebolt; `_has_shot()` = mana >= MANA_COST
+for casters, ammo for archers; `get_ranged_range()` = the spell's 8 tiles).
+Out of mana it closes in and uses its staff. goblin_shaman (Polygon Goblin
+Shaman, warren + dungeon, tier 2+, cost 4, idle = cast-ready, new item
+Shaman's Staff = SM_Wep_Goblin_Staff_01). goblin_warchief now the Polygon
+Goblin WarChief (same id, stats, gear and key; idle-armed, hit-heavy).
+Test +3: the shaman has mana, a shot at range 8 with no bow, and none once
+the mana is spent. NOTE: the plain goblins / goblin archers / brute are still
+Kenney and now look out of place next to these two — the pack's Goblin Male /
+Female / Warrior bodies would fix that with model_props only.
+
+### Every enemy is on a Synty body now (2026-10-23)
+
+goblin (Goblin Male / Female, 0.85), goblin_archer (Female / Male, 0.8),
+goblin_brute (Goblin Warrior Male / Female, 1.0, tint dropped) moved to
+PolygonBody; shaman resized 0.9, warchief 1.05 so goblins stand under the
+humans. `PolygonBody.character_pool` picks one body per spawn at random
+(cosmetic, not seeded). No template uses the Kenney orc any more; the Kenney
+models remain only for the town's ambient townsfolk and the authored heroes
+still standing in quest_scene.tscn (retired at runtime). Enemy's Kenney-only
+paths (_apply_enemy_visual's per-type scales, _apply_tint) are now unused by
+templates but left for any scene that still places a Kenney enemy by hand.
+
+### Townsfolk on Sidekick bodies (2026-10-23)
+
+`TownLayout.TOWNSFOLK` entries take a `props` dict now (set before the body
+builds, like CLASS_BODIES): a town guard in Knight 01 plate + helm (no hair:
+the helm is open at the crest), the magician (long hair, beard, tabard and hip
+flaps over plain clothes), a ranger with a quiver. Same TOWNSFOLK_SCALE as the
+party line-up. Kenney models are now used by nothing the game spawns; only the
+authored heroes left in quest_scene.tscn (retired at runtime) still reference
+them. Both bodies now clear `owner` on parts before reparenting — the town
+alone used to log ~300 "inconsistent owner" warnings.
+
+### Vikings: raiders theme, Viking bodies and weapons (2026-10-23)
+
+POLYGON Viking Realm extracted to `assets/vikings/` (characters FBX, attachments,
+weapons, textures). The characters FBX imports through the new
+`bonemaps/polygon_bonemap.tres` (Synty Polygon bone names) with `fbx/importer=0`
+(the default FBX2glTF importer is not installed). `PolygonBody` takes any such
+scene now: `source`, `texture`/`texture_pool` (the pack's meshes arrive
+untextured — everything uses PolygonVikingRealm_Texture_01_A), `attachment_pool`,
+and `head_attachments` (head-local FBX helmets/beards/crowns on a Head
+BoneAttachment; an Array entry picks one at random, "" = none).
+
+Items: viking_axe (Axe_01), dane_axe (Axe_02, two-handed), viking_sword
+(Sword_Short_01 at 0.85 — the pack's Sword_01 is a 2 m greatsword), seax,
+viking_spear (two-handed), round_shield and painted_shield (Shield_Set_Optimised
+01/03 on their own Shield_Optimised atlas, worn at (0,180,0) pushed 0.08 off the
+arm). Bows (short/long/goblin) now hold the rigged Viking bow at (0,0,90).
+`_worn_model` applies `model_material_path` and `worn_scale` to scene models and
+strips their AnimationPlayers: most Viking weapon FBX carry one, and held on a
+bone it shadowed the body's own player (find_child) so the wielder froze in
+T-pose. GroundItem uses an item's `model_material_path` too.
+
+Templates (appended): viking_raider, shieldmaiden, viking_archer, berserker
+(tier 2, bear pelt, Dane axe), jarl (boss, winged helm, eyepatch, iron key).
+New theme "raiders" in QuestDef.THEMES — note this changes which theme an
+existing seed rolls (THEMES.size() went 3 → 4); boards already saved keep
+their quests, which are stored whole. Dungeon dressing is still the
+shared one; a Viking-flavoured hall (Viking Realm props) is the obvious follow-up.

@@ -470,6 +470,19 @@ var _center_target := 0.0
 var _last_right_hand: ItemResource = null
 var _last_left_hand: ItemResource = null
 var _last_helmet: ItemResource = null
+var _last_armor: ItemResource = null
+var _last_legs: ItemResource = null
+
+## The CharacterModel when it is a body that DRESSES from its gear (sidekick_body.gd): armour,
+## greaves and helmets change what it looks like, and it names the bones things hang on. Null
+## for the Kenney bodies, whose look is painted on and whose bones are assumed.
+var _body: Node = null
+
+## How much bigger an item is drawn in a Sidekick body's hand than in a Kenney one's, for an item
+## that has no worn_model_path of its own. model_scale sizes an item in its SOCKET's units; the
+## Kenney rig is about 0.7 of its own units tall and the Sidekick one 1.8, and the Sidekick body
+## also stands taller in the world, so the same number reads about 2.6 times too small there.
+const WORN_ITEM_SCALE := 2.6
 var _anim_player = null
 var _is_attacking := false
 ## Rest-position of CharacterModel, cached on the first shove so overlapping
@@ -784,29 +797,43 @@ func _setup_sockets() -> void:
 	var skeleton: Skeleton3D = model.find_child("Skeleton3D", true, false) as Skeleton3D
 	if not skeleton:
 		return
-	# Before the sockets exist, so a helmet already hanging off one can never be measured as
-	# part of the head it is supposed to fit.
-	_head_meshes = _find_head_meshes(skeleton)
-	_head_bounds = _measure_head(skeleton, _head_meshes)
+	_body = model if model.has_method("wears_gear") else null
+	# A dressing body puts its own helmet on (as parts), so there is no head to measure a helmet
+	# MESH against and nothing to switch off — _head_bounds stays empty, which is what tells
+	# _fit_helmet_to_head and _show_bare_head to leave it alone.
+	if _body == null:
+		# Before the sockets exist, so a helmet already hanging off one can never be measured as
+		# part of the head it is supposed to fit.
+		_head_meshes = _find_head_meshes(skeleton)
+		_head_bounds = _measure_head(skeleton, _head_meshes)
 	# Find existing BoneAttachment3D nodes from the wrapper scene
 	_weapon_socket = skeleton.find_child("WeaponSocket", false, false) as BoneAttachment3D
 	_shield_socket = skeleton.find_child("ShieldSocket", false, false) as BoneAttachment3D
 	_helmet_socket = skeleton.find_child("HelmetSocket", false, false) as BoneAttachment3D
 	# Fallback: create at runtime if wrapper scene doesn't have them
+	# Which bones: the body's own say-so if it has one (a Sidekick body holds things on its prop
+	# bones), else the Kenney rig's arm-right / arm-left / head.
+	var weapon_bone := "arm-right"
+	var shield_bone := "arm-left"
+	var head_bone := "head"
+	if model.has_method("socket_bone"):
+		weapon_bone = model.socket_bone("weapon")
+		shield_bone = model.socket_bone("shield")
+		head_bone = model.socket_bone("head")
 	if not _weapon_socket:
 		_weapon_socket = BoneAttachment3D.new()
 		_weapon_socket.name = "WeaponSocket"
-		_weapon_socket.bone_name = "arm-right"
+		_weapon_socket.bone_name = weapon_bone
 		skeleton.add_child(_weapon_socket)
 	if not _shield_socket:
 		_shield_socket = BoneAttachment3D.new()
 		_shield_socket.name = "ShieldSocket"
-		_shield_socket.bone_name = "arm-left"
+		_shield_socket.bone_name = shield_bone
 		skeleton.add_child(_shield_socket)
 	if not _helmet_socket:
 		_helmet_socket = BoneAttachment3D.new()
 		_helmet_socket.name = "HelmetSocket"
-		_helmet_socket.bone_name = "head"
+		_helmet_socket.bone_name = head_bone
 		skeleton.add_child(_helmet_socket)
 	_setup_two_handed_grip(skeleton)
 
@@ -1071,13 +1098,24 @@ func _update_equipment_visuals() -> void:
 	var main: ItemResource = inventory.get("right_hand")
 	var off: ItemResource = inventory.get("left_hand")
 	var helmet_item: ItemResource = inventory.get("helmet")
+	var armor_item: ItemResource = inventory.get("armor")
+	var legs_item: ItemResource = inventory.get("legs")
 	if DEBUG_EQUIPMENT:
 		print("[Combatant] %s: right_hand=%s left_hand=%s helmet=%s" % [character_name, main.item_name if main else "null", off.item_name if off else "null", helmet_item.item_name if helmet_item else "null"])
-	if main == _last_right_hand and off == _last_left_hand and helmet_item == _last_helmet:
+	if main == _last_right_hand and off == _last_left_hand and helmet_item == _last_helmet \
+			and armor_item == _last_armor and legs_item == _last_legs:
 		return
 	_last_right_hand = main
 	_last_left_hand = off
 	_last_helmet = helmet_item
+	_last_armor = armor_item
+	_last_legs = legs_item
+	if _body != null:
+		# The body dresses itself in what is worn; a helmet made of parts goes on the head that
+		# way, so the helmet socket only holds a helmet that has no parts (a mesh-only item).
+		_body.wear_items([armor_item, legs_item, helmet_item])
+		if helmet_item != null and not helmet_item.worn_parts.is_empty():
+			helmet_item = null
 	# A two-handed weapon sits in BOTH hand slots as the same object.
 	var two_handed: bool = main != null and main == off
 	# Held in two hands only when the weapon opts in (bows do not — see
@@ -1090,7 +1128,8 @@ func _update_equipment_visuals() -> void:
 	_refresh_socket(_shield_socket, null if two_handed else off)
 	_refresh_socket(_helmet_socket, helmet_item)
 	# The helmet does not sit over the head, it stands in for it — see _show_bare_head.
-	_show_bare_head(helmet_item == null)
+	if _body == null:
+		_show_bare_head(helmet_item == null)
 
 
 func _refresh_grip_socket(item: ItemResource) -> void:
@@ -1129,9 +1168,19 @@ func _refresh_socket(socket, item: ItemResource) -> void:
 	if not socket:
 		return
 	for c in socket.get_children():
+		# Out of the tree now, not at the end of the frame: until then a queued node is still a
+		# child, and anything that copies the model in the meantime (the party portrait) copies
+		# the old weapon along with the new one.
+		socket.remove_child(c)
 		c.queue_free()
 	if not item:
 		return
+	# A dressing body holds the item's own worn model, if it has one, exactly where the item says.
+	if _body != null and item.worn_model_path != "":
+		var worn := _worn_model(item)
+		if worn != null:
+			socket.add_child(worn)
+			return
 	# Data-driven model: if the item declares its own model, use it directly.
 	if item.has_model():
 		var model_node := item.instantiate_model()
@@ -1144,6 +1193,7 @@ func _refresh_socket(socket, item: ItemResource) -> void:
 			if socket == _helmet_socket:
 				_fit_helmet_to_head(model_node, item)
 				_show_helmet_interior(model_node)
+			_fit_to_body(model_node, item)
 			socket.add_child(model_node)
 			return
 	# Otherwise fall back to the name/type-based lookup below.
@@ -1223,6 +1273,7 @@ func _refresh_socket(socket, item: ItemResource) -> void:
 					n3d.position = Vector3(0.2, 0, 0.15)
 					n3d.rotation_degrees = Vector3(0, 20, 0)
 			_apply_offhand_mirror(n3d, socket, item)
+			_fit_to_body(n3d, item)
 		socket.add_child(node)
 		return
 	# Fallback: procedural box placeholder
@@ -1248,6 +1299,54 @@ func _refresh_socket(socket, item: ItemResource) -> void:
 	mi.mesh = box
 	mi.material_override = mat
 	socket.add_child(mi)
+
+
+func _worn_model(item: ItemResource) -> Node3D:
+	## The item's worn_model_path, at native scale, nudged by worn_position / worn_rotation.
+	##
+	## Native scale because a Synty weapon mesh is modelled at the size a Synty character holds it,
+	## and the body it is going on is one; and a Synty .res mesh ships without a material, so it is
+	## given the pack's atlas the way the hammer and axe always were.
+	var loaded: Resource = load(item.worn_model_path)
+	var node: Node3D = null
+	if loaded is PackedScene:
+		node = (loaded as PackedScene).instantiate() as Node3D
+		# Most of the Viking pack's FBX weapons import with an (empty) AnimationPlayer of their own.
+		# Held on a bone it sits inside the body's model ahead of the body's own player, so
+		# find_child("AnimationPlayer") picks it up instead and the body never animates again.
+		if node != null:
+			for player in node.find_children("*", "AnimationPlayer", true, false):
+				player.get_parent().remove_child(player)
+				player.free()
+		# A scene (the Viking pack's FBX weapons) can arrive with an untextured material; the item
+		# names the atlas it should have.
+		if node != null and item.model_material_path != "":
+			var mat: Material = load(item.model_material_path)
+			for m in node.find_children("*", "MeshInstance3D", true, false):
+				(m as MeshInstance3D).material_override = mat
+	elif loaded is Mesh:
+		var mi := MeshInstance3D.new()
+		mi.mesh = loaded as Mesh
+		var mat_path := item.model_material_path if item.model_material_path != "" else SYNTY_MATERIAL_PATH
+		mi.material_override = load(mat_path)
+		node = mi
+	if node == null:
+		return null
+	node.position = item.worn_position
+	node.rotation_degrees = item.worn_rotation
+	node.scale = Vector3.ONE * item.worn_scale
+	return node
+
+
+func _fit_to_body(node: Node3D, item: ItemResource) -> void:
+	## An item with no worn model of its own, in a dressing body's hand: the hand-tuned Kenney
+	## placement means nothing on this rig, so it is resized for it and placed by the worn_*
+	## nudge instead. A no-op on a Kenney body.
+	if _body == null:
+		return
+	node.scale *= WORN_ITEM_SCALE * item.worn_scale
+	node.position = item.worn_position
+	node.rotation_degrees = item.worn_rotation
 
 
 func _apply_offhand_mirror(node: Node3D, socket, item: ItemResource) -> void:
@@ -3095,10 +3194,19 @@ func _play_hit_anim() -> void:
 	_play_crouch_anim()
 
 
-func _play_attack_anim(anim_name: String) -> void:
+func _play_attack_anim(anim_name: String, fallback: String = "") -> void:
+	## Play an attack clip, or `fallback` on a body that does not have it — the Sidekick bodies
+	## have a cast and a roundhouse the Kenney ones never had. With neither, nothing is played and
+	## nothing is waited on: awaiting animation_finished for a clip that never started would leave
+	## the character mid-attack for good.
 	var ap := _ensure_anim_player()
 	if not ap:
 		return
+	if not ap.has_animation(anim_name):
+		if fallback != "" and ap.has_animation(fallback):
+			anim_name = fallback
+		else:
+			return
 	_is_attacking = true
 	# Let go of the two-handed stance for the swing: the modifier pins both arms, so leaving
 	# it on would hold the ready pose and the attack would not animate at all.

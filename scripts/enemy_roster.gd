@@ -19,6 +19,19 @@ const TEMPLATES := [
 	"res://resources/enemies/grave_robber.tres",
 	"res://resources/enemies/cultist.tres",
 	"res://resources/enemies/crypt_lord.tres",
+	"res://resources/enemies/skeleton_warrior.tres",
+	"res://resources/enemies/skeleton_archer.tres",
+	"res://resources/enemies/skeleton_knight.tres",
+	"res://resources/enemies/skeleton_thrall.tres",
+	"res://resources/enemies/ghost.tres",
+	"res://resources/enemies/wraith.tres",
+	"res://resources/enemies/rock_golem.tres",
+	"res://resources/enemies/goblin_shaman.tres",
+	"res://resources/enemies/viking_raider.tres",
+	"res://resources/enemies/shieldmaiden.tres",
+	"res://resources/enemies/viking_archer.tres",
+	"res://resources/enemies/berserker.tres",
+	"res://resources/enemies/jarl.tres",
 ]
 
 ## Who fills a dungeon whose theme nothing is listed for. Should never happen; if it does, it is

@@ -77,6 +77,10 @@ const MEASURE_EXCLUDE: Array[String] = ["WeaponSocket", "ShieldSocket"]
 ## Rig bone the framing is measured from — mid-torso on these models, see
 ## _frame_bust(). Present on all of them as lowercase "head".
 const BUST_BONE := "head"
+## The same two numbers for a Sidekick body, measured from its Head bone (top of the neck, about
+## 0.86 of its height): a crop of about head and shoulders, centred on the face.
+const SIDEKICK_BUST_ZOOM := 0.5
+const SIDEKICK_FACE_HEIGHT := 1.03
 
 ## Camera framing, derived from the model's own rig and bounding box so it works
 ## across the soldier / orc / goblin models without per-model tuning.
@@ -293,6 +297,19 @@ func _spawn_bust() -> void:
 	_dst_anim = _model.find_child("AnimationPlayer", true, false) as AnimationPlayer
 
 	_frame_bust()
+	if _model.has_method("socket_bone"):
+		_reframe_once_posed()
+
+
+func _reframe_once_posed() -> void:
+	## Frame a Sidekick body again once its clip has actually posed it. The first framing is
+	## measured off the pose the copy arrives in, and a body whose idle is not upright — a
+	## ghoul's stoop — then drops its head out of the crop it was framed for.
+	_sync_animation()
+	for i in range(3):
+		await get_tree().process_frame
+	if is_instance_valid(_model):
+		_frame_bust()
 
 
 func _frame_bust() -> void:
@@ -317,9 +334,20 @@ func _frame_bust() -> void:
 	var aim_x: float = centre.x
 	var aim_z: float = centre.z
 
+	# A Sidekick body's head bone is at the top of the neck, not at mid-torso where the Kenney
+	# rigs put theirs, so the same multiples would frame its whole body. Its own factors put the
+	# crop round head and shoulders and the face in the middle of it.
+	var zoom := bust_zoom
+	var face := face_height
+	var bust_bone := BUST_BONE
+	if _model.has_method("socket_bone"):
+		bust_bone = _model.socket_bone("head")
+		zoom = SIDEKICK_BUST_ZOOM
+		face = SIDEKICK_FACE_HEIGHT
+
 	var skel := _model.find_child("Skeleton3D", true, false) as Skeleton3D
 	if skel:
-		var bone := skel.find_bone(BUST_BONE)
+		var bone := skel.find_bone(bust_bone)
 		if bone >= 0:
 			var pose: Vector3 = skel.global_transform * skel.get_bone_global_pose(bone).origin
 			bone_height = maxf(0.05, pose.y)
@@ -328,8 +356,8 @@ func _frame_bust() -> void:
 			aim_x = pose.x
 			aim_z = pose.z
 
-	var covered: float = bone_height * bust_zoom
-	var focus := Vector3(aim_x, bone_height * face_height, aim_z)
+	var covered: float = bone_height * zoom
+	var focus := Vector3(aim_x, bone_height * face, aim_z)
 	var distance: float = (covered * 0.5) / tan(deg_to_rad(cam_fov) * 0.5)
 
 	# Orbit the camera to the requested elevation and look back at the focus, so

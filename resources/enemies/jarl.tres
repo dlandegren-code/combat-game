@@ -1,0 +1,26 @@
+[gd_resource type="Resource" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemy_template.gd" id="1_tpl"]
+[ext_resource type="PackedScene" path="res://scenes/characters/polygon_model.tscn" id="2_model"]
+[ext_resource type="Resource" path="res://resources/stats/captain_stats.tres" id="3_stats"]
+[ext_resource type="Resource" path="res://resources/items/viking_sword.tres" id="4_viking_sword"]
+[ext_resource type="Resource" path="res://resources/items/painted_shield.tres" id="5_painted_shield"]
+[ext_resource type="Resource" path="res://resources/items/iron_key.tres" id="6_iron_key"]
+
+[resource]
+script = ExtResource("1_tpl")
+id = "jarl"
+display_name = "Jarl"
+ai = 2
+model_scene = ExtResource("2_model")
+model_props = {"source": "res://assets/vikings/characters/VikingRealm_Characters.fbx", "texture": "res://assets/vikings/textures/PolygonVikingRealm_Texture_01_A.png", "character": "SM_Chr_Leader_Male_01", "attachments": ["SM_Chr_Attach_Fur_01"], "head_attachments": ["res://assets/vikings/attachments/SM_Chr_Attach_Helmet_Wings_01.fbx", "res://assets/vikings/attachments/SM_Chr_Attach_Beard_02.fbx", "res://assets/vikings/attachments/SM_Chr_Attach_Eyepatch_01.fbx"]}
+stats = ExtResource("3_stats")
+gear = Array[Resource]([ExtResource("4_viking_sword"), ExtResource("5_painted_shield"), ExtResource("6_iron_key")])
+size = 1.15
+tint = Color(1, 1, 1, 1)
+voice = "male_d"
+cost = 4
+themes = PackedStringArray("raiders")
+min_tier = 1
+weight = 1.0
+is_boss = true

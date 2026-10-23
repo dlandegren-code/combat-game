@@ -85,8 +85,12 @@ func _apply_visual() -> void:
 				if model_node and model_node is Node3D:
 					# Synty .res meshes ship without a resolved material; assign the shared
 					# atlas or they render untextured white.
-					if _weapon_kind() in ["axe", "hammer"]:
-						var atlas: Material = load(SYNTY_MAT)
+					# An item that names its own atlas (the Viking pack's) gets that one.
+					var mat_path := item_resource.model_material_path
+					if mat_path == "" and _weapon_kind() in ["axe", "hammer"]:
+						mat_path = SYNTY_MAT
+					if mat_path != "":
+						var atlas: Material = load(mat_path)
 						if atlas:
 							var synty_meshes: Array = []
 							_collect_meshes(model_node, synty_meshes)

@@ -375,12 +375,16 @@ func _place_townsfolk(folk: Dictionary) -> void:
 	if packed == null:
 		return
 	var node := packed.instantiate() as Node3D
+	# Dressed before the tree: a Sidekick body builds itself from these in its own _ready.
+	var props: Dictionary = folk.get("props", {})
+	for prop in props:
+		node.set(prop, props[prop])
 	node.position = folk["position"]
 	node.rotation_degrees = Vector3(0.0, float(folk.get("rotation", 0.0)), 0.0)
 	node.scale = Vector3.ONE * TownLayoutScript.TOWNSFOLK_SCALE
 	_world.add_child(node)
-	# The game's own hero models, already rigged with the idle the combat scene plays, so a
-	# townsperson breathes instead of standing there like a shop dummy.
+	# Rigged with the idle the combat scene plays, so a townsperson breathes instead of
+	# standing there like a shop dummy.
 	var anim := _find_anim_player(node)
 	if anim != null and anim.has_animation("idle"):
 		anim.play("idle")
@@ -424,6 +428,10 @@ func _place_party_member(member, mark: Dictionary) -> void:
 	node.rotation_degrees = Vector3(0.0, float(mark.get("rotation", 180.0)), 0.0)
 	node.scale = Vector3.ONE * TownLayoutScript.TOWNSFOLK_SCALE
 	_world.add_child(node)
+	# A body that dresses from its gear stands here in the gear: the soldier in his leather, a
+	# hireling in whatever was handed over at the camp.
+	if node.has_method("wear_items"):
+		node.wear_items(member.worn_items())
 
 	var anim := _find_anim_player(node)
 	if anim != null and anim.has_animation("idle"):

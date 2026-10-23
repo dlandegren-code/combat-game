@@ -1,7 +1,7 @@
 [gd_resource type="Resource" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemy_template.gd" id="1_tpl"]
-[ext_resource type="PackedScene" path="res://scenes/characters/male_d_model.tscn" id="2_model"]
+[ext_resource type="PackedScene" path="res://scenes/characters/sidekick_model.tscn" id="2_model"]
 [ext_resource type="Resource" path="res://resources/stats/bandit_archer_stats.tres" id="3_stats"]
 [ext_resource type="Resource" path="res://resources/items/dagger.tres" id="4_dagger"]
 [ext_resource type="Resource" path="res://resources/items/short_bow.tres" id="5_short_bow"]
@@ -13,11 +13,11 @@ id = "grave_robber"
 display_name = "Grave Robber"
 ai = 1
 model_scene = ExtResource("2_model")
-model_props = {"show_quiver": true}
+model_props = {"hair": "SK_HUMN_BASE_10_02HAIR_HU01", "facial_hair": "none", "skin_palette": "T_HumanSpecies_03ColorMap.png", "outfit": ["SK_FANT_KNGT_06_10TORS_HU01", "SK_FANT_KNGT_04_17HIPS_HU01", "SK_FANT_KNGT_04_18LEGL_HU01", "SK_FANT_KNGT_04_19LEGR_HU01", "SK_FANT_KNGT_04_20FOTL_HU01", "SK_FANT_KNGT_04_21FOTR_HU01"], "show_quiver": true}
 stats = ExtResource("3_stats")
 gear = Array[Resource]([ExtResource("4_dagger"), ExtResource("5_short_bow"), ExtResource("6_leather_armor")])
 size = 1.0
-tint = Color(0.6, 0.6, 0.65, 1)
+tint = Color(1, 1, 1, 1)
 voice = "male_d"
 cost = 3
 themes = PackedStringArray("crypt")

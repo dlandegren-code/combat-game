@@ -10,3 +10,4 @@ item_type = 0
 attack_bonus = 8
 durability = 5
 throw_range = 7
+worn_model_path = "res://assets/PolygonDungeon/Models/SM_Wep_Goblin_Shiv_Stone_01.res"

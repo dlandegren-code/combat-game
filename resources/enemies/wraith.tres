@@ -1,0 +1,23 @@
+[gd_resource type="Resource" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemy_template.gd" id="1_tpl"]
+[ext_resource type="PackedScene" path="res://scenes/characters/polygon_model.tscn" id="2_model"]
+[ext_resource type="Resource" path="res://resources/stats/wraith_stats.tres" id="3_stats"]
+
+[resource]
+script = ExtResource("1_tpl")
+id = "wraith"
+display_name = "Wraith"
+ai = 0
+model_scene = ExtResource("2_model")
+model_props = {"character": "Character_Ghost_02", "clip_overrides": {"idle": "idle-relaxed", "walk": "zombie-walk", "run": "zombie-walk", "attack-melee-right": "zombie-attack", "attack-melee-left": "zombie-attack", "attack-heavy": "zombie-attack", "hit": "hit-light"}, "hover": 0.25}
+stats = ExtResource("3_stats")
+gear = Array[Resource]([])
+size = 1.05
+tint = Color(1, 1, 1, 1)
+voice = "male_d"
+cost = 4
+themes = PackedStringArray("crypt")
+min_tier = 2
+weight = 1.0
+is_boss = false

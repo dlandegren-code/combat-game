@@ -73,9 +73,9 @@ func get_damage_text(actor) -> String:
 
 
 func execute(actor, target) -> void:
-	# The Kenney rig has no casting clip, so this borrows the two-handed ranged one — it reads
-	# acceptably for a staff thrust forward. Swap it when a cast animation exists.
-	actor._play_attack_anim("holding-both-shoot")
+	# A proper cast on a body that has one; the Kenney rig has none, and borrows the two-handed
+	# ranged clip, which reads acceptably as a staff thrust forward.
+	actor._play_attack_anim("cast", "holding-both-shoot")
 	# Awaited, unlike every other ability's execute(): the bolt is a projectile that has to
 	# fly and land before the attack is rolled, and player.gd waits on this call so the turn
 	# does not end while it is still in the air.

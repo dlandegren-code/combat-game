@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="CombatantStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combatant_stats.gd" id="1_stats"]
+
+[resource]
+script = ExtResource("1_stats")
+character_name = "Wraith"
+initiative = 8
+attack_dmg = 4
+move_speed = 4.0
+move_range = 4
+move_cost_per_tile = 1
+attack_skill = 11
+attack_cost = 2
+shove_skill = 3
+shove_cost = 2
+trip_skill = 3
+trip_cost = 2
+armor = 0
+physical_resistance = 50
+parry_skill = 3
+defensive_option = 1
+ranged_skill = 0
+ranged_cost = 3
+ammo = 0
+max_ammo = 0
+throw_skill = 0
+throw_cost = 1
+strength = 6
+weight = 0
+equip_cost = 1
+agility = 14
+stamina = 7

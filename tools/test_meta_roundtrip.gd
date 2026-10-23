@@ -212,6 +212,9 @@ func _run() -> void:
 	# --- The dungeon a quest builds, and the alarm scoped to its rooms --------------------
 	await _run_dungeon_checks()
 
+	# --- Bodies that dress from what they wear --------------------------------------------
+	await _run_body_checks()
+
 	# --- Hiring, and taking the people hired underground ---------------------------------
 	await _run_hire_checks()
 
@@ -597,10 +600,11 @@ func _run_dungeon_checks() -> void:
 		var e: Node = enemies[i]
 		if t == null or e.get_node_or_null("CharacterModel") == null \
 				or not String(e.character_name).begins_with(t.display_name) \
-				or e.enemy_type != t.ai or e.inventory == null or e.inventory.get_equipped_weapon() == null:
+				or e.enemy_type != t.ai or e.inventory == null \
+				or (not t.gear.is_empty() and e.inventory.get_equipped_weapon() == null):
 			dressed = false
 			_say("    enemy not dressed as %s: %s" % [spawns[i]["kind"], e.character_name])
-	_check(dressed, "and is dressed as its template: body, name, fighting style and a weapon in hand")
+	_check(dressed, "and is dressed as its template: body, name, fighting style and its weapon in hand")
 	var hero: Node = quest._party_views[0]
 	_check(room.region_at(hero.position.x, hero.position.z)
 		== room.layout.room_with_role("entrance")["id"], "the party comes in at the entrance")
@@ -646,6 +650,91 @@ func _run_dungeon_checks() -> void:
 			e.is_alive = false
 			cm.on_character_died(e)
 	_check(quest.field_is_held(), "and the last one down holds the whole dungeon")
+	await _leave_quest(quest, "retreat")
+
+
+func _run_body_checks() -> void:
+	## The Sidekick body: a hero is spawned in one, and what they WEAR is what it looks like.
+	## Checked on the slots the body reports (SidekickBody.part_in), not on a screenshot, so it
+	## says which part is showing where — the whole contract between an item and a body.
+	GameState.clear()
+	GameState.add_member(CharacterClassesScript.make("soldier", "Plated"))
+	var quest := await _enter_quest()
+	var hero: Node = quest._party_views[0]
+	var body: Node = hero.get_node("CharacterModel")
+	_check(body.has_method("wears_gear"), "a hero is spawned in a body that dresses from its gear")
+	var bare_torso: String = body.part_in("10TORS")
+	_check(bare_torso != "", "and it has a torso showing (%s)" % bare_torso)
+
+	var plate: ItemResource = (load("res://resources/items/heavy_armor.tres") as ItemResource).make_instance()
+	hero.inventory.add_item(plate)
+	hero.inventory.equip(hero.inventory.get_item_slot(plate))
+	hero._update_equipment_visuals()
+	_check(body.part_in("10TORS") == plate.worn_parts[0],
+		"putting on heavy armour puts its torso on the body (%s)" % body.part_in("10TORS"))
+	_check(body.part_in("29ASHL") != "", "and its pauldrons, which the bare body has no slot for")
+	hero.inventory.unequip_item(plate)
+	hero._update_equipment_visuals()
+	_check(body.part_in("10TORS") == bare_torso, "and taking it off puts the clothes back")
+	_check(body.part_in("29ASHL") == "", "with the pauldrons gone")
+
+	var helm: ItemResource = (load("res://resources/items/knight_helmet.tres") as ItemResource).make_instance()
+	var hair_before: String = body.part_in("02HAIR")
+	hero.inventory.add_item(helm)
+	hero.inventory.equip(hero.inventory.get_item_slot(helm))
+	hero._update_equipment_visuals()
+	_check(body.part_in("22AHED") != "" and body.part_in("02HAIR") == "",
+		"a helmet goes on the head and the hair goes under it")
+	hero.inventory.unequip_item(helm)
+	hero._update_equipment_visuals()
+	_check(body.part_in("02HAIR") == hair_before, "and comes back when it comes off")
+
+	# A copy of a built body (what the party portraits make) is the same body, not two of them.
+	var copy := body.duplicate() as Node3D
+	add_child(copy)
+	await get_tree().process_frame
+	var meshes := 0
+	var copy_names: Array = []
+	for n in copy.find_children("*", "MeshInstance3D", true, false):
+		meshes += 1
+		copy_names.append(str(copy.get_path_to(n)))
+	var originals := 0
+	var orig_names: Array = []
+	for n in body.find_children("*", "MeshInstance3D", true, false):
+		originals += 1
+		orig_names.append(str(body.get_path_to(n)))
+	_check(meshes == originals and copy.part_in("10TORS") == body.part_in("10TORS"),
+		"a copied body adopts its parts instead of building a second set (%d vs %d meshes)"
+			% [meshes, originals])
+	copy.queue_free()
+	await _leave_quest(quest, "retreat")
+
+	# The human enemies dress from their templates' gear the same way.
+	var captain = RosterScript.find("crypt_lord")
+	var dressed_lord := false
+	GameState.clear()
+	GameState.add_member(CharacterClassesScript.make("soldier", "Witness"))
+	var crypt = QuestDefScript.generate(5151, 3)
+	crypt.theme = "crypt"
+	GameState.accept_quest(crypt)
+	quest = await _enter_quest()
+	for n in get_tree().get_nodes_in_group("enemies"):
+		if quest.is_ancestor_of(n) and String(n.character_name).begins_with(captain.display_name):
+			var m: Node = n.get_node("CharacterModel")
+			dressed_lord = m.has_method("part_in") and m.part_in("10TORS").begins_with("SK_FANT_KNGT_03")
+	_check(dressed_lord, "the Crypt Lord stands in the plate his heavy armour is made of")
+
+	# A caster among the enemies: the shaman fights as an archer whose shot is a firebolt.
+	var shaman: Node = quest._dress(RosterScript.find("goblin_shaman"))
+	quest.add_child(shaman)
+	await get_tree().process_frame
+	_check(shaman.can_cast and shaman.mana > 0, "the goblin shaman arrives with a pool of mana (%d)" % shaman.mana)
+	_check(shaman._has_shot() and shaman.get_ranged_range() == 8,
+		"and has a shot at the spell's range, with no bow and no arrows")
+	shaman.mana = 0
+	_check(not shaman._has_shot(), "and once the mana is spent it has none, and closes in")
+	quest.remove_child(shaman)
+	shaman.queue_free()
 	await _leave_quest(quest, "retreat")
 
 

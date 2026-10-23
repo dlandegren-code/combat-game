@@ -1,7 +1,7 @@
 [gd_resource type="Resource" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemy_template.gd" id="1_tpl"]
-[ext_resource type="PackedScene" path="res://scenes/characters/orc_model.tscn" id="2_model"]
+[ext_resource type="PackedScene" path="res://scenes/characters/polygon_model.tscn" id="2_model"]
 [ext_resource type="Resource" path="res://resources/stats/brute_stats.tres" id="3_stats"]
 [ext_resource type="Resource" path="res://resources/items/warhammer.tres" id="4_warhammer"]
 [ext_resource type="Resource" path="res://resources/items/reinforced_goblin_leather.tres" id="5_reinforced_goblin_leather"]
@@ -12,11 +12,11 @@ id = "goblin_brute"
 display_name = "Goblin Brute"
 ai = 0
 model_scene = ExtResource("2_model")
-model_props = {}
+model_props = {"character_pool": ["Character_Goblin_Warrior_Male", "Character_Goblin_Warrior_Female"]}
 stats = ExtResource("3_stats")
 gear = Array[Resource]([ExtResource("4_warhammer"), ExtResource("5_reinforced_goblin_leather")])
-size = 1.15
-tint = Color(0.8, 0.9, 0.75, 1)
+size = 1.0
+tint = Color(1, 1, 1, 1)
 voice = "male_d"
 cost = 4
 themes = PackedStringArray("warren")

@@ -1,7 +1,7 @@
 [gd_resource type="Resource" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemy_template.gd" id="1_tpl"]
-[ext_resource type="PackedScene" path="res://scenes/characters/soldier_model.tscn" id="2_model"]
+[ext_resource type="PackedScene" path="res://scenes/characters/sidekick_model.tscn" id="2_model"]
 [ext_resource type="Resource" path="res://resources/stats/crypt_lord_stats.tres" id="3_stats"]
 [ext_resource type="Resource" path="res://resources/items/boss_cleaver.tres" id="4_boss_cleaver"]
 [ext_resource type="Resource" path="res://resources/items/heavy_armor.tres" id="5_heavy_armor"]
@@ -13,11 +13,11 @@ id = "crypt_lord"
 display_name = "Crypt Lord"
 ai = 2
 model_scene = ExtResource("2_model")
-model_props = {}
+model_props = {"hair": "none", "facial_hair": "SK_HUMN_BASE_04_09FCHR_HU01", "outfit": ["SK_FANT_KNGT_06_10TORS_HU01", "SK_FANT_KNGT_04_17HIPS_HU01", "SK_FANT_KNGT_04_18LEGL_HU01", "SK_FANT_KNGT_04_19LEGR_HU01", "SK_FANT_KNGT_04_20FOTL_HU01", "SK_FANT_KNGT_04_21FOTR_HU01", "SK_FANT_KNGT_04_22AHED_HU01", "SK_FANT_KNGT_02_24ABAC_HU01"]}
 stats = ExtResource("3_stats")
 gear = Array[Resource]([ExtResource("4_boss_cleaver"), ExtResource("5_heavy_armor"), ExtResource("6_iron_key")])
 size = 1.2
-tint = Color(0.55, 0.6, 0.7, 1)
+tint = Color(1, 1, 1, 1)
 voice = "male_d"
 cost = 4
 themes = PackedStringArray("crypt")

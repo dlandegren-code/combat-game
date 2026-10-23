@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/item_resource.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+item_name = "Seax"
+weapon_sound = 2
+item_type = 0
+attack_bonus = 7
+durability = 20
+throw_range = 6
+model_path = "res://assets/vikings/weapons/SM_Wep_Knife_01.fbx"
+model_material_path = "res://assets/vikings/viking_mat_01_A.tres"
+worn_model_path = "res://assets/vikings/weapons/SM_Wep_Knife_01.fbx"
+worn_rotation = Vector3(-90, 0, 0)

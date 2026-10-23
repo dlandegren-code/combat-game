@@ -8,3 +8,4 @@ item_name = "Rusty Sword"
 attack_bonus = 2
 damage_bonus = 1
 durability = 71
+worn_model_path = "res://assets/PolygonDungeon/Models/SM_Wep_Straightsword_01.res"

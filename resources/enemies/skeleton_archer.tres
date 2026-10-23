@@ -1,0 +1,25 @@
+[gd_resource type="Resource" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemy_template.gd" id="1_tpl"]
+[ext_resource type="PackedScene" path="res://scenes/characters/polygon_model.tscn" id="2_model"]
+[ext_resource type="Resource" path="res://resources/stats/skeleton_archer_stats.tres" id="3_stats"]
+[ext_resource type="Resource" path="res://resources/items/dagger.tres" id="4_dagger"]
+[ext_resource type="Resource" path="res://resources/items/short_bow.tres" id="5_short_bow"]
+
+[resource]
+script = ExtResource("1_tpl")
+id = "skeleton_archer"
+display_name = "Skeleton Archer"
+ai = 1
+model_scene = ExtResource("2_model")
+model_props = {"character": "Character_Skeleton_Soldier_02", "clip_overrides": {"hit": "hit-light"}}
+stats = ExtResource("3_stats")
+gear = Array[Resource]([ExtResource("4_dagger"), ExtResource("5_short_bow")])
+size = 1.0
+tint = Color(1, 1, 1, 1)
+voice = "male_d"
+cost = 3
+themes = PackedStringArray("crypt")
+min_tier = 1
+weight = 1.2
+is_boss = false

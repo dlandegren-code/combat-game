@@ -48,10 +48,38 @@ const V1_ATTRIBUTES := ["strength", "agility", "stamina", "intelligence", "willp
 ## Only the body lives here. What a NEW character of a class starts with — stats, gear, a
 ## name for the screen — is character_classes.gd, which is authoring data rather than
 ## something every spawn needs.
+## Every class is the same Sidekick body (sidekick_body.gd), and what tells them apart is the
+## face and hair they were born with and the plain clothes they wear under their gear. ARMOUR is
+## not here: that comes from the items they have on, which is the point of the body.
+##
+## The clothes are a tunic (Knight 06's torso) and dark trousers and boots (Knight 04's legs);
+## any armour or greaves replace those slots, so a character in a cuirass has the cuirass on and
+## the tunic off. The wizard adds Knight 04's tabard front, which is the nearest the packs come to
+## a robe.
+const SIDEKICK_BODY := "res://scenes/characters/sidekick_model.tscn"
+const CLOTHES := ["SK_FANT_KNGT_06_10TORS_HU01", "SK_FANT_KNGT_04_17HIPS_HU01",
+	"SK_FANT_KNGT_04_18LEGL_HU01", "SK_FANT_KNGT_04_19LEGR_HU01",
+	"SK_FANT_KNGT_04_20FOTL_HU01", "SK_FANT_KNGT_04_21FOTR_HU01"]
 const CLASS_BODIES := {
-	"soldier": {"model": "res://scenes/characters/soldier_model.tscn", "props": {}},
-	"wizard": {"model": "res://scenes/characters/wizard_model.tscn", "props": {}},
-	"archer": {"model": "res://scenes/characters/male_d_model.tscn", "props": {"show_quiver": true}},
+	"soldier": {"model": SIDEKICK_BODY, "props": {
+		"hair": "SK_HUMN_BASE_04_02HAIR_HU01", "facial_hair": "SK_HUMN_BASE_02_09FCHR_HU01",
+		"outfit": CLOTHES}},
+	"wizard": {"model": SIDEKICK_BODY, "props": {
+		"hair": "SK_HUMN_BASE_09_02HAIR_HU01", "facial_hair": "SK_HUMN_BASE_08_09FCHR_HU01",
+		"skin_palette": "T_HumanSpecies_02ColorMap.png",
+		"outfit": CLOTHES + ["SK_FANT_KNGT_04_25AHPF_HU01"]}},
+	"archer": {"model": SIDEKICK_BODY, "props": {
+		"hair": "SK_HUMN_BASE_06_02HAIR_HU01", "facial_hair": "none",
+		"skin_palette": "T_HumanSpecies_03ColorMap.png",
+		"outfit": CLOTHES, "show_quiver": true}},
+}
+
+## The Kenney bodies the hand-placed heroes in quest_scene.tscn still wear, by class — only so
+## _class_of can tell which class an authored hero was, now that every class shares one body.
+const LEGACY_BODIES := {
+	"soldier": "res://scenes/characters/soldier_model.tscn",
+	"wizard": "res://scenes/characters/wizard_model.tscn",
+	"archer": "res://scenes/characters/male_d_model.tscn",
 }
 
 const DEFAULT_CLASS := "soldier"
@@ -290,6 +318,18 @@ func bag_remove_at(idx: int):
 	return item
 
 
+func worn_items() -> Array:
+	## What a dressing body should have on: armour, greaves, helmet — the items whose look is
+	## worn rather than held. For the town and any other place a character is shown without a
+	## Combatant to work it out (Combatant reads its live Inventory instead).
+	var out: Array = []
+	for slot in [ItemResource.EquipSlot.ARMOR, ItemResource.EquipSlot.LEGS,
+			ItemResource.EquipSlot.HELMET]:
+		var idx: int = int(equipped.get(slot, -1))
+		out.append(bag[idx] if idx >= 0 and idx < bag.size() else null)
+	return out
+
+
 func is_equipped(idx: int) -> bool:
 	for slot in equipped:
 		if int(equipped[slot]) == idx:
@@ -476,8 +516,8 @@ static func _class_of(c: Node) -> String:
 	var model: Node = c.get_node_or_null("CharacterModel")
 	if model != null:
 		var scene_path: String = model.scene_file_path
-		for cls in CLASS_BODIES:
-			if CLASS_BODIES[cls]["model"] == scene_path:
+		for cls in LEGACY_BODIES:
+			if LEGACY_BODIES[cls] == scene_path:
 				return cls
 	return DEFAULT_CLASS
 

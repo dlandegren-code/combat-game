@@ -457,20 +457,45 @@ const FENCES := [
 	[Vector3(11.0, 0.0, 7.5), Vector3(22.0, 0.0, 5.0)],
 ]
 
-## Where the game's own hero models stand around as townsfolk. Using these rather than the
-## farm pack's characters on purpose: the farm's people are modern farmers in caps and
-## overalls, and these are the game's own soldier, wizard and ranger, already rigged with the
-## idle animation the combat scene plays.
-## The combat scene scales these same models by Combatant.CHARACTER_SCALE, and without it a
-## townsperson stands about half a metre tall.
-## 1.6 is what the combat scene uses, where everything is scaled to a 2 m grid. Next to a
-## 4 m cabin and a 3.3 m market stall those same models read as children, so the town
-## stands them at roughly human height instead.
+## Who stands around the clearing for atmosphere. Sidekick bodies (sidekick_body.gd), the same
+## as the party and the human enemies, dressed by `props` — set on the body before it is built,
+## exactly as a class's look is (CharacterData.CLASS_BODIES). Not the farm pack's characters on
+## purpose: those are modern farmers in caps and overalls.
+##
+## Scaled by TOWNSFOLK_SCALE on top of the body's own MODEL_SCALE, the same as the party line-up
+## (Town._place_party_member), so the guard and the party stand at the same height. 2.75 was
+## chosen for the old Kenney models, which next to a 4 m cabin and a 3.3 m stall read as
+## children at the combat scene's 1.6.
 const TOWNSFOLK_SCALE := 2.75
+const _TOWN_BODY := "res://scenes/characters/sidekick_model.tscn"
+## Tunic, trousers and boots — the same plain clothes the party wears under its gear.
+const _TOWN_CLOTHES := ["SK_FANT_KNGT_06_10TORS_HU01", "SK_FANT_KNGT_04_17HIPS_HU01",
+	"SK_FANT_KNGT_04_18LEGL_HU01", "SK_FANT_KNGT_04_19LEGR_HU01",
+	"SK_FANT_KNGT_04_20FOTL_HU01", "SK_FANT_KNGT_04_21FOTR_HU01"]
 const TOWNSFOLK := [
-	{"model": "res://scenes/characters/soldier_model.tscn", "position": Vector3(-3.5, 0.0, 6.5), "rotation": 166.0},
-	{"model": "res://scenes/characters/wizard_model.tscn", "position": Vector3(10.0, 0.0, -3.0), "rotation": -140.0},
-	{"model": "res://scenes/characters/male_d_model.tscn", "position": Vector3(-10.5, 0.0, 7.5), "rotation": 200.0},
+	# A town guard by the market, in Knight 01's white-and-gold plate.
+	{"model": _TOWN_BODY, "position": Vector3(-3.5, 0.0, 6.5), "rotation": 166.0, "props": {
+		# No hair: the helm is open at the crest, and hair pokes straight through it.
+		"hair": "none", "facial_hair": "SK_HUMN_BASE_03_09FCHR_HU01",
+		"outfit": ["SK_FANT_KNGT_01_10TORS_HU01", "SK_FANT_KNGT_01_11AUPL_HU01",
+			"SK_FANT_KNGT_01_12AUPR_HU01", "SK_FANT_KNGT_01_13ALWL_HU01",
+			"SK_FANT_KNGT_01_14ALWR_HU01", "SK_FANT_KNGT_01_15HNDL_HU01",
+			"SK_FANT_KNGT_01_16HNDR_HU01", "SK_FANT_KNGT_01_17HIPS_HU01",
+			"SK_FANT_KNGT_01_18LEGL_HU01", "SK_FANT_KNGT_01_19LEGR_HU01",
+			"SK_FANT_KNGT_01_20FOTL_HU01", "SK_FANT_KNGT_01_21FOTR_HU01",
+			"SK_FANT_KNGT_01_29ASHL_HU01", "SK_FANT_KNGT_01_30ASHR_HU01",
+			"SK_FANT_KNGT_01_22AHED_HU01"]}},
+	# The magician, outside his own house: long hair, a beard, a tabard over plain clothes.
+	{"model": _TOWN_BODY, "position": Vector3(10.0, 0.0, -3.0), "rotation": -140.0, "props": {
+		"hair": "SK_HUMN_BASE_09_02HAIR_HU01", "facial_hair": "SK_HUMN_BASE_10_09FCHR_HU01",
+		"skin_palette": "T_HumanSpecies_02ColorMap.png",
+		"outfit": _TOWN_CLOTHES + ["SK_FANT_KNGT_04_25AHPF_HU01", "SK_FANT_KNGT_04_27AHPL_HU01",
+			"SK_FANT_KNGT_04_28AHPR_HU01"]}},
+	# A ranger passing through, quiver on her back.
+	{"model": _TOWN_BODY, "position": Vector3(-10.5, 0.0, 7.5), "rotation": 200.0, "props": {
+		"hair": "SK_HUMN_BASE_07_02HAIR_HU01", "facial_hair": "none",
+		"skin_palette": "T_HumanSpecies_03ColorMap.png",
+		"outfit": _TOWN_CLOTHES, "show_quiver": true}},
 ]
 
 ## Where the PARTY stands, one mark per member, main character first.

@@ -13,3 +13,4 @@ icon_rotation = Vector3(10, 22, 0)
 model_path = "res://assets/models/synty_armor/studded_leather.res"
 model_scale = 0.45
 model_ground_rotation = Vector3(0, 0, 0)
+worn_parts = PackedStringArray("SK_FANT_KNGT_05_10TORS_HU01", "SK_FANT_KNGT_05_29ASHL_HU01", "SK_FANT_KNGT_05_30ASHR_HU01")

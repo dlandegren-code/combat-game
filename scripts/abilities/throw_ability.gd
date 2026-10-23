@@ -24,7 +24,7 @@ func unavailable_reason(actor) -> String:
 	return "resource" if not actor._has_usable_weapon() else "range"
 
 func execute(actor, target) -> void:
-	actor._play_attack_anim("attack-melee-right")
+	actor._play_attack_anim("throw", "attack-melee-right")
 	# Awaited: the weapon has to fly and land before the throw is rolled, and player.gd waits
 	# on this call so the turn does not end while it is still in the air.
 	await actor._do_throw_attack(target)

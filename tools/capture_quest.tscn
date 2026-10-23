@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tools/capture_quest.gd" id="1"]
+
+[node name="CaptureQuest" type="Node"]
+script = ExtResource("1")
+theme = "raiders"
+focus_enemy = "Jarl"
+seat_boss = true

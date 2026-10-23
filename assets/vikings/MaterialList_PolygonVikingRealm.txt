@@ -1,0 +1,4028 @@
+-------------------
+Folder Name: Buildings
+-------------------
+Prefab Name: SM_Bld_Arch_01
+    Mesh Name: SM_Bld_Arch_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Beam_01
+    Mesh Name: SM_Bld_Beam_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Beam_02
+    Mesh Name: SM_Bld_Beam_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Bridge_01
+    Mesh Name: SM_Bld_Bridge_01
+        Slot: PolygonVikingRealm_Mat_02_C (PolygonVikingRealm_Texture_02_C)
+        Slot: Stone_Wall_01 (PolygonVikingRealm_Stone_Wall_01)
+        Slot: Gravel_02 (Beach_03)
+
+Prefab Name: SM_Bld_Dock_Floor_01
+    Mesh Name: SM_Bld_Dock_Floor_01
+        Slot: PolygonVikingRealm_Mat_01_B (PolygonVikingRealm_Texture_01_B)
+
+Prefab Name: SM_Bld_Dock_Pillar_01
+    Mesh Name: SM_Bld_Dock_Pillar_01
+        Slot: PolygonVikingRealm_Mat_01_B (PolygonVikingRealm_Texture_01_B)
+
+Prefab Name: SM_Bld_Dock_Pillar_02
+    Mesh Name: SM_Bld_Dock_Pillar_02
+        Slot: PolygonVikingRealm_Mat_01_B (PolygonVikingRealm_Texture_01_B)
+
+Prefab Name: SM_Bld_Dock_Pillar_03
+    Mesh Name: SM_Bld_Dock_Pillar_03
+        Slot: PolygonVikingRealm_Mat_01_B (PolygonVikingRealm_Texture_01_B)
+
+Prefab Name: SM_Bld_Dock_Rope_01
+    Mesh Name: SM_Bld_Dock_Rope_01
+        Slot: PolygonVikingRealm_Mat_01_B (PolygonVikingRealm_Texture_01_B)
+
+Prefab Name: SM_Bld_Dock_Wood_End_01
+    Mesh Name: SM_Bld_Dock_Wood_End_01
+        Slot: PolygonVikingRealm_Mat_01_B (PolygonVikingRealm_Texture_01_B)
+
+Prefab Name: SM_Bld_Dock_Wood_Stairs_01
+    Mesh Name: SM_Bld_Dock_Wood_Stairs_01
+        Slot: PolygonVikingRealm_Mat_01_B (PolygonVikingRealm_Texture_01_B)
+
+Prefab Name: SM_Bld_Dock_Wood_Stairs_02
+    Mesh Name: SM_Bld_Dock_Wood_Stairs_02
+        Slot: PolygonVikingRealm_Mat_01_B (PolygonVikingRealm_Texture_01_B)
+
+Prefab Name: SM_Bld_Dock_Wood_Stairs_03
+    Mesh Name: SM_Bld_Dock_Wood_Stairs_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Dock_Wood_Straight_01
+    Mesh Name: SM_Bld_Dock_Wood_Straight_01
+        Slot: PolygonVikingRealm_Mat_01_B (PolygonVikingRealm_Texture_01_B)
+
+Prefab Name: SM_Bld_Dock_Wood_Straight_02
+    Mesh Name: SM_Bld_Dock_Wood_Straight_02
+        Slot: PolygonVikingRealm_Mat_01_B (PolygonVikingRealm_Texture_01_B)
+
+Prefab Name: SM_Bld_Door_01
+    Mesh Name: SM_Bld_Door_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Door_02
+    Mesh Name: SM_Bld_Door_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Door_03
+    Mesh Name: SM_Bld_Door_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Fence_01
+    Mesh Name: SM_Bld_Fence_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Fence_02
+    Mesh Name: SM_Bld_Fence_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Fence_End_01
+    Mesh Name: SM_Bld_Fence_End_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Floor_Curved_01
+    Mesh Name: SM_Bld_Floor_Curved_01
+        Slot: Stone_Wall_01 (PolygonVikingRealm_Stone_Wall_01)
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_Floor_Trim_01
+    Mesh Name: SM_Bld_Floor_Trim_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Floor_Trim_Corner_01
+    Mesh Name: SM_Bld_Floor_Trim_Corner_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Hall_Roof_01
+    Mesh Name: SM_Bld_Hall_Roof_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Roof_Tan (Uses custom shader)
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_Hall_Roof_Beam_01
+    Mesh Name: SM_Bld_Hall_Roof_Beam_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Hall_Roof_End_01
+    Mesh Name: SM_Bld_Hall_Roof_End_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Planks_01 (Planks_01)
+        Slot: Roof_Tan (Uses custom shader)
+
+Prefab Name: SM_Bld_Hall_Roof_Window_01
+    Mesh Name: SM_Bld_Hall_Roof_Window_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Roof_Tan (Uses custom shader)
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_Hall_Roof_Window_Large_01
+    Mesh Name: SM_Bld_Hall_Roof_Window_Large_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Roof_Tan (Uses custom shader)
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_Head_01
+    Mesh Name: SM_Bld_Head_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Head_02
+    Mesh Name: SM_Bld_Head_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Head_03
+    Mesh Name: SM_Bld_Head_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Head_04
+    Mesh Name: SM_Bld_Head_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Head_05
+    Mesh Name: SM_Bld_Head_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Head_06
+    Mesh Name: SM_Bld_Head_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Head_07
+    Mesh Name: SM_Bld_Head_07
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_House_Beam_01
+    Mesh Name: SM_Bld_House_Beam_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_House_Beam_02
+    Mesh Name: SM_Bld_House_Beam_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_House_Roof_01
+    Mesh Name: SM_Bld_House_Roof_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Roof_Tan (Uses custom shader)
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_House_Roof_01_Tiles_01
+    Mesh Name: SM_Bld_House_Roof_01_Tiles_01
+        Slot: Roof_Tan (Uses custom shader)
+
+Prefab Name: SM_Bld_House_Roof_01_Tiles_02
+    Mesh Name: SM_Bld_House_Roof_01_Tiles_02
+        Slot: Roof_Tan (Uses custom shader)
+
+Prefab Name: SM_Bld_House_Roof_01_Tile_01
+    Mesh Name: SM_Bld_House_Roof_01_Tile_01
+        Slot: Roof_Tan (Uses custom shader)
+
+Prefab Name: SM_Bld_House_Roof_01_Tile_02
+    Mesh Name: SM_Bld_House_Roof_01_Tile_02
+        Slot: Roof_Tan (Uses custom shader)
+
+Prefab Name: SM_Bld_House_Roof_Curved_01
+    Mesh Name: SM_Bld_House_Roof_Curved_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Roof_Tan (Uses custom shader)
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_House_Roof_Curved_Beam_01
+    Mesh Name: SM_Bld_House_Roof_Curved_Beam_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_House_Roof_Curved_Corner_01
+    Mesh Name: SM_Bld_House_Roof_Curved_Corner_01
+        Slot: Roof_Tan (Uses custom shader)
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_House_Roof_Curved_End_01
+    Mesh Name: SM_Bld_House_Roof_Curved_End_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Roof_Tan (Uses custom shader)
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_House_Roof_Curved_Tiles_01
+    Mesh Name: SM_Bld_House_Roof_Curved_Tiles_01
+        Slot: Roof_Green (Uses custom shader)
+
+Prefab Name: SM_Bld_House_Roof_Curved_Tiles_02
+    Mesh Name: SM_Bld_House_Roof_Curved_Tiles_02
+        Slot: Roof_Green (Uses custom shader)
+
+Prefab Name: SM_Bld_House_Roof_Edge_01
+    Mesh Name: SM_Bld_House_Roof_Edge_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Roof_Tan (Uses custom shader)
+
+Prefab Name: SM_Bld_House_Roof_Edge_Curved_01
+    Mesh Name: SM_Bld_House_Roof_Edge_Curved_01
+        Slot: Planks_01 (Planks_01)
+        Slot: Roof_Green (Uses custom shader)
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_House_Roof_Edge_Grass_01
+    Mesh Name: SM_Bld_House_Roof_Edge_Grass_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_House_Roof_Grass_01
+    Mesh Name: SM_Bld_House_Roof_Grass_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_House_Roof_Grass_Tufts_01
+    Mesh Name: SM_Bld_House_Roof_Grass_Tufts_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_House_Roof_Grass_Tuft_01
+    Mesh Name: SM_Bld_House_Roof_Grass_Tuft_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_House_Roof_Grass_Tuft_02
+    Mesh Name: SM_Bld_House_Roof_Grass_Tuft_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_House_Roof_Grass_Tuft_03
+    Mesh Name: SM_Bld_House_Roof_Grass_Tuft_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_House_Roof_Half_01
+    Mesh Name: SM_Bld_House_Roof_Half_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Roof_Tan (Uses custom shader)
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_House_Roof_Half_02
+    Mesh Name: SM_Bld_House_Roof_Half_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Roof_Tan (Uses custom shader)
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_House_Roof_Quarter_01
+    Mesh Name: SM_Bld_House_Roof_Quarter_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Roof_Tan (Uses custom shader)
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_House_Roof_Wall_End_01
+    Mesh Name: SM_Bld_House_Roof_Wall_End_01
+        Slot: Planks_01 (Planks_01)
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_House_Roof_Wall_End_02
+    Mesh Name: SM_Bld_House_Roof_Wall_End_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_House_Roof_Wall_End_Curved_01
+    Mesh Name: SM_Bld_House_Roof_Wall_End_Curved_01
+        Slot: Planks_01 (Planks_01)
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_House_Roof_Wall_End_Curved_02
+    Mesh Name: SM_Bld_House_Roof_Wall_End_Curved_02
+        Slot: Planks_01 (Planks_01)
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_House_Wall_Curved_01
+    Mesh Name: SM_Bld_House_Wall_Curved_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Planks_Dark_01 (Planks_Dark_01)
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_Pillar_01
+    Mesh Name: SM_Bld_Pillar_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Pillar_02
+    Mesh Name: SM_Bld_Pillar_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Pillar_03
+    Mesh Name: SM_Bld_Pillar_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Pillar_04
+    Mesh Name: SM_Bld_Pillar_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Pillar_05
+    Mesh Name: SM_Bld_Pillar_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Pillar_06
+    Mesh Name: SM_Bld_Pillar_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Plank_01
+    Mesh Name: SM_Bld_Plank_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Plank_02
+    Mesh Name: SM_Bld_Plank_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Railing_01
+    Mesh Name: SM_Bld_Railing_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Railing_Pillar_01
+    Mesh Name: SM_Bld_Railing_Pillar_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Roof_Beam_01
+    Mesh Name: SM_Bld_Roof_Beam_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Roof_Cap_01
+    Mesh Name: SM_Bld_Roof_Cap_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Roof_Cap_02
+    Mesh Name: SM_Bld_Roof_Cap_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Roof_Ridge_01
+    Mesh Name: SM_Bld_Roof_Ridge_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Step_01
+    Mesh Name: SM_Bld_Step_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Stone_Pillar_01
+    Mesh Name: SM_Bld_Stone_Pillar_01
+        Slot: PolygonVikingRealm_Mat_03_A (PolygonVikingRealm_Texture_03_A)
+
+Prefab Name: SM_Bld_Stone_Wall_01
+    Mesh Name: SM_Bld_Stone_Wall_01
+        Slot: PolygonVikingRealm_Mat_03_A (PolygonVikingRealm_Texture_03_A)
+
+Prefab Name: SM_Bld_Wall_01
+    Mesh Name: SM_Bld_Wall_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Planks_Dark_01 (Planks_Dark_01)
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_Wall_Angled_01
+    Mesh Name: SM_Bld_Wall_Angled_01
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_Wall_Door_01
+    Mesh Name: SM_Bld_Wall_Door_01
+        Slot: Planks_Dark_01 (Planks_Dark_01)
+        Slot: Planks_01 (Planks_01)
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Wall_Door_02
+    Mesh Name: SM_Bld_Wall_Door_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Planks_Dark_01 (Planks_Dark_01)
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_Wall_Door_Double_01
+    Mesh Name: SM_Bld_Wall_Door_Double_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Planks_01 (Planks_01)
+        Slot: Planks_Dark_01 (Planks_Dark_01)
+
+Prefab Name: SM_Bld_Wall_Door_Double_02
+    Mesh Name: SM_Bld_Wall_Door_Double_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Planks_Dark_01 (Planks_Dark_01)
+        Slot: Planks_01 (Planks_01)
+    Mesh Name: SM_Bld_Wall_Door_Double_01_Door_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Bld_Wall_Door_Double_01_Door_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Wall_Half_01
+    Mesh Name: SM_Bld_Wall_Half_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Planks_Dark_01 (Planks_Dark_01)
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_Wall_Logs_01
+    Mesh Name: SM_Bld_Wall_Logs_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Wall_Logs_Door_01
+    Mesh Name: SM_Bld_Wall_Logs_Door_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Wall_Logs_Half_01
+    Mesh Name: SM_Bld_Wall_Logs_Half_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Wall_Logs_Window_01
+    Mesh Name: SM_Bld_Wall_Logs_Window_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Wall_Slope_01
+    Mesh Name: SM_Bld_Wall_Slope_01
+        Slot: Stone_Wall_01 (PolygonVikingRealm_Stone_Wall_01)
+        Slot: Stone_Wall_01 (PolygonVikingRealm_Stone_Wall_01)
+
+Prefab Name: SM_Bld_Wall_Slope_Corner_01
+    Mesh Name: SM_Bld_Wall_Slope_Corner_01
+        Slot: Stone_Wall_01 (PolygonVikingRealm_Stone_Wall_01)
+
+Prefab Name: SM_Bld_Wall_Slope_Half_01
+    Mesh Name: SM_Bld_Wall_Slope_Half_01
+        Slot: Stone_Wall_01 (PolygonVikingRealm_Stone_Wall_01)
+        Slot: Stone_Wall_01 (PolygonVikingRealm_Stone_Wall_01)
+
+Prefab Name: SM_Bld_Wall_Support_01
+    Mesh Name: SM_Bld_Wall_Support_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Bld_Wall_Trim_Half_Stone_01
+    Mesh Name: SM_Bld_Wall_Trim_Half_Stone_01
+        Slot: Stone_Wall_01 (PolygonVikingRealm_Stone_Wall_01)
+
+Prefab Name: SM_Bld_Wall_Trim_Stone_01
+    Mesh Name: SM_Bld_Wall_Trim_Stone_01
+        Slot: Stone_Wall_01 (PolygonVikingRealm_Stone_Wall_01)
+
+Prefab Name: SM_Bld_Wall_Trim_Stone_Cap_01
+    Mesh Name: SM_Bld_Wall_Trim_Stone_Cap_01
+        Slot: Stone_Wall_01 (PolygonVikingRealm_Stone_Wall_01)
+
+Prefab Name: SM_Bld_Wall_Window_01
+    Mesh Name: SM_Bld_Wall_Window_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Planks_Dark_01 (Planks_Dark_01)
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_Wall_Window_Double_01
+    Mesh Name: SM_Bld_Wall_Window_Double_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Planks_Dark_01 (Planks_Dark_01)
+        Slot: Planks_01 (Planks_01)
+
+Prefab Name: SM_Bld_Wall_Window_Half_01
+    Mesh Name: SM_Bld_Wall_Window_Half_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+        Slot: Planks_Dark_01 (Planks_Dark_01)
+        Slot: Planks_01 (Planks_01)
+
+-------------------
+Folder Name: Characters
+-------------------
+Prefab Name: SM_Chr_Leader_Female_01
+    Mesh Name: SM_Chr_Attach_Cape_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Cape_02
+        Slot: Default-Material (No Albedo Texture)
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Leader_Male_01
+    Mesh Name: SM_Chr_Attach_Crown_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Eyepatch_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Beard_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Cape_01
+        Slot: Default-Material (No Albedo Texture)
+    Mesh Name: SM_Chr_Attach_Cape_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Peasant_Female_01
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Peasant_Female_02
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Peasant_Male_01
+    Mesh Name: SM_Chr_Attach_Hair_08
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Beard_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Peasant_Male_02
+    Mesh Name: SM_Chr_Attach_Beard_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Warrior_Female_01
+    Mesh Name: SM_Chr_Attach_Hair_07
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Warrior_Female_02
+    Mesh Name: SM_Chr_Attach_Pouch_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Warrior_Male_01
+    Mesh Name: SM_Chr_Attach_Beard_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Pouch_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Warrior_Male_02
+    Mesh Name: SM_Chr_Attach_Beard_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Helmet_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+-------------------
+Folder Name: Environment
+-------------------
+Prefab Name: SM_Env_Bush_Berries_01
+    Mesh Name: SM_Env_Bush_Berries_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Bush_Berries_02
+    Mesh Name: SM_Env_Bush_Berries_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Bush_Berries_03
+    Mesh Name: SM_Env_Bush_Berries_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Bush_Berries_04
+    Mesh Name: SM_Env_Bush_Berries_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Icicle_01
+    Mesh Name: SM_Env_Icicle_01
+        Slot: Ice (No Albedo Texture)
+
+Prefab Name: SM_Env_Icicle_02
+    Mesh Name: SM_Env_Icicle_02
+        Slot: Ice (No Albedo Texture)
+
+Prefab Name: SM_Env_Icicle_03
+    Mesh Name: SM_Env_Icicle_03
+        Slot: Ice (No Albedo Texture)
+
+Prefab Name: SM_Env_Icicle_04
+    Mesh Name: SM_Env_Icicle_04
+        Slot: Ice (No Albedo Texture)
+
+Prefab Name: SM_Env_Icicle_Small_01
+    Mesh Name: SM_Env_Icicle_Small_01
+        Slot: Ice (No Albedo Texture)
+
+Prefab Name: SM_Env_Icicle_Small_02
+    Mesh Name: SM_Env_Icicle_Small_02
+        Slot: Ice (No Albedo Texture)
+
+Prefab Name: SM_Env_Icicle_Small_03
+    Mesh Name: SM_Env_Icicle_Small_03
+        Slot: Ice (No Albedo Texture)
+
+Prefab Name: SM_Env_Icicle_Small_Cluster_01
+    Mesh Name: SM_Env_Icicle_Small_Cluster_01
+        Slot: Ice (No Albedo Texture)
+
+Prefab Name: SM_Env_Icicle_Small_Cluster_02
+    Mesh Name: SM_Env_Icicle_Small_Cluster_02
+        Slot: Ice (No Albedo Texture)
+
+Prefab Name: SM_Env_Icicle_Small_Sloped_01
+    Mesh Name: SM_Env_Icicle_Small_Sloped_01
+        Slot: Ice (No Albedo Texture)
+
+Prefab Name: SM_Env_Icicle_Small_Sloped_02
+    Mesh Name: SM_Env_Icicle_Small_Sloped_02
+        Slot: Ice (No Albedo Texture)
+
+Prefab Name: SM_Env_Mountain_01
+    Mesh Name: SM_Env_Mountain_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Mountain_02
+    Mesh Name: SM_Env_Mountain_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Mountain_03
+    Mesh Name: SM_Env_Mountain_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Rock_Cliff_01
+    Mesh Name: SM_Env_Rock_Cliff_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Rock_Cliff_02
+    Mesh Name: SM_Env_Rock_Cliff_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Rock_Cliff_03
+    Mesh Name: SM_Env_Rock_Cliff_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Rock_Cliff_04
+    Mesh Name: SM_Env_Rock_Cliff_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Rock_Cliff_05
+    Mesh Name: SM_Env_Rock_Cliff_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Snow_Edge_01
+    Mesh Name: SM_Env_Snow_Edge_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Snow_Edge_02
+    Mesh Name: SM_Env_Snow_Edge_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Snow_Edge_03
+    Mesh Name: SM_Env_Snow_Edge_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Snow_Edge_04
+    Mesh Name: SM_Env_Snow_Edge_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Snow_Edge_05
+    Mesh Name: SM_Env_Snow_Edge_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Snow_Edge_06
+    Mesh Name: SM_Env_Snow_Edge_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Snow_Hill_01
+    Mesh Name: SM_Env_Snow_Hill_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Snow_Hill_02
+    Mesh Name: SM_Env_Snow_Hill_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Snow_Hill_03
+    Mesh Name: SM_Env_Snow_Hill_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Snow_Mound_01
+    Mesh Name: SM_Env_Snow_Mound_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Snow_Mound_02
+    Mesh Name: SM_Env_Snow_Mound_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Snow_Mound_03
+    Mesh Name: SM_Env_Snow_Mound_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Stone_01
+    Mesh Name: SM_Env_Stone_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Stone_02
+    Mesh Name: SM_Env_Stone_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Stone_03
+    Mesh Name: SM_Env_Stone_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Stone_04
+    Mesh Name: SM_Env_Stone_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Stone_Engraved_01
+    Mesh Name: SM_Env_Stone_Engraved_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Stone_Engraved_02
+    Mesh Name: SM_Env_Stone_Engraved_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Stone_Engraved_03
+    Mesh Name: SM_Env_Stone_Engraved_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Stone_Stairs_01
+    Mesh Name: SM_Env_Stone_Stairs_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Stone_Stairs_02
+    Mesh Name: SM_Env_Stone_Stairs_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Stone_Stairs_03
+    Mesh Name: SM_Env_Stone_Stairs_03
+        Slot: Stone_Wall_01 (PolygonVikingRealm_Stone_Wall_01)
+
+Prefab Name: SM_Env_Tree_Pine_01
+    Mesh Name: SM_Env_Tree_Pine_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Tree_Pine_02
+    Mesh Name: SM_Env_Tree_Pine_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Tree_Pine_03
+    Mesh Name: SM_Env_Tree_Pine_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Tree_Pine_04
+    Mesh Name: SM_Env_Tree_Pine_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Tree_Pine_05
+    Mesh Name: SM_Env_Tree_Pine_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Tree_Pine_06
+    Mesh Name: SM_Env_Tree_Pine_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Tree_Pine_Group_01
+    Mesh Name: SM_Env_Tree_Pine_Group_01
+        Slot: PolygonVikingRealm_Mat_01_C (PolygonVikingRealm_Texture_01_C)
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Tree_Pine_Group_02
+    Mesh Name: SM_Env_Tree_Pine_Group_02
+        Slot: PolygonVikingRealm_Mat_01_C (PolygonVikingRealm_Texture_01_C)
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Tree_Pine_Group_03
+    Mesh Name: SM_Env_Tree_Pine_Group_03
+        Slot: PolygonVikingRealm_Mat_01_C (PolygonVikingRealm_Texture_01_C)
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Trim_Snow_01
+    Mesh Name: SM_Env_Trim_Snow_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Trim_Snow_02
+    Mesh Name: SM_Env_Trim_Snow_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Trim_Snow_03
+    Mesh Name: SM_Env_Trim_Snow_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Trim_Snow_04
+    Mesh Name: SM_Env_Trim_Snow_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Trim_Snow_05
+    Mesh Name: SM_Env_Trim_Snow_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Trim_Snow_06
+    Mesh Name: SM_Env_Trim_Snow_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Env_Trim_Snow_07
+    Mesh Name: SM_Env_Trim_Snow_07
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+-------------------
+Folder Name: FX
+-------------------
+Prefab Name: FX_Aurora_Mesh_01
+    Mesh Name: FX_Aurora_Mesh_01
+        Slot: FX_Aurora_01 (Uses custom shader)
+
+Prefab Name: FX_Aurora_Mesh_02
+    Mesh Name: FX_Aurora_Mesh_02
+        Slot: FX_Aurora_01 (Uses custom shader)
+
+Prefab Name: FX_Blizzard_01
+    Mesh Name: FX_Blizzard_01
+        Slot: FX_Circle_Additive_01 (Uses custom shader)
+
+Prefab Name: FX_Candelabra_Flame_01
+    Mesh Name: FX_Candelabra_Flame_01
+        Slot: Generic_Candle_Glow_01 (Uses custom shader)
+
+Prefab Name: FX_Chandelier_Flame_01
+    Mesh Name: FX_Chandelier_Flame_01
+        Slot: Generic_Candle_Glow_01 (Uses custom shader)
+
+Prefab Name: FX_Fireflies_01
+    Mesh Name: FX_Fireflies_01
+        Slot: FX_Fireflies_01 (No Albedo Texture)
+
+Prefab Name: FX_Fire_Embers_Large_01
+    Mesh Name: FX_Fire_Embers_Large_01
+        Slot: FX_Circle_Additive_Glow_01 (Uses custom shader)
+
+Prefab Name: FX_Fire_Large_01
+    Mesh Name: FX_Fire_Large_01
+        Slot: FX_Circle_Additive_Glow_01 (Uses custom shader)
+
+Prefab Name: FX_Lightning_Background_01
+    Mesh Name: FX_Lightning_Background_01
+        Slot: FX_Lightning_01 (Uses custom shader)
+
+Prefab Name: FX_Smoke_Large_01
+    Mesh Name: FX_Smoke_Large_01
+        Slot: Fx_Circle_Glow_02 (Uses custom shader)
+
+Prefab Name: FX_Snow_01
+    Mesh Name: FX_Snow_01
+        Slot: FX_Circle_Additive_01 (Uses custom shader)
+
+Prefab Name: FX_Waterfall_Foam_01
+    Mesh Name: FX_Waterfall_Foam_01
+        Slot: FX_Circle_Additive_01 (Uses custom shader)
+
+-------------------
+Folder Name: Props
+-------------------
+Prefab Name: SM_Prop_Anvil_01
+    Mesh Name: SM_Prop_Anvil_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Anvil_02
+    Mesh Name: SM_Prop_Anvil_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Apple_01
+    Mesh Name: SM_Prop_Apple_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Arrow_Insert_01
+    Mesh Name: SM_Prop_Arrow_Insert_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Arrow_Insert_02
+    Mesh Name: SM_Prop_Arrow_Insert_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Awning_01
+    Mesh Name: SM_Prop_Awning_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Awning_02
+    Mesh Name: SM_Prop_Awning_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Awning_03
+    Mesh Name: SM_Prop_Awning_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Awning_04
+    Mesh Name: SM_Prop_Awning_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Barnacle_01
+    Mesh Name: SM_Prop_Barnacle_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Barnacle_02
+    Mesh Name: SM_Prop_Barnacle_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Barrel_01
+    Mesh Name: SM_Prop_Barrel_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Barrel_02
+    Mesh Name: SM_Prop_Barrel_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Barrel_03
+    Mesh Name: SM_Prop_Barrel_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Barrel_04
+    Mesh Name: SM_Prop_Barrel_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Barrel_04_L_Lid_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Barrel_04_R_Lid_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Barrel_05
+    Mesh Name: SM_Prop_Barrel_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Barrel_Stand_01
+    Mesh Name: SM_Prop_Barrel_Stand_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Basket_01
+    Mesh Name: SM_Prop_Basket_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Basket_02
+    Mesh Name: SM_Prop_Basket_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Basket_03
+    Mesh Name: SM_Prop_Basket_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Basket_04
+    Mesh Name: SM_Prop_Basket_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Basket_04_Lid_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Beacon_01
+    Mesh Name: SM_Prop_Beacon_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Bed_01
+    Mesh Name: SM_Prop_Bed_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Bed_01_Insert_01
+    Mesh Name: SM_Prop_Bed_01_Insert_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Bed_02
+    Mesh Name: SM_Prop_Bed_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Bed_02_Insert_01
+    Mesh Name: SM_Prop_Bed_02_Insert_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Bench_01
+    Mesh Name: SM_Prop_Bench_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Bench_02
+    Mesh Name: SM_Prop_Bench_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Boar_Roasted_01
+    Mesh Name: SM_Prop_Boar_Roasted_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Boat_Destroyed_01
+    Mesh Name: SM_Prop_Boat_Destroyed_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Boat_Ramp_01
+    Mesh Name: SM_Prop_Boat_Ramp_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Boat_Ramp_02
+    Mesh Name: SM_Prop_Boat_Ramp_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Boat_Structure_01
+    Mesh Name: SM_Prop_Boat_Structure_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Bonfire_Large_01
+    Mesh Name: SM_Prop_Bonfire_Large_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Bonfire_Small_01
+    Mesh Name: SM_Prop_Bonfire_Small_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Bowl_01
+    Mesh Name: SM_Prop_Bowl_01
+        Slot: PolygonVikingRealm_Mat_03_A (PolygonVikingRealm_Texture_03_A)
+
+Prefab Name: SM_Prop_Bowl_02
+    Mesh Name: SM_Prop_Bowl_02
+        Slot: PolygonVikingRealm_Mat_03_B (PolygonVikingRealm_Texture_03_B)
+
+Prefab Name: SM_Prop_Bowl_03
+    Mesh Name: SM_Prop_Bowl_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Brazier_01
+    Mesh Name: SM_Prop_Brazier_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Brazier_01_Insert_01
+    Mesh Name: SM_Prop_Brazier_01_Insert_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Bucket_01
+    Mesh Name: SM_Prop_Bucket_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Bucket_02
+    Mesh Name: SM_Prop_Bucket_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Cabbage_01
+    Mesh Name: SM_Prop_Cabbage_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Cairn_01
+    Mesh Name: SM_Prop_Cairn_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Cairn_02
+    Mesh Name: SM_Prop_Cairn_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Candelabra_01
+    Mesh Name: SM_Prop_Candelabra_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Candle_01
+    Mesh Name: SM_Prop_Candle_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Candle_02
+    Mesh Name: SM_Prop_Candle_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Candle_03
+    Mesh Name: SM_Prop_Candle_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Candle_04
+    Mesh Name: SM_Prop_Candle_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Candle_05
+    Mesh Name: SM_Prop_Candle_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Canteen_01
+    Mesh Name: SM_Prop_Canteen_01
+        Slot: PolygonVikingRealm_Mat_02_B (PolygonVikingRealm_Texture_02_B)
+    Mesh Name: SM_Prop_Canteen_01_Cork_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Cauldron_01
+    Mesh Name: SM_Prop_Cauldron_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Cauldron_01_Handle_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Cauldron_02
+    Mesh Name: SM_Prop_Cauldron_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Cauldron_02_Handle_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Cauldron_03
+    Mesh Name: SM_Prop_Cauldron_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Cauldron_03_Handle_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Chair_01
+    Mesh Name: SM_Prop_Chair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Chandelier_01
+    Mesh Name: SM_Prop_Chandelier_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Cheese_01
+    Mesh Name: SM_Prop_Cheese_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Cheese_Slice_01
+    Mesh Name: SM_Prop_Cheese_Slice_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Chest_01
+    Mesh Name: SM_Prop_Chest_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Chest_01_Lid
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Chest_01_Lock
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Chest_02
+    Mesh Name: SM_Prop_Chest_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Chest_02_Lid_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Chest_02_Latch_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Chest_02_Insert_01
+    Mesh Name: SM_Prop_Chest_02_Insert_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Chest_03
+    Mesh Name: SM_Prop_Chest_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Chest_03_Handle_L_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Chest_03_Handle_R_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Chest_03_Lid_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Chest_03_Lid_Handle_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Chest_03_Lid_Handle_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Chest_03_Insert_01
+    Mesh Name: SM_Prop_Chest_03_Insert_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Crane_01
+    Mesh Name: SM_Prop_Crane_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Crane_01_Hook_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Crane_01_Rope_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Crane_01_Wheel_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Cup_01
+    Mesh Name: SM_Prop_Cup_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Cup_02
+    Mesh Name: SM_Prop_Cup_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Cup_03
+    Mesh Name: SM_Prop_Cup_03
+        Slot: PolygonVikingRealm_Mat_03_A (PolygonVikingRealm_Texture_03_A)
+
+Prefab Name: SM_Prop_Draw_Knife_01
+    Mesh Name: SM_Prop_Draw_Knife_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Drinking_Horn_01
+    Mesh Name: SM_Prop_Drinking_Horn_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Fire_Pit_01
+    Mesh Name: SM_Prop_Fire_Pit_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Fire_Pit_01_Insert_01
+    Mesh Name: SM_Prop_Fire_Pit_01_Insert_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Fire_Pit_02
+    Mesh Name: SM_Prop_Fire_Pit_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Fire_Pit_02_Insert_01
+    Mesh Name: SM_Prop_Fire_Pit_02_Insert_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Fire_Pit_03
+    Mesh Name: SM_Prop_Fire_Pit_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Fire_Pit_03_Insert_01
+    Mesh Name: SM_Prop_Fire_Pit_03_Insert_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Fire_Pit_04
+    Mesh Name: SM_Prop_Fire_Pit_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Fire_Pit_04_Insert_01
+    Mesh Name: SM_Prop_Fire_Pit_04_Insert_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Fire_Pit_05
+    Mesh Name: SM_Prop_Fire_Pit_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Fire_Pit_05_Insert_01
+    Mesh Name: SM_Prop_Fire_Pit_05_Insert_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Fire_Pit_06
+    Mesh Name: SM_Prop_Fire_Pit_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Fire_Pit_06_Insert_01
+    Mesh Name: SM_Prop_Fire_Pit_06_Insert_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Fish_Hanging_01
+    Mesh Name: SM_Prop_Fish_Hanging_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Fish_Pile_01
+    Mesh Name: SM_Prop_Fish_Pile_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Fish_Rack_01
+    Mesh Name: SM_Prop_Fish_Rack_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Fish_Rack_02
+    Mesh Name: SM_Prop_Fish_Rack_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Flag_01
+    Mesh Name: SM_Prop_Flag_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Flag_01_Flag
+        Slot: Banner_05 (Banner_Seahorse_Test)
+
+Prefab Name: SM_Prop_Flag_02
+    Mesh Name: SM_Prop_Flag_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Flag_02_Flag
+        Slot: Banner_03 (Banner_Dragon_02)
+
+Prefab Name: SM_Prop_Flag_03
+    Mesh Name: SM_Prop_Flag_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Flag_03_Flag
+        Slot: Banner_04 (Banner_Raven)
+
+Prefab Name: SM_Prop_Flag_04
+    Mesh Name: SM_Prop_Flag_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Flag_04_Flag
+        Slot: Banner_07 (Banner_Wolf)
+
+Prefab Name: SM_Prop_Flag_05
+    Mesh Name: SM_Prop_Flag_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Flag_05_Flag
+        Slot: Banner_04 (Banner_Raven)
+
+Prefab Name: SM_Prop_Flag_06
+    Mesh Name: SM_Prop_Flag_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Flag_06_Flag
+        Slot: Banner_01 (Banner_Deer)
+
+Prefab Name: SM_Prop_Flag_07
+    Mesh Name: SM_Prop_Flag_07
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Flag_07_Flag
+        Slot: Banner_07 (Banner_Wolf)
+
+Prefab Name: SM_Prop_Flag_08
+    Mesh Name: SM_Prop_Flag_08
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Flag_08_Flag
+        Slot: Banner_05 (Banner_Seahorse_Test)
+
+Prefab Name: SM_Prop_Flag_09
+    Mesh Name: SM_Prop_Flag_09
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Flag_09_Flag
+        Slot: Banner_06 (Banner_Snake)
+
+Prefab Name: SM_Prop_Flag_10
+    Mesh Name: SM_Prop_Flag_10
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Flag_10_Flag
+        Slot: Banner_03 (Banner_Dragon_02)
+
+Prefab Name: SM_Prop_Flag_11
+    Mesh Name: SM_Prop_Flag_11
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Flag_11_Flag
+        Slot: Banner_01 (Banner_Deer)
+
+Prefab Name: SM_Prop_Flatbread_01
+    Mesh Name: SM_Prop_Flatbread_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Food_Insert_01
+    Mesh Name: SM_Prop_Food_Insert_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Food_Insert_02
+    Mesh Name: SM_Prop_Food_Insert_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Food_Insert_03
+    Mesh Name: SM_Prop_Food_Insert_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Food_Insert_04
+    Mesh Name: SM_Prop_Food_Insert_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Fork_01
+    Mesh Name: SM_Prop_Fork_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Furnace_01
+    Mesh Name: SM_Prop_Furnace_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Grindstone_01
+    Mesh Name: SM_Prop_Grindstone_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Grindstone_01_Handle_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Grindstone_01_Wheel_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Hammer_01
+    Mesh Name: SM_Prop_Hammer_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Hammer_02
+    Mesh Name: SM_Prop_Hammer_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Herb_01
+    Mesh Name: SM_Prop_Herb_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Herb_02
+    Mesh Name: SM_Prop_Herb_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Jewellery_01
+    Mesh Name: SM_Prop_Jewellery_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Jewellery_02
+    Mesh Name: SM_Prop_Jewellery_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Jewellery_03
+    Mesh Name: SM_Prop_Jewellery_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Jewellery_04
+    Mesh Name: SM_Prop_Jewellery_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Jewellery_Box_01
+    Mesh Name: SM_Prop_Jewellery_Box_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Jewellery_Box_Lid_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Jewellery_Box_02
+    Mesh Name: SM_Prop_Jewellery_Box_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Jewellery_Box_Lid_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Knife_01
+    Mesh Name: SM_Prop_Knife_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Ladder_01
+    Mesh Name: SM_Prop_Ladder_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Lantern_01
+    Mesh Name: SM_Prop_Lantern_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Leek_01
+    Mesh Name: SM_Prop_Leek_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Log_01
+    Mesh Name: SM_Prop_Log_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Log_02
+    Mesh Name: SM_Prop_Log_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Log_03
+    Mesh Name: SM_Prop_Log_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Log_Holder_01
+    Mesh Name: SM_Prop_Log_Holder_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Mead_Barrel_01
+    Mesh Name: SM_Prop_Mead_Barrel_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Meat_01
+    Mesh Name: SM_Prop_Meat_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Meat_Cooked_01
+    Mesh Name: SM_Prop_Meat_Cooked_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Meat_Cooked_02
+    Mesh Name: SM_Prop_Meat_Cooked_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Meat_Pile_01
+    Mesh Name: SM_Prop_Meat_Pile_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Pelt_01
+    Mesh Name: SM_Prop_Pelt_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Pelt_02
+    Mesh Name: SM_Prop_Pelt_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Pelt_03
+    Mesh Name: SM_Prop_Pelt_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Pelt_04
+    Mesh Name: SM_Prop_Pelt_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Pelt_05
+    Mesh Name: SM_Prop_Pelt_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Pelt_06
+    Mesh Name: SM_Prop_Pelt_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Pelt_07
+    Mesh Name: SM_Prop_Pelt_07
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Plate_01
+    Mesh Name: SM_Prop_Plate_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Plate_02
+    Mesh Name: SM_Prop_Plate_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Pot_01
+    Mesh Name: SM_Prop_Pot_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Pot_02
+    Mesh Name: SM_Prop_Pot_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Pot_03
+    Mesh Name: SM_Prop_Pot_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Pot_04
+    Mesh Name: SM_Prop_Pot_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Pot_Hanging_01
+    Mesh Name: SM_Prop_Pot_Hanging_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Pot_Hanging_02
+    Mesh Name: SM_Prop_Pot_Hanging_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Pot_Hanging_02_Handle_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Pyre_01
+    Mesh Name: SM_Prop_Pyre_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Rack_01
+    Mesh Name: SM_Prop_Rack_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Rack_02
+    Mesh Name: SM_Prop_Rack_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_RuneStone_01
+    Mesh Name: SM_Prop_RuneStone_01
+        Slot: PolygonVikingRealm_Mat_02_C (PolygonVikingRealm_Texture_02_C)
+
+Prefab Name: SM_Prop_RuneStone_02
+    Mesh Name: SM_Prop_RuneStone_02
+        Slot: PolygonVikingRealm_Mat_02_C (PolygonVikingRealm_Texture_02_C)
+
+Prefab Name: SM_Prop_RuneStone_03
+    Mesh Name: SM_Prop_RuneStone_03
+        Slot: PolygonVikingRealm_Mat_02_C (PolygonVikingRealm_Texture_02_C)
+
+Prefab Name: SM_Prop_RuneStone_04
+    Mesh Name: SM_Prop_RuneStone_04
+        Slot: PolygonVikingRealm_Mat_02_C (PolygonVikingRealm_Texture_02_C)
+
+Prefab Name: SM_Prop_Sack_01
+    Mesh Name: SM_Prop_Sack_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Sack_02
+    Mesh Name: SM_Prop_Sack_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Sack_Pile_01
+    Mesh Name: SM_Prop_Sack_Pile_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Sack_Pile_02
+    Mesh Name: SM_Prop_Sack_Pile_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Saw_01
+    Mesh Name: SM_Prop_Saw_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Shelf_01
+    Mesh Name: SM_Prop_Shelf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Sign_01
+    Mesh Name: SM_Prop_Sign_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Sign_Post_01
+    Mesh Name: SM_Prop_Sign_Post_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Snowball_01
+    Mesh Name: SM_Prop_Snowball_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Spit_01
+    Mesh Name: SM_Prop_Spit_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Spit_02
+    Mesh Name: SM_Prop_Spit_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Spit_02_Handle_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Spit_Insert_01
+    Mesh Name: SM_Prop_Spit_Insert_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Spoon_01
+    Mesh Name: SM_Prop_Spoon_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Statue_01
+    Mesh Name: SM_Prop_Statue_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Statue_02
+    Mesh Name: SM_Prop_Statue_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Statue_03
+    Mesh Name: SM_Prop_Statue_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Statue_04
+    Mesh Name: SM_Prop_Statue_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Stool_01
+    Mesh Name: SM_Prop_Stool_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Stool_02
+    Mesh Name: SM_Prop_Stool_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_01
+    Mesh Name: SM_Prop_Symbol_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_02
+    Mesh Name: SM_Prop_Symbol_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_03
+    Mesh Name: SM_Prop_Symbol_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_04
+    Mesh Name: SM_Prop_Symbol_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_05
+    Mesh Name: SM_Prop_Symbol_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_06
+    Mesh Name: SM_Prop_Symbol_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_07
+    Mesh Name: SM_Prop_Symbol_07
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_08
+    Mesh Name: SM_Prop_Symbol_08
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_09
+    Mesh Name: SM_Prop_Symbol_09
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_10
+    Mesh Name: SM_Prop_Symbol_10
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_11
+    Mesh Name: SM_Prop_Symbol_11
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_12
+    Mesh Name: SM_Prop_Symbol_12
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_13
+    Mesh Name: SM_Prop_Symbol_13
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_14
+    Mesh Name: SM_Prop_Symbol_14
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_15
+    Mesh Name: SM_Prop_Symbol_15
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_16
+    Mesh Name: SM_Prop_Symbol_16
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_17
+    Mesh Name: SM_Prop_Symbol_17
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_18
+    Mesh Name: SM_Prop_Symbol_18
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_19
+    Mesh Name: SM_Prop_Symbol_19
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_20
+    Mesh Name: SM_Prop_Symbol_20
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_21
+    Mesh Name: SM_Prop_Symbol_21
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_22
+    Mesh Name: SM_Prop_Symbol_22
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_23
+    Mesh Name: SM_Prop_Symbol_23
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_24
+    Mesh Name: SM_Prop_Symbol_24
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Symbol_25
+    Mesh Name: SM_Prop_Symbol_25
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Table_01
+    Mesh Name: SM_Prop_Table_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Table_02
+    Mesh Name: SM_Prop_Table_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Table_03
+    Mesh Name: SM_Prop_Table_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Table_04
+    Mesh Name: SM_Prop_Table_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Table_Runner_01
+    Mesh Name: SM_Prop_Table_Runner_01
+        Slot: Banner_06 (Banner_Snake)
+
+Prefab Name: SM_Prop_Table_Runner_02
+    Mesh Name: SM_Prop_Table_Runner_02
+        Slot: Banner_02 (Banner_Dragon_01)
+
+Prefab Name: SM_Prop_Table_Runner_03
+    Mesh Name: SM_Prop_Table_Runner_03
+        Slot: Banner_05 (Banner_Seahorse_Test)
+
+Prefab Name: SM_Prop_Table_Small_01
+    Mesh Name: SM_Prop_Table_Small_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Table_Small_02
+    Mesh Name: SM_Prop_Table_Small_02
+        Slot: PolygonVikingRealm_Mat_04_A (PolygonVikingRealm_Texture_04_A)
+
+Prefab Name: SM_Prop_Tanning_Rack_01
+    Mesh Name: SM_Prop_Tanning_Rack_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Tanning_Rack_02
+    Mesh Name: SM_Prop_Tanning_Rack_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Target_01
+    Mesh Name: SM_Prop_Target_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Target_02
+    Mesh Name: SM_Prop_Target_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Throne_01
+    Mesh Name: SM_Prop_Throne_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Tongs_01
+    Mesh Name: SM_Prop_Tongs_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Prop_Tongs_01_Arm_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Torch_01
+    Mesh Name: SM_Prop_Torch_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Torch_02
+    Mesh Name: SM_Prop_Torch_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Torch_03
+    Mesh Name: SM_Prop_Torch_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Torch_Hanging_01
+    Mesh Name: SM_Prop_Torch_Hanging_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Training_Log_01
+    Mesh Name: SM_Prop_Training_Log_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_War_Horn_01
+    Mesh Name: SM_Prop_War_Horn_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Weapon_Rack_01
+    Mesh Name: SM_Prop_Weapon_Rack_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Wood_Pile_01
+    Mesh Name: SM_Prop_Wood_Pile_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Wood_Pile_02
+    Mesh Name: SM_Prop_Wood_Pile_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Prop_Wood_Stump_01
+    Mesh Name: SM_Prop_Wood_Stump_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+-------------------
+Folder Name: Vehicles
+-------------------
+Prefab Name: SM_Veh_Boat_Large_01
+    Mesh Name: SM_Veh_Boat_Large_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_07
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_08
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_09
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_10
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Tail_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Tail_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Tail_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Tail_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Boat_Large_01_Chests_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Boat_Large_01_Oars_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Boat_Large_01_Sail_01
+        Slot: Sail_Dragon_01 (Boat_Dragon_01)
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Boat_Large_01_Sail_Folded_01
+        Slot: Sail_Dragon_01 (Boat_Dragon_01)
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Boat_Large_01_Shields_01
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+    Mesh Name: SM_Veh_Boat_Large_01_Tent_Structure_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Boat_Large_01_Tent_Cloth_01
+        Slot: Sail_Dragon_01 (Boat_Dragon_01)
+
+Prefab Name: SM_Veh_Boat_Medium_01
+    Mesh Name: SM_Veh_Boat_Medium_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_07
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_08
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_09
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_10
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Tail_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Tail_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Tail_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Tail_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Boat_Medium_01_Chests_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Boat_Medium_01_Oars_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Boat_Medium_01_Sail_01
+        Slot: Sail_Deer_01 (Boat_Deer)
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Boat_Medium_01_Sail_Folded_01
+        Slot: Sail_Deer_01 (Boat_Deer)
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Boat_Medium_01_Shields_01
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+    Mesh Name: SM_Veh_Boat_Medium_01_Tent_Structure_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Boat_Medium_01_Tent_Cloth_01
+        Slot: Sail_Deer_01 (Boat_Deer)
+
+Prefab Name: SM_Veh_Boat_Oar_01
+    Mesh Name: SM_Veh_Boat_Oar_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Veh_Boat_Small_01
+    Mesh Name: SM_Veh_Boat_Small_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_07
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_08
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_09
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Head_10
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Tail_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Tail_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Tail_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Tail_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Veh_Cart_01
+    Mesh Name: SM_Veh_Cart_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Cart_01_Wheel_Left_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Cart_01_Wheel_Right_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Veh_Head_01
+    Mesh Name: SM_Veh_Head_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Veh_Head_02
+    Mesh Name: SM_Veh_Head_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Veh_Head_03
+    Mesh Name: SM_Veh_Head_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Veh_Head_04
+    Mesh Name: SM_Veh_Head_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Veh_Head_05
+    Mesh Name: SM_Veh_Head_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Veh_Head_06
+    Mesh Name: SM_Veh_Head_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Veh_Head_07
+    Mesh Name: SM_Veh_Head_07
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Veh_Head_08
+    Mesh Name: SM_Veh_Head_08
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Veh_Head_09
+    Mesh Name: SM_Veh_Head_09
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Veh_Head_10
+    Mesh Name: SM_Veh_Head_10
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Veh_Tail_01
+    Mesh Name: SM_Veh_Tail_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Veh_Tail_02
+    Mesh Name: SM_Veh_Tail_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Veh_Tail_03
+    Mesh Name: SM_Veh_Tail_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Veh_Tail_04
+    Mesh Name: SM_Veh_Tail_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Veh_Wagon_01
+    Mesh Name: SM_Veh_Wagon_01
+        Slot: PolygonVikingRealm_Mat_03_B (PolygonVikingRealm_Texture_03_B)
+    Mesh Name: SM_Veh_Wagon_01_Wheel_BL_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Wagon_01_Wheel_BR_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Wagon_01_Wheel_FL_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Veh_Wagon_01_Wheel_FR_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+-------------------
+Folder Name: Weapons
+-------------------
+Prefab Name: SM_Wep_Arrow_01
+    Mesh Name: SM_Wep_Arrow_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Axe_01
+    Mesh Name: SM_Wep_Axe_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Axe_02
+    Mesh Name: SM_Wep_Axe_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Axe_03
+    Mesh Name: SM_Wep_Axe_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Axe_04
+    Mesh Name: SM_Wep_Axe_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Bow_Rigged_01
+    Mesh Name: SM_Wep_Bow_Rigged_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Hammer_01
+    Mesh Name: SM_Wep_Hammer_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Knife_01
+    Mesh Name: SM_Wep_Knife_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Knife_02
+    Mesh Name: SM_Wep_Knife_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Knife_03
+    Mesh Name: SM_Wep_Knife_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Sheath_01
+    Mesh Name: SM_Wep_Sheath_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Sheath_02
+    Mesh Name: SM_Wep_Sheath_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Sheath_03
+    Mesh Name: SM_Wep_Sheath_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Shield_01
+    Mesh Name: SM_Wep_Shield_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Shield_Set_01
+    Mesh Name: SM_Wep_Shield_Set_01
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_02
+    Mesh Name: SM_Wep_Shield_Set_02
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_03
+    Mesh Name: SM_Wep_Shield_Set_03
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_04
+    Mesh Name: SM_Wep_Shield_Set_04
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_05
+    Mesh Name: SM_Wep_Shield_Set_05
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_06
+    Mesh Name: SM_Wep_Shield_Set_06
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_07
+    Mesh Name: SM_Wep_Shield_Set_07
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_08
+    Mesh Name: SM_Wep_Shield_Set_08
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_09
+    Mesh Name: SM_Wep_Shield_Set_09
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_10
+    Mesh Name: SM_Wep_Shield_Set_10
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_11
+    Mesh Name: SM_Wep_Shield_Set_11
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_12
+    Mesh Name: SM_Wep_Shield_Set_12
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_13
+    Mesh Name: SM_Wep_Shield_Set_13
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_14
+    Mesh Name: SM_Wep_Shield_Set_14
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_15
+    Mesh Name: SM_Wep_Shield_Set_15
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_16
+    Mesh Name: SM_Wep_Shield_Set_16
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_17
+    Mesh Name: SM_Wep_Shield_Set_17
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_18
+    Mesh Name: SM_Wep_Shield_Set_18
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_19
+    Mesh Name: SM_Wep_Shield_Set_19
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_20
+    Mesh Name: SM_Wep_Shield_Set_20
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_21
+    Mesh Name: SM_Wep_Shield_Set_21
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_22
+    Mesh Name: SM_Wep_Shield_Set_22
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_23
+    Mesh Name: SM_Wep_Shield_Set_23
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_24
+    Mesh Name: SM_Wep_Shield_Set_24
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_25
+    Mesh Name: SM_Wep_Shield_Set_25
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_26
+    Mesh Name: SM_Wep_Shield_Set_26
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_27
+    Mesh Name: SM_Wep_Shield_Set_27
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_28
+    Mesh Name: SM_Wep_Shield_Set_28
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_29
+    Mesh Name: SM_Wep_Shield_Set_29
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_30
+    Mesh Name: SM_Wep_Shield_Set_30
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_31
+    Mesh Name: SM_Wep_Shield_Set_31
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_32
+    Mesh Name: SM_Wep_Shield_Set_32
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_33
+    Mesh Name: SM_Wep_Shield_Set_33
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_34
+    Mesh Name: SM_Wep_Shield_Set_34
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_35
+    Mesh Name: SM_Wep_Shield_Set_35
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_36
+    Mesh Name: SM_Wep_Shield_Set_36
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_37
+    Mesh Name: SM_Wep_Shield_Set_37
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_38
+    Mesh Name: SM_Wep_Shield_Set_38
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_39
+    Mesh Name: SM_Wep_Shield_Set_39
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_40
+    Mesh Name: SM_Wep_Shield_Set_40
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_41
+    Mesh Name: SM_Wep_Shield_Set_41
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_42
+    Mesh Name: SM_Wep_Shield_Set_42
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_43
+    Mesh Name: SM_Wep_Shield_Set_43
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_44
+    Mesh Name: SM_Wep_Shield_Set_44
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_45
+    Mesh Name: SM_Wep_Shield_Set_45
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_46
+    Mesh Name: SM_Wep_Shield_Set_46
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_47
+    Mesh Name: SM_Wep_Shield_Set_47
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_48
+    Mesh Name: SM_Wep_Shield_Set_48
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_49
+    Mesh Name: SM_Wep_Shield_Set_49
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_50
+    Mesh Name: SM_Wep_Shield_Set_50
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_51
+    Mesh Name: SM_Wep_Shield_Set_51
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_52
+    Mesh Name: SM_Wep_Shield_Set_52
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_53
+    Mesh Name: SM_Wep_Shield_Set_53
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_54
+    Mesh Name: SM_Wep_Shield_Set_54
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_55
+    Mesh Name: SM_Wep_Shield_Set_55
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_56
+    Mesh Name: SM_Wep_Shield_Set_56
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_57
+    Mesh Name: SM_Wep_Shield_Set_57
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_58
+    Mesh Name: SM_Wep_Shield_Set_58
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_59
+    Mesh Name: SM_Wep_Shield_Set_59
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_60
+    Mesh Name: SM_Wep_Shield_Set_60
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_61
+    Mesh Name: SM_Wep_Shield_Set_61
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_62
+    Mesh Name: SM_Wep_Shield_Set_62
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_63
+    Mesh Name: SM_Wep_Shield_Set_63
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_64
+    Mesh Name: SM_Wep_Shield_Set_64
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_65
+    Mesh Name: SM_Wep_Shield_Set_65
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_66
+    Mesh Name: SM_Wep_Shield_Set_66
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_67
+    Mesh Name: SM_Wep_Shield_Set_67
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_68
+    Mesh Name: SM_Wep_Shield_Set_68
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_69
+    Mesh Name: SM_Wep_Shield_Set_69
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_70
+    Mesh Name: SM_Wep_Shield_Set_70
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_71
+    Mesh Name: SM_Wep_Shield_Set_71
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_72
+    Mesh Name: SM_Wep_Shield_Set_72
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_73
+    Mesh Name: SM_Wep_Shield_Set_73
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_74
+    Mesh Name: SM_Wep_Shield_Set_74
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_75
+    Mesh Name: SM_Wep_Shield_Set_75
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_76
+    Mesh Name: SM_Wep_Shield_Set_76
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_77
+    Mesh Name: SM_Wep_Shield_Set_77
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_78
+    Mesh Name: SM_Wep_Shield_Set_78
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_79
+    Mesh Name: SM_Wep_Shield_Set_79
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_80
+    Mesh Name: SM_Wep_Shield_Set_80
+        Slot: Shield_Set (Shield_Set_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_18
+    Mesh Name: SM_Wep_Shield_Set_Optimised_18
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_30
+    Mesh Name: SM_Wep_Shield_Set_Optimised_30
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_62
+    Mesh Name: SM_Wep_Shield_Set_Optimised_62
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_75
+    Mesh Name: SM_Wep_Shield_Set_Optimised_75
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Spear_01
+    Mesh Name: SM_Wep_Spear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Spear_02
+    Mesh Name: SM_Wep_Spear_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Sword_01
+    Mesh Name: SM_Wep_Sword_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Sword_02
+    Mesh Name: SM_Wep_Sword_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Sword_03
+    Mesh Name: SM_Wep_Sword_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Sword_04
+    Mesh Name: SM_Wep_Sword_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Sword_Scabbard_01
+    Mesh Name: SM_Wep_Sword_Scabbard_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Sword_Scabbard_02
+    Mesh Name: SM_Wep_Sword_Scabbard_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Sword_Short_01
+    Mesh Name: SM_Wep_Sword_Short_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Wep_Sword_Short_Scabbard_01
+    Mesh Name: SM_Wep_Sword_Short_Scabbard_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+-------------------
+Folder Name: Chr_Attach
+-------------------
+Prefab Name: SM_Chr_Attach_Beard_01
+    Mesh Name: SM_Chr_Attach_Beard_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Beard_02
+    Mesh Name: SM_Chr_Attach_Beard_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Beard_03
+    Mesh Name: SM_Chr_Attach_Beard_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Beard_04
+    Mesh Name: SM_Chr_Attach_Beard_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Beard_05
+    Mesh Name: SM_Chr_Attach_Beard_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Bear_01
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Cape_01
+    Mesh Name: SM_Chr_Attach_Cape_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Cape_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Cape_02
+    Mesh Name: SM_Chr_Attach_Cape_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Cape_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Crown_01
+    Mesh Name: SM_Chr_Attach_Crown_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Crown_01_Alt
+    Mesh Name: SM_Chr_Attach_Crown_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Crown_02
+    Mesh Name: SM_Chr_Attach_Crown_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Crown_03
+    Mesh Name: SM_Chr_Attach_Crown_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Eyepatch_01
+    Mesh Name: SM_Chr_Attach_Eyepatch_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Fur_01
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Fur_02
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Fur_03
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Fur_04
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Hair_01
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Hair_01_Alt
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Hair_02
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Hair_03
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Hair_03_alt
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Hair_04
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Hair_04_Alt
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Hair_05
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_05
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Hair_06
+    Mesh Name: SM_Chr_Attach_Hair_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Hair_07
+    Mesh Name: SM_Chr_Attach_Hair_07
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Hair_08
+    Mesh Name: SM_Chr_Attach_Hair_08
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Hair_09
+    Mesh Name: SM_Chr_Attach_Hair_09
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Helmet_01
+    Mesh Name: SM_Chr_Attach_Helmet_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Helmet_02
+    Mesh Name: SM_Chr_Attach_Helmet_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Helmet_03
+    Mesh Name: SM_Chr_Attach_Helmet_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Helmet_04
+    Mesh Name: SM_Chr_Attach_Helmet_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Helmet_Horns_01
+    Mesh Name: SM_Chr_Attach_Helmet_Horns_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Helmet_Horns_02
+    Mesh Name: SM_Chr_Attach_Helmet_Horns_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Helmet_Horns_03
+    Mesh Name: SM_Chr_Attach_Helmet_Horns_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Helmet_Wings_01
+    Mesh Name: SM_Chr_Attach_Helmet_Wings_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Pouch_01
+    Mesh Name: SM_Chr_Attach_Pouch_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Pouch_02
+    Mesh Name: SM_Chr_Attach_Pouch_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+Prefab Name: SM_Chr_Attach_Wolf_01
+    Mesh Name: SM_Chr_Attach_Bear_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Fur_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_01_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_03_alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_04_Alt
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Hair_06
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Attach_Wolf_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Leader_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Peasant_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Female_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_01
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+    Mesh Name: SM_Chr_Warrior_Male_02
+        Slot: PolygonVikingRealm_Mat_01_A (PolygonVikingRealm_Texture_01_A)
+
+-------------------
+Folder Name: Sheilds_Optimised
+-------------------
+Prefab Name: SM_Wep_Shield_Set_Optimised_01
+    Mesh Name: SM_Wep_Shield_Set_Optimised_01
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_02
+    Mesh Name: SM_Wep_Shield_Set_Optimised_02
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_03
+    Mesh Name: SM_Wep_Shield_Set_Optimised_03
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_04
+    Mesh Name: SM_Wep_Shield_Set_Optimised_04
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_05
+    Mesh Name: SM_Wep_Shield_Set_Optimised_05
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_06
+    Mesh Name: SM_Wep_Shield_Set_Optimised_06
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_07
+    Mesh Name: SM_Wep_Shield_Set_Optimised_07
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_08
+    Mesh Name: SM_Wep_Shield_Set_Optimised_08
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_09
+    Mesh Name: SM_Wep_Shield_Set_Optimised_09
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_10
+    Mesh Name: SM_Wep_Shield_Set_Optimised_10
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_11
+    Mesh Name: SM_Wep_Shield_Set_Optimised_11
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_12
+    Mesh Name: SM_Wep_Shield_Set_Optimised_12
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_13
+    Mesh Name: SM_Wep_Shield_Set_Optimised_13
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_14
+    Mesh Name: SM_Wep_Shield_Set_Optimised_14
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_15
+    Mesh Name: SM_Wep_Shield_Set_Optimised_15
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_16
+    Mesh Name: SM_Wep_Shield_Set_Optimised_16
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_17
+    Mesh Name: SM_Wep_Shield_Set_Optimised_17
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_19
+    Mesh Name: SM_Wep_Shield_Set_Optimised_19
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_20
+    Mesh Name: SM_Wep_Shield_Set_Optimised_20
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_21
+    Mesh Name: SM_Wep_Shield_Set_Optimised_21
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_22
+    Mesh Name: SM_Wep_Shield_Set_Optimised_22
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_23
+    Mesh Name: SM_Wep_Shield_Set_Optimised_23
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_24
+    Mesh Name: SM_Wep_Shield_Set_Optimised_24
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_25
+    Mesh Name: SM_Wep_Shield_Set_Optimised_25
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_26
+    Mesh Name: SM_Wep_Shield_Set_Optimised_26
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_27
+    Mesh Name: SM_Wep_Shield_Set_Optimised_27
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_28
+    Mesh Name: SM_Wep_Shield_Set_Optimised_28
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_29
+    Mesh Name: SM_Wep_Shield_Set_Optimised_29
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_31
+    Mesh Name: SM_Wep_Shield_Set_Optimised_31
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_32
+    Mesh Name: SM_Wep_Shield_Set_Optimised_32
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_33
+    Mesh Name: SM_Wep_Shield_Set_Optimised_33
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_34
+    Mesh Name: SM_Wep_Shield_Set_Optimised_34
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_35
+    Mesh Name: SM_Wep_Shield_Set_Optimised_35
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_36
+    Mesh Name: SM_Wep_Shield_Set_Optimised_36
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_37
+    Mesh Name: SM_Wep_Shield_Set_Optimised_37
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_38
+    Mesh Name: SM_Wep_Shield_Set_Optimised_38
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_39
+    Mesh Name: SM_Wep_Shield_Set_Optimised_39
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_40
+    Mesh Name: SM_Wep_Shield_Set_Optimised_40
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_41
+    Mesh Name: SM_Wep_Shield_Set_Optimised_41
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_42
+    Mesh Name: SM_Wep_Shield_Set_Optimised_42
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_43
+    Mesh Name: SM_Wep_Shield_Set_Optimised_43
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_44
+    Mesh Name: SM_Wep_Shield_Set_Optimised_44
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_45
+    Mesh Name: SM_Wep_Shield_Set_Optimised_45
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_46
+    Mesh Name: SM_Wep_Shield_Set_Optimised_46
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_47
+    Mesh Name: SM_Wep_Shield_Set_Optimised_47
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_48
+    Mesh Name: SM_Wep_Shield_Set_Optimised_48
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_49
+    Mesh Name: SM_Wep_Shield_Set_Optimised_49
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_50
+    Mesh Name: SM_Wep_Shield_Set_Optimised_50
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_51
+    Mesh Name: SM_Wep_Shield_Set_Optimised_51
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_52
+    Mesh Name: SM_Wep_Shield_Set_Optimised_52
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_53
+    Mesh Name: SM_Wep_Shield_Set_Optimised_53
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_54
+    Mesh Name: SM_Wep_Shield_Set_Optimised_54
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_55
+    Mesh Name: SM_Wep_Shield_Set_Optimised_55
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_56
+    Mesh Name: SM_Wep_Shield_Set_Optimised_56
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_57
+    Mesh Name: SM_Wep_Shield_Set_Optimised_57
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_58
+    Mesh Name: SM_Wep_Shield_Set_Optimised_58
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_59
+    Mesh Name: SM_Wep_Shield_Set_Optimised_59
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_60
+    Mesh Name: SM_Wep_Shield_Set_Optimised_60
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_61
+    Mesh Name: SM_Wep_Shield_Set_Optimised_61
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_63
+    Mesh Name: SM_Wep_Shield_Set_Optimised_63
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_64
+    Mesh Name: SM_Wep_Shield_Set_Optimised_64
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_65
+    Mesh Name: SM_Wep_Shield_Set_Optimised_65
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_66
+    Mesh Name: SM_Wep_Shield_Set_Optimised_66
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_67
+    Mesh Name: SM_Wep_Shield_Set_Optimised_67
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_68
+    Mesh Name: SM_Wep_Shield_Set_Optimised_68
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_69
+    Mesh Name: SM_Wep_Shield_Set_Optimised_69
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_70
+    Mesh Name: SM_Wep_Shield_Set_Optimised_70
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_71
+    Mesh Name: SM_Wep_Shield_Set_Optimised_71
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_72
+    Mesh Name: SM_Wep_Shield_Set_Optimised_72
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_73
+    Mesh Name: SM_Wep_Shield_Set_Optimised_73
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_74
+    Mesh Name: SM_Wep_Shield_Set_Optimised_74
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_76
+    Mesh Name: SM_Wep_Shield_Set_Optimised_76
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_77
+    Mesh Name: SM_Wep_Shield_Set_Optimised_77
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_78
+    Mesh Name: SM_Wep_Shield_Set_Optimised_78
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_79
+    Mesh Name: SM_Wep_Shield_Set_Optimised_79
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+
+Prefab Name: SM_Wep_Shield_Set_Optimised_80
+    Mesh Name: SM_Wep_Shield_Set_Optimised_80
+        Slot: Shield_Set_Optimised (Shield_Optimised_01)
+

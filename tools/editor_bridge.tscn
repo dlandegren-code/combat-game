@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cvrun4qbvm83u"]
+
+[ext_resource type="Script" uid="uid://62xddh5af7ot" path="res://tools/editor_bridge.gd" id="1"]
+
+[node name="EditorBridge" type="Node" unique_id=1364468091]
+script = ExtResource("1")

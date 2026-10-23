@@ -9,3 +9,4 @@ weapon_sound = 2
 item_type = 0
 attack_bonus = 2
 durability = 4
+worn_model_path = "res://assets/PolygonDungeon/Models/SM_Wep_Goblin_Shiv_Stone_01.res"

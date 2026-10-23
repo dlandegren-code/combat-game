@@ -156,6 +156,10 @@ func _spawn_enemies() -> void:
 		if int(per_name[base]) > 1:
 			numbered[base] = int(numbered.get(base, 0)) + 1
 			node.character_name = "%s %d" % [base, numbered[base]]
+	# The nameplate was printed in _ready, from the stat block's name — which is a shared block's
+	# ("Bandit Captain" over the Jarl) wherever the template renames it.
+	for node in spawned:
+		node._update_health_bar()
 
 
 func _dress(template) -> Node:
@@ -175,6 +179,12 @@ func _dress(template) -> Node:
 	for prop in template.model_props:
 		model.set(prop, template.model_props[prop])
 	node.add_child(model)
+	if model.has_method("wears_gear"):
+		# A Sidekick body is drawn at its own MODEL_SCALE (and Enemy.body_scale is absolute, so it
+		# has to carry it), and takes its colour from palettes: the tint, which multiplies every
+		# material, would be undone the first time its gear is put on.
+		node.body_scale = template.size * model.MODEL_SCALE
+		node.tint = Color(1, 1, 1, 1)
 	var inv := node.get_node("Inventory")
 	for i in range(mini(template.gear.size(), 4)):
 		inv.set("starting_item_%d" % (i + 1), template.gear[i])

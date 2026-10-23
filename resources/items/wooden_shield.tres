@@ -12,3 +12,5 @@ durability = 15
 is_shield = true
 parry_ranged = true
 parry_bonus = 4
+worn_model_path = "res://assets/PolygonDungeon/Models/SM_Wep_Shield_Plank_01.res"
+worn_rotation = Vector3(90, 0, 0)

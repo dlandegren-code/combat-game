@@ -1,79 +1,56 @@
 extends Node3D
-## Dev tool: the Sidekick test character, in five stages of dress, for judging the gear-driven
-## look. Play tools/preview_sidekick.tscn.
+## Dev tool: a catalogue of the Sidekick outfits there are, to choose what each item wears.
+## Play tools/preview_sidekick.tscn. Writes .summer/local/sidekick_catalogue.png and keeps
+## running (everyone idles).
 ##
-## Writes two screenshots to .summer/local/ (idle, and the middle of a sword swing), then keeps
-## running: the line-up idles, and every few seconds the full knight swings, takes a hit or
-## blocks, so the animation can be judged live. Close the window to stop.
+## Row 1: the bare body, then every full outfit set (knights 01-06 and the starter knight, 17).
+## Row 2: the single pieces — helmets 07-13 and capes/back pieces 14-15 — each on a bare body.
 
 const SidekickBody := preload("res://scripts/sidekick_body.gd")
-const KENNEY_SOLDIER := "res://scenes/characters/soldier_model.tscn"
-
-## Debug line-up, used when DEBUG_PARTS is set: the bare body with one suspect part left out
-## per figure, to find which part renders wrong.
-const DEBUG_PARTS := ["", "facial_hair", "hair", "tongue", "teeth", "foot_l"]
-const DEBUG := false
-
-const LINEUP := [
-	{"label": "Bare body", "gear": []},
-	{"label": "+ Cuirass", "gear": ["knight_cuirass"]},
-	{"label": "+ Greaves, boots,\ngauntlets", "gear": ["knight_cuirass", "knight_greaves", "knight_boots", "knight_gauntlets"]},
-	{"label": "Full knight", "gear": ["knight_cuirass", "knight_greaves", "knight_boots", "knight_gauntlets", "knight_helm"]},
-	{"label": "Same, villain hood", "gear": ["knight_cuirass", "knight_greaves", "knight_boots", "knight_gauntlets", "villain_hood"]},
-]
-const SPACING := 1.1
-const SHOT_IDLE := "res://.summer/local/sidekick_preview.png"
-const SHOT_SWING := "res://.summer/local/sidekick_preview_swing.png"
-
-var _bodies: Array = []
+const SETS := ["", "SK_FANT_KNGT_01", "SK_FANT_KNGT_02", "SK_FANT_KNGT_03", "SK_FANT_KNGT_04",
+	"SK_FANT_KNGT_05", "SK_FANT_KNGT_06", "SK_FANT_KNGT_17"]
+const PIECES := ["SK_FANT_KNGT_07", "SK_FANT_KNGT_08", "SK_FANT_KNGT_09", "SK_FANT_KNGT_10",
+	"SK_FANT_KNGT_11", "SK_FANT_KNGT_12", "SK_FANT_KNGT_13", "SK_FANT_KNGT_14", "SK_FANT_KNGT_15"]
+const DX := 0.62
+const SHOT := "res://.summer/local/sidekick_catalogue.png"
 
 
 func _ready() -> void:
 	_stage()
-	var lineup: Array = LINEUP
-	if DEBUG:
-		lineup = []
-		for d in DEBUG_PARTS:
-			lineup.append({"label": "without " + d if d != "" else "all parts", "gear": [], "omit": d})
-	var x0 := -SPACING * (lineup.size() - 1) / 2.0
-	for i in range(lineup.size()):
+	_row(SETS, 0.0, true)
+	_row(PIECES, -1.6, false)
+	await get_tree().create_timer(0.8).timeout
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://.summer/local"))
+	get_viewport().get_texture().get_image().save_png(SHOT)
+	print("[SidekickCatalogue] screenshot written")
+
+
+func _row(sets: Array, z: float, whole: bool) -> void:
+	var x0 := -DX * (sets.size() - 1) / 2.0
+	for i in range(sets.size()):
 		var body := SidekickBody.new()
-		body.name = "Sidekick%d" % i
-		body.position = Vector3(x0 + i * SPACING, 0, 0)
-		body.omit = lineup[i].get("omit", "")
+		var prefix: String = sets[i]
+		if prefix != "":
+			var parts := SidekickBody.parts_of_set(prefix)
+			if not whole:
+				# A helmet or a cape on its own, not the hair that came with it.
+				var keep := PackedStringArray()
+				for p in parts:
+					if SidekickBody.slot_of(p) in ["22AHED", "23AFAC", "24ABAC"]:
+						keep.append(p)
+				parts = keep
+			body.outfit = parts
+		body.position = Vector3(x0 + i * DX, 0, z)
 		add_child(body)
-		body.build(lineup[i]["gear"])
 		body.play("idle")
-		_bodies.append(body)
 		var label := Label3D.new()
-		label.text = lineup[i]["label"]
-		label.font_size = 28
-		label.pixel_size = 0.004
-		label.position = body.position + Vector3(0, 2.05, 0)
-		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		label.text = prefix.replace("SK_FANT_KNGT_", "Knight ") if prefix != "" else "Bare"
+		label.font_size = 24
+		label.pixel_size = 0.0035
 		label.outline_size = 8
+		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		label.position = body.position + Vector3(0, 1.0, 0)
 		add_child(label)
-	# The game's current soldier, for scale and style next to the new bodies.
-	var ks: PackedScene = load(KENNEY_SOLDIER)
-	if ks:
-		var k := ks.instantiate() as Node3D
-		k.position = Vector3(x0 + lineup.size() * SPACING, 0, 0)
-		# Combatant.CHARACTER_SCALE: how big the Kenney bodies are drawn in the game.
-		k.scale = Vector3.ONE * 1.6
-		add_child(k)
-		var kap := k.find_child("AnimationPlayer", true, false) as AnimationPlayer
-		if kap and kap.has_animation("idle"):
-			kap.play("idle")
-		var kl := Label3D.new()
-		kl.text = "Current (Kenney)"
-		kl.font_size = 28
-		kl.pixel_size = 0.004
-		kl.outline_size = 8
-		kl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		kl.position = k.position + Vector3(0, 2.05, 0)
-		add_child(kl)
-	await _shots()
-	_cycle()
 
 
 func _stage() -> void:
@@ -82,52 +59,26 @@ func _stage() -> void:
 	e.background_mode = Environment.BG_COLOR
 	e.background_color = Color(0.16, 0.17, 0.2)
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	e.ambient_light_color = Color(0.55, 0.55, 0.6)
-	e.ambient_light_energy = 0.6
+	e.ambient_light_color = Color(0.6, 0.6, 0.65)
+	e.ambient_light_energy = 0.7
 	env.environment = e
 	add_child(env)
 	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-40, 30, 0)
-	sun.light_energy = 1.3
+	sun.rotation_degrees = Vector3(-40, 20, 0)
+	sun.light_energy = 1.2
 	sun.shadow_enabled = true
 	add_child(sun)
 	var floor_mesh := MeshInstance3D.new()
 	var plane := PlaneMesh.new()
-	plane.size = Vector2(14, 6)
+	plane.size = Vector2(12, 8)
 	floor_mesh.mesh = plane
 	var fm := StandardMaterial3D.new()
 	fm.albedo_color = Color(0.3, 0.29, 0.27)
 	floor_mesh.material_override = fm
 	add_child(floor_mesh)
 	var cam := Camera3D.new()
-	cam.position = Vector3(0.55, 1.3, 5.4)
-	cam.rotation_degrees = Vector3(-6, 0, 0)
+	cam.position = Vector3(0, 1.25, 3.3)
+	cam.rotation_degrees = Vector3(-14, 0, 0)
 	cam.fov = 55
 	add_child(cam)
 	cam.make_current()
-
-
-func _shots() -> void:
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://.summer/local"))
-	for i in range(30):
-		await get_tree().process_frame
-	get_viewport().get_texture().get_image().save_png(SHOT_IDLE)
-	for b in _bodies:
-		b.play("attack")
-	await get_tree().create_timer(0.45).timeout
-	get_viewport().get_texture().get_image().save_png(SHOT_SWING)
-	print("[SidekickPreview] screenshots written")
-	for b in _bodies:
-		b.play("idle")
-
-
-func _cycle() -> void:
-	var knight = _bodies[3]
-	var moves := ["attack", "hit", "heavy", "block", "die"]
-	var i := 0
-	while is_inside_tree():
-		await get_tree().create_timer(3.0).timeout
-		knight.play(moves[i % moves.size()])
-		await get_tree().create_timer(2.5).timeout
-		knight.play("idle")
-		i += 1

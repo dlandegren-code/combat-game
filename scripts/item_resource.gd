@@ -154,6 +154,31 @@ const DEFAULT_THROW_RANGE := 2
 @export var model_grip_roll: float = 0.0
 @export var model_ground_rotation: Vector3 = Vector3(-90, 0, 0)  ## rotation when dropped on the ground (degrees)
 
+## --- Worn on a Sidekick body ---
+## How this item looks on a body made of Sidekick parts (sidekick_body.gd), which takes its
+## look from what it wears instead of having one painted on. The Kenney bodies ignore all of it.
+@export_group("Worn Look")
+## Armour, greaves, helmets: the Sidekick parts this piece is made of, by part name
+## (e.g. "SK_FANT_KNGT_03_10TORS_HU01"). Each part's slot code says where it goes — a body slot
+## replaces the bare part there, an attachment slot (helmet, shoulders, knees...) is added.
+@export var worn_parts: PackedStringArray = PackedStringArray()
+## Body slots this piece covers without replacing — a helmet over the hair ("02HAIR").
+@export var worn_hides: PackedStringArray = PackedStringArray()
+## A palette to draw the parts with instead of their own set's ("T_FantasyKnights_02ColorMap.png"),
+## which is how one cuirass can be leather-brown or steel. "" keeps their own.
+@export var worn_palette: String = ""
+## Weapons and shields: the mesh held on the body's prop bone, at native scale. Synty's weapon
+## meshes are modelled to sit on that bone, so most need no nudge at all. "" falls back to
+## model_path / the name lookup, sized for the body.
+@export var worn_model_path: String = ""
+## Nudge on the prop bone, in the bone's own space (Sidekick units: the body is 1.8 tall).
+@export var worn_position: Vector3 = Vector3.ZERO
+@export var worn_rotation: Vector3 = Vector3.ZERO
+## Size on top of the default, for an item WITHOUT a worn model: one drawn from model_path or the
+## name lookup is sized for a Kenney fist and then scaled up for the body, which overshoots for
+## anything long (a bow at 1.0 is taller than the person holding it).
+@export var worn_scale: float = 1.0
+
 
 ## What this is worth in a market, or 0 to let gold_value() work it out from the item's stats.
 ##

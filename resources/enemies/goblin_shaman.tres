@@ -1,0 +1,24 @@
+[gd_resource type="Resource" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemy_template.gd" id="1_tpl"]
+[ext_resource type="PackedScene" path="res://scenes/characters/polygon_model.tscn" id="2_model"]
+[ext_resource type="Resource" path="res://resources/stats/shaman_stats.tres" id="3_stats"]
+[ext_resource type="Resource" path="res://resources/items/shaman_staff.tres" id="4_staff"]
+
+[resource]
+script = ExtResource("1_tpl")
+id = "goblin_shaman"
+display_name = "Goblin Shaman"
+ai = 1
+model_scene = ExtResource("2_model")
+model_props = {"character": "Character_Goblin_Shaman", "clip_overrides": {"idle": "cast-ready", "hit": "hit-light"}}
+stats = ExtResource("3_stats")
+gear = Array[Resource]([ExtResource("4_staff")])
+size = 0.9
+tint = Color(1, 1, 1, 1)
+voice = "male_d"
+cost = 4
+themes = PackedStringArray("warren", "dungeon")
+min_tier = 2
+weight = 1.0
+is_boss = false

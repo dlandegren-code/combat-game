@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="CombatantStats" format=3]
+
+[ext_resource type="Script" uid="uid://dslqg6e2diy4m" path="res://scripts/combatant_stats.gd" id="1_stats"]
+
+[resource]
+script = ExtResource("1_stats")
+character_name = "Skeleton Archer"
+initiative = 5
+attack_dmg = 2
+move_speed = 4.0
+move_range = 4
+attack_skill = 7
+shove_skill = 5
+shove_cost = 3
+trip_skill = 5
+trip_cost = 3
+parry_skill = 5
+defensive_option = 1
+ranged_skill = 11
+ammo = 8
+max_ammo = 8
+throw_skill = 7
+strength = 4
+weight = 1
+agility = 9
+stamina = 7

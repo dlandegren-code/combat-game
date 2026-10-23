@@ -4,6 +4,14 @@ extends "res://scripts/combatant.gd"
 
 enum EnemyType { GOBLIN, ARCHER, BOSS }
 
+## An ARCHER whose stat block can cast (CombatantStats.can_cast) fights the same way — keep its
+## distance, take the shot — but its shot is the wizard's firebolt, paid for in mana, instead of
+## an arrow. The goblin shaman. Same rules as the player's (to-hit as a missile, spell power, fire
+## that armour does not soak), so magic does not get a second set of numbers for enemies.
+const FireboltAbilityScript := preload("res://scripts/abilities/firebolt_ability.gd")
+const FireboltProjectileScript := preload("res://scripts/fx/firebolt_projectile.gd")
+const FireSplashScript := preload("res://scripts/fx/fire_splash.gd")
+
 @export var enemy_type: int = EnemyType.GOBLIN
 
 ## Which room of the generated dungeon this one belongs to, by DungeonLayout region id. The
@@ -166,10 +174,16 @@ var _idle_settle := ""
 var _idle_perch := Vector3.INF
 ## Set while sitting up on one, so getting up knows to climb down again.
 var _perched := false
+## The square climbed up from, which is where climbing down goes back to. See _idle_leave_perch.
+var _perch_from := Vector3.INF
 var _perch_tween: Tween = null
 ## How far below the body's origin this rig's hips end up once it is sitting, measured off the
 ## posed skeleton the first time it sits. Negative until then. See _seated_hip_drop.
 var _hip_drop := -1.0
+## Where the seated hips sit off the body's origin across the floor, in the facing frame
+## (measured with the drop). The sit clip pushes the pelvis back, so a body placed by its origin
+## sat in the throne's backrest. See _idle_take_perch.
+var _hip_shift := Vector3.ZERO
 ## Pulses left to stay put before deciding again. Counted down by idle_step, and while it is
 ## running this enemy does nothing at all — which is most of the time, and the point.
 var _idle_hold := 0
@@ -477,10 +491,22 @@ func _idle_take_perch(perch: Vector3) -> void:
 		return
 	_idle_stop_perching()
 	_perched = true
-	var to := Vector3(perch.x, perch.y + _seated_hip_drop() + SEAT_CLEARANCE, perch.z)
+	_perch_from = _snap_to_grid(position)
+	var drop := _seated_hip_drop()
+	# Hips onto the seat, not the origin: shifted back by however far the clip moves the pelvis
+	# off it, turned the way the body now faces.
+	var shift: Vector3 = _facing_basis() * _hip_shift
+	var to := Vector3(perch.x - shift.x, perch.y + drop + SEAT_CLEARANCE, perch.z - shift.z)
 	_perch_tween = create_tween()
 	_perch_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	_perch_tween.tween_property(self, "position", to, PERCH_CLIMB_TIME)
+
+
+func _facing_basis() -> Basis:
+	## Which way the body faces: facing turns the CharacterModel (_face_point), not this node.
+	var model := get_node_or_null("CharacterModel") as Node3D
+	var n: Node3D = model if model != null else self
+	return n.global_transform.basis.orthonormalized()
 
 
 func _seated_hip_drop() -> float:
@@ -524,11 +550,16 @@ func _seated_hip_drop() -> float:
 		found += 1
 	if found > 0:
 		_hip_drop = total / float(found)
+	var hips := skel.find_bone("Hips")
+	if hips >= 0:
+		var off: Vector3 = skel.global_transform * skel.get_bone_global_pose(hips).origin - global_position
+		off.y = 0.0
+		_hip_shift = _facing_basis().inverse() * off
 	return _hip_drop
 
 
 func _idle_leave_perch(instant: bool) -> void:
-	## Get down off it, back to the middle of the square the seat snaps to and back to the floor.
+	## Get down off it, back to the square it was climbed from and back to the floor.
 	##
 	## `instant` for the alarm, which is a hard cut: a boss ambling down off his chair while the
 	## room is already fighting looks like the fight is waiting for him. Sliding otherwise,
@@ -537,7 +568,10 @@ func _idle_leave_perch(instant: bool) -> void:
 		return
 	_idle_stop_perching()
 	_perched = false
-	var down: Vector3 = _snap_to_grid(position)
+	# Back to where he climbed up from. NOT the square the seat snaps to: that is one of the
+	# throne's own, reserved as an obstacle, and standing on it is standing inside the chair's arm.
+	var down: Vector3 = _perch_from if _perch_from != Vector3.INF else _snap_to_grid(position)
+	_perch_from = Vector3.INF
 	down.y = _ground_y()
 	if instant:
 		position = down
@@ -852,7 +886,7 @@ func _take_turn_archer() -> void:
 	# blank if there are arrows left, steel if not.
 	var pin := _pinning_guard()
 	if pin != null:
-		if ammo > 0:
+		if _has_shot():
 			await _fire_arrow(pin)
 		else:
 			_action_used = Action.ATTACK
@@ -864,7 +898,7 @@ func _take_turn_archer() -> void:
 
 	# Out of ammo: kiting is pointless (arrows never come back), so close in and melee.
 	# This also walks a stranded archer back toward the fight.
-	if ammo <= 0:
+	if not _has_shot():
 		if _is_adjacent(player.position):
 			_action_used = Action.ATTACK
 			_do_melee_attack(player)
@@ -1024,7 +1058,44 @@ func _begin_move_toward(target: Node) -> void:
 		end_my_turn(_pending_cost)
 
 
+func _has_shot() -> bool:
+	## Arrows for an archer, mana for a bolt for a caster.
+	if can_cast:
+		return mana >= FireboltAbilityScript.MANA_COST
+	return ammo > 0
+
+
+func get_ranged_range() -> int:
+	## A caster's reach is the spell's, not a weapon's (see Combatant.get_ranged_range).
+	if can_cast:
+		return FireboltAbilityScript.RANGE_TILES
+	return super.get_ranged_range()
+
+
+func _cast_bolt(target: Node) -> void:
+	_face_target(target)
+	_action_used = Action.RANGED
+	spend_mana(FireboltAbilityScript.MANA_COST)
+	_update_health_bar()
+	_play_attack_anim("cast", "holding-both-shoot")
+	_show_action_text("Firebolt!")
+	_pending_cost = spell_cost
+	var impact_point: Vector3 = target.global_position + Vector3(0, PROJECTILE_IMPACT_HEIGHT, 0)
+	var bolt = FireboltProjectileScript.fire(get_parent(), get_projectile_origin(impact_point), impact_point)
+	await bolt.impacted
+	if is_instance_valid(target) and target.is_alive:
+		var to_hit: int = get_missile_skill(get_spell_skill(), target, FireboltAbilityScript.RANGE_TILES)
+		var dmg: int = get_spell_power() + FireboltAbilityScript.DAMAGE_BONUS
+		var defended: bool = target.take_damage(dmg, to_hit, true, self, DamageType.FIRE)
+		if not defended:
+			FireSplashScript.burst(get_parent(), impact_point, target.get_feet_y())
+	end_my_turn(_pending_cost)
+
+
 func _fire_arrow(player: Node) -> void:
+	if can_cast:
+		await _cast_bolt(player)
+		return
 	_face_target(player)
 	_action_used = Action.RANGED
 	ammo -= 1

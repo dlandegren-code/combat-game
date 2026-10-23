@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="CombatantStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combatant_stats.gd" id="1_stats"]
+
+[resource]
+script = ExtResource("1_stats")
+character_name = "Rock Golem"
+initiative = 2
+attack_dmg = 7
+move_speed = 4.0
+move_range = 3
+move_cost_per_tile = 1
+attack_skill = 10
+attack_cost = 2
+shove_skill = 14
+shove_cost = 2
+trip_skill = 4
+trip_cost = 2
+armor = 3
+physical_resistance = 20
+parry_skill = 4
+defensive_option = 0
+ranged_skill = 0
+ranged_cost = 3
+ammo = 0
+max_ammo = 0
+throw_skill = 6
+throw_cost = 1
+strength = 18
+weight = 6
+equip_cost = 1
+agility = 5
+stamina = 22

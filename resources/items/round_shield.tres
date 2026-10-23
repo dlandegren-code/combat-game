@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/item_resource.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+item_name = "Round Shield"
+item_type = 4
+equip_slot = 2
+handedness = 0
+durability = 20
+is_shield = true
+parry_ranged = true
+parry_bonus = 5
+model_path = "res://assets/vikings/weapons/SM_Wep_Shield_Set_Optimised_01.fbx"
+model_material_path = "res://assets/vikings/viking_shield_mat_01.tres"
+worn_model_path = "res://assets/vikings/weapons/SM_Wep_Shield_Set_Optimised_01.fbx"
+worn_position = Vector3(0, 0, -0.08)
+worn_rotation = Vector3(0, 180, 0)

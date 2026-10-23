@@ -14,3 +14,4 @@ icon_rotation = Vector3(10, 22, 0)
 model_path = "res://assets/models/synty_armor/plate_cuirass.res"
 model_scale = 0.45
 model_ground_rotation = Vector3(0, 0, 0)
+worn_parts = PackedStringArray("SK_FANT_KNGT_03_10TORS_HU01", "SK_FANT_KNGT_03_11AUPL_HU01", "SK_FANT_KNGT_03_12AUPR_HU01", "SK_FANT_KNGT_03_13ALWL_HU01", "SK_FANT_KNGT_03_14ALWR_HU01", "SK_FANT_KNGT_03_15HNDL_HU01", "SK_FANT_KNGT_03_16HNDR_HU01", "SK_FANT_KNGT_03_29ASHL_HU01", "SK_FANT_KNGT_03_30ASHR_HU01", "SK_FANT_KNGT_03_31AEBL_HU01", "SK_FANT_KNGT_03_32AEBR_HU01")

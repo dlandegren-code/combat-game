@@ -6,7 +6,7 @@
 script = ExtResource("1_stats")
 character_name = "Ghoul"
 initiative = 7
-attack_dmg = 3
+attack_dmg = 4
 move_speed = 4.0
 move_range = 4
 move_cost_per_tile = 1

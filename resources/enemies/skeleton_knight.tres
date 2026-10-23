@@ -1,0 +1,26 @@
+[gd_resource type="Resource" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemy_template.gd" id="1_tpl"]
+[ext_resource type="PackedScene" path="res://scenes/characters/polygon_model.tscn" id="2_model"]
+[ext_resource type="Resource" path="res://resources/stats/skeleton_knight_stats.tres" id="3_stats"]
+[ext_resource type="Resource" path="res://resources/items/warhammer.tres" id="4_warhammer"]
+[ext_resource type="Resource" path="res://resources/items/wooden_shield.tres" id="5_wooden_shield"]
+[ext_resource type="Resource" path="res://resources/items/heavy_armor.tres" id="6_heavy_armor"]
+
+[resource]
+script = ExtResource("1_tpl")
+id = "skeleton_knight"
+display_name = "Skeleton Knight"
+ai = 0
+model_scene = ExtResource("2_model")
+model_props = {"character": "Character_Skeleton_Knight", "clip_overrides": {"idle": "idle-armed", "hit": "hit-light"}}
+stats = ExtResource("3_stats")
+gear = Array[Resource]([ExtResource("4_warhammer"), ExtResource("5_wooden_shield"), ExtResource("6_heavy_armor")])
+size = 1.0
+tint = Color(1, 1, 1, 1)
+voice = "male_d"
+cost = 5
+themes = PackedStringArray("crypt")
+min_tier = 2
+weight = 1.0
+is_boss = false

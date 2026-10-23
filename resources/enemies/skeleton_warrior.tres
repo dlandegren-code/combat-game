@@ -1,0 +1,25 @@
+[gd_resource type="Resource" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemy_template.gd" id="1_tpl"]
+[ext_resource type="PackedScene" path="res://scenes/characters/polygon_model.tscn" id="2_model"]
+[ext_resource type="Resource" path="res://resources/stats/skeleton_stats.tres" id="3_stats"]
+[ext_resource type="Resource" path="res://resources/items/rusty_sword.tres" id="4_rusty_sword"]
+[ext_resource type="Resource" path="res://resources/items/wooden_shield.tres" id="5_wooden_shield"]
+
+[resource]
+script = ExtResource("1_tpl")
+id = "skeleton_warrior"
+display_name = "Skeleton Warrior"
+ai = 0
+model_scene = ExtResource("2_model")
+model_props = {"character": "Character_Skeleton_Soldier_01", "clip_overrides": {"idle": "idle-armed", "hit": "hit-light"}}
+stats = ExtResource("3_stats")
+gear = Array[Resource]([ExtResource("4_rusty_sword"), ExtResource("5_wooden_shield")])
+size = 1.0
+tint = Color(1, 1, 1, 1)
+voice = "male_d"
+cost = 2
+themes = PackedStringArray("crypt")
+min_tier = 1
+weight = 2.5
+is_boss = false

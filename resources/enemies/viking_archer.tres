@@ -1,0 +1,25 @@
+[gd_resource type="Resource" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemy_template.gd" id="1_tpl"]
+[ext_resource type="PackedScene" path="res://scenes/characters/polygon_model.tscn" id="2_model"]
+[ext_resource type="Resource" path="res://resources/stats/bandit_archer_stats.tres" id="3_stats"]
+[ext_resource type="Resource" path="res://resources/items/seax.tres" id="4_seax"]
+[ext_resource type="Resource" path="res://resources/items/short_bow.tres" id="5_short_bow"]
+
+[resource]
+script = ExtResource("1_tpl")
+id = "viking_archer"
+display_name = "Raider Archer"
+ai = 1
+model_scene = ExtResource("2_model")
+model_props = {"source": "res://assets/vikings/characters/VikingRealm_Characters.fbx", "texture": "res://assets/vikings/textures/PolygonVikingRealm_Texture_01_A.png", "character_pool": ["SM_Chr_Peasant_Male_01", "SM_Chr_Peasant_Male_02"], "attachment_pool": ["SM_Chr_Attach_Hair_01", "SM_Chr_Attach_Hair_02", "SM_Chr_Attach_Hair_03", "SM_Chr_Attach_Hair_04", "SM_Chr_Attach_Hair_05"], "head_attachments": [["res://assets/vikings/attachments/SM_Chr_Attach_Beard_01.fbx", "res://assets/vikings/attachments/SM_Chr_Attach_Beard_02.fbx", "res://assets/vikings/attachments/SM_Chr_Attach_Beard_03.fbx", "res://assets/vikings/attachments/SM_Chr_Attach_Beard_04.fbx", "res://assets/vikings/attachments/SM_Chr_Attach_Beard_05.fbx"]]}
+stats = ExtResource("3_stats")
+gear = Array[Resource]([ExtResource("4_seax"), ExtResource("5_short_bow")])
+size = 1.0
+tint = Color(1, 1, 1, 1)
+voice = "male_c"
+cost = 3
+themes = PackedStringArray("raiders")
+min_tier = 1
+weight = 1.2
+is_boss = false

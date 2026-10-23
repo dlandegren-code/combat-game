@@ -3,20 +3,16 @@ extends Node
 ## .summer/local/sidekick_inspect.txt. Play tools/inspect_sidekick.tscn.
 
 const PARTS := [
-	"res://assets/sidekick/base/SK_HUMN_BASE_01_09FCHR_HU01.fbx",
-	"res://assets/sidekick/base/SK_HUMN_BASE_01_02HAIR_HU01.fbx",
-	"res://assets/sidekick/base/SK_HUMN_BASE_01_10TORS_HU01.fbx",
-	"res://assets/sidekick/outfits/SK_FANT_KNGT_17_24ABAC_HU01.fbx",
-	"res://assets/sidekick/outfits/SK_FANT_KNGT_17_25AHPF_HU01.fbx",
+	"res://assets/vikings/characters/VikingRealm_Characters.fbx",
 ]
-const CLIP := "res://assets/sidekick/anims/A_MOD_SWD_Idle_Base_Neut.fbx"
+const CLIP := "res://assets/vikings/weapons/SM_Wep_Axe_01.fbx"
 var _out: Array = []
 
 
 func _ready() -> void:
 	for p in PARTS:
 		_dump_scene(p, true)
-	_dump_scene(CLIP, false)
+	_dump_scene(CLIP, true)
 	var f := FileAccess.open("res://.summer/local/sidekick_inspect.txt", FileAccess.WRITE)
 	f.store_string("\n".join(_out))
 	f.close()
@@ -29,7 +25,7 @@ func _dump_scene(path: String, bones: bool) -> void:
 	if ps == null:
 		return
 	var root := ps.instantiate()
-	_walk(root, 0, false)
+	_walk(root, 0, true)
 	var ap := root.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if ap:
 		for lib in ap.get_animation_library_list():

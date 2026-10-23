@@ -1,7 +1,7 @@
 [gd_resource type="Resource" load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemy_template.gd" id="1_tpl"]
-[ext_resource type="PackedScene" path="res://scenes/characters/orc_model.tscn" id="2_model"]
+[ext_resource type="PackedScene" path="res://scenes/characters/polygon_model.tscn" id="2_model"]
 [ext_resource type="Resource" path="res://resources/stats/boss_stats.tres" id="3_stats"]
 [ext_resource type="Resource" path="res://resources/items/goblin_dagger.tres" id="4_goblin_dagger"]
 [ext_resource type="Resource" path="res://resources/items/reinforced_goblin_leather.tres" id="5_reinforced_goblin_leather"]
@@ -14,10 +14,10 @@ id = "goblin_warchief"
 display_name = "Goblin Warchief"
 ai = 2
 model_scene = ExtResource("2_model")
-model_props = {}
+model_props = {"character": "Character_Goblin_WarChief", "clip_overrides": {"idle": "idle-armed", "hit": "hit-heavy"}}
 stats = ExtResource("3_stats")
 gear = Array[Resource]([ExtResource("4_goblin_dagger"), ExtResource("5_reinforced_goblin_leather"), ExtResource("6_boss_cleaver"), ExtResource("7_iron_key")])
-size = 1.28
+size = 1.05
 tint = Color(1, 1, 1, 1)
 voice = "male_d"
 cost = 4

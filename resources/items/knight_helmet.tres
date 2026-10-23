@@ -16,3 +16,5 @@ model_scale = 0.3
 model_hand_position = Vector3(0, 0, 0)
 model_hand_rotation = Vector3(0, 0, 0)
 model_ground_rotation = Vector3(0, 0, 0)
+worn_parts = PackedStringArray("SK_FANT_KNGT_17_22AHED_HU01", "SK_FANT_KNGT_17_23AFAC_HU01")
+worn_hides = PackedStringArray("02HAIR", "07EARL", "08EARR")

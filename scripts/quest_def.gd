@@ -84,6 +84,13 @@ const THEMES := [
 		"adjective": ["Stinking", "Deep", "Crowded", "Rotten", "Low"],
 		"place": ["Warren", "Burrows", "Nest", "Den", "Tunnels"],
 	},
+	{
+		"id": "raiders",
+		"label": "raider hold",
+		"task": ["Drive out", "Raid", "Break"],
+		"adjective": ["Frozen", "Burnt", "Northern", "Smoky", "Grim"],
+		"place": ["Longhouse", "Mead Hall", "Hold", "Camp", "Stronghold"],
+	},
 ]
 
 @export var quest_seed: int = 0
