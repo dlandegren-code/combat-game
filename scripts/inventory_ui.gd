@@ -46,6 +46,7 @@ const SOCKETS: Array[Dictionary] = [
 	{"slot": ItemResource.EquipSlot.ARMOR, "label": "Torso", "at": Vector2(0.5, 0.40)},
 	{"slot": ItemResource.EquipSlot.LEFT_HAND, "label": "Left Hand", "at": Vector2(0.85, 0.40)},
 	{"slot": ItemResource.EquipSlot.LEGS, "label": "Legs", "at": Vector2(0.5, 0.76)},
+	{"slot": ItemResource.EquipSlot.BACK, "label": "Back", "at": Vector2(0.85, 0.04)},
 ]
 
 const COLOR_FIGURE := Color(0.32, 0.38, 0.49, 0.60)
@@ -342,12 +343,14 @@ func _equipped_in(inv: Node, slot: int) -> ItemResource:
 			return inv.helmet
 		ItemResource.EquipSlot.LEGS:
 			return inv.legs
+		ItemResource.EquipSlot.BACK:
+			return inv.back
 	return null
 
 
 func _is_equipped(inv: Node, item: ItemResource) -> bool:
 	return item == inv.right_hand or item == inv.left_hand or item == inv.armor \
-		or item == inv.helmet or item == inv.legs
+		or item == inv.helmet or item == inv.legs or item == inv.back
 
 
 # --- interaction ------------------------------------------------------------

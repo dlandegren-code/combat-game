@@ -47,7 +47,7 @@ var enemies: Array = []
 ## What stands in the rooms, as {type, room, at: Vector3, normal: Vector3, squares: Array}.
 ## `normal` points from the wall the thing is against into the room, and `squares` are the play
 ## squares it takes up, which nothing else may then be put on. Types the builder knows:
-##   throne, banner, chest, barrel, crate, pillar, vessel, circle
+##   throne, banner, chest, barrel, crate, pillar, vessel, circle, table, bench, rack, statue, runestone (raiders only)
 var features: Array = []
 
 ## {path: String, at: Vector3} — items lying loose on the floor.

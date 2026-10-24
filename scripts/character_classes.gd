@@ -56,8 +56,6 @@ const CLASSES := {
 			"shove_skill": 7,
 			"trip_skill": 9,
 			"ranged_skill": 13,
-			"ammo": 7,
-			"max_ammo": 12,
 			"lockpick_skill": 9,
 			"agility": 16,
 			"stamina": 13,
@@ -173,8 +171,10 @@ static func summary_lines(class_id: String) -> Array:
 		extras.append("can guard")
 	if s.lockpick_skill > 0:
 		extras.append("lockpicking %d%%" % D20Script.chance(s.lockpick_skill))
-	if s.max_ammo > 0:
-		extras.append("%d/%d arrows" % [s.ammo, s.max_ammo])
+	# Arrows are carried in the quiver the class starts with, not on the stat block.
+	for item in _starting_bag(CLASSES[class_id]):
+		if item != null and item.item_type == ItemResource.ItemType.QUIVER:
+			extras.append("%d/%d arrows" % [item.ammo_amount, item.ammo_capacity])
 	if not extras.is_empty():
 		lines.append(", ".join(extras))
 	lines.append("Starts with: " + ", ".join(_item_names(CLASSES[class_id])))

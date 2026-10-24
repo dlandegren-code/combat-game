@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://assets/vikings/viking_mat_01_A.tres" id="1_d3g0p"]
+[ext_resource type="ArrayMesh" path="res://assets/vikings/models/SM_Prop_Chest_01.res" id="2_vcb7s"]
+[ext_resource type="ArrayMesh" path="res://assets/vikings/models/SM_Prop_Chest_01_Lid.res" id="3_pqitu"]
+[ext_resource type="ArrayMesh" path="res://assets/vikings/models/SM_Prop_Chest_01_Lock.res" id="4_n5hof"]
+
+[node name="SM_Prop_Chest_01" type="MeshInstance3D" unique_id=2083405826]
+material_override = ExtResource("1_d3g0p")
+mesh = ExtResource("2_vcb7s")
+
+[node name="SM_Prop_Chest_01_Lid" type="MeshInstance3D" parent="." unique_id=93746274]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0062510753, 0.40388122, -0.20038775)
+material_override = ExtResource("1_d3g0p")
+mesh = ExtResource("3_pqitu")
+
+[node name="SM_Prop_Chest_01_Lock" type="MeshInstance3D" parent="SM_Prop_Chest_01_Lid" unique_id=2084408052]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.005226204, -0.031397045, 0.42169982)
+material_override = ExtResource("1_d3g0p")
+mesh = ExtResource("4_n5hof")

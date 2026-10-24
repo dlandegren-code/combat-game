@@ -58,6 +58,7 @@ const WORN_ORDER := [
 	{"slot": ItemResource.EquipSlot.ARMOR, "label": "Body"},
 	{"slot": ItemResource.EquipSlot.HELMET, "label": "Head"},
 	{"slot": ItemResource.EquipSlot.LEGS, "label": "Legs"},
+	{"slot": ItemResource.EquipSlot.BACK, "label": "Back"},
 ]
 
 const ATTRIBUTES := [
@@ -277,10 +278,9 @@ func _draw_sheet(column: Node, member) -> void:
 		var max_mana: int = CombatantScript.mana_for_willpower(int(s.willpower))
 		var mana: int = max_mana if member.mana == CharacterDataScript.VITALS_FULL else member.mana
 		ScreenPanelScript.label(column, "Mana: %d of %d" % [mana, max_mana])
-	if int(s.max_ammo) > 0:
-		var ammo: int = int(s.max_ammo) if member.ammo == CharacterDataScript.VITALS_FULL \
-			else member.ammo
-		ScreenPanelScript.label(column, "Arrows: %d of %d" % [ammo, int(s.max_ammo)])
+	var quiver: ItemResource = member.quiver()
+	if quiver != null:
+		ScreenPanelScript.label(column, "Arrows: %d of %d" % [quiver.ammo_amount, quiver.ammo_capacity])
 
 	# Armour as it will actually be in the dungeon: the stat block plus what is worn. Shown
 	# together because the number that matters is the total, and split because a player

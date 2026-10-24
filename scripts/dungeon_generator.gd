@@ -60,6 +60,10 @@ const PICKUPS_BASE := 3
 
 ## Chance a plain fight room has a crate in it. The stores room always has its casks and crates.
 const FIGHT_CRATE_CHANCE := 0.35
+## How often a raiders fight room gets a weapon rack (a stores room always does).
+const RACK_CHANCE := 0.6
+## How often a raiders fight room gets a rune stone.
+const RUNESTONE_CHANCE := 0.5
 
 ## The four ways out of a room, as tile steps: north (+z), east, south, west.
 const DIRS := [Vector2i(0, 1), Vector2i(1, 0), Vector2i(0, -1), Vector2i(-1, 0)]
@@ -125,6 +129,29 @@ static func generate(quest_seed: int, tier: int, enemy_budget: int,
 	var near_door := _door_zone(layout)
 	for room in layout.rooms():
 		_furnish(layout, rng, room, taken, near_door)
+	if theme == "raiders":
+		# A mead hall has long tables down its rooms. Off a generator of its own, so the main
+		# one draws exactly what it always drew and no other theme's dungeons change.
+		var hall_rng := RandomNumberGenerator.new()
+		hall_rng.seed = quest_seed ^ 0x6D656164
+		for room in layout.rooms():
+			_place_tables(layout, hall_rng, room, taken, near_door)
+		# A weapon rack against the wall of every stores room and most fight rooms.
+		for room in layout.rooms():
+			var role := String(room["role"])
+			if role == "stores" or (role == "fight" and hall_rng.randf() < RACK_CHANCE):
+				_place_along_wall(layout, hall_rng, room, "rack", 1, taken, near_door)
+		# Carved gods round the jarl's hall and one to meet you at the door; a rune stone in
+		# about half the fight rooms.
+		for room in layout.rooms():
+			match String(room["role"]):
+				"boss":
+					_place_along_wall(layout, hall_rng, room, "statue", 2, taken, near_door)
+				"entrance":
+					_place_along_wall(layout, hall_rng, room, "statue", 1, taken, near_door)
+				"fight":
+					if hall_rng.randf() < RUNESTONE_CHANCE:
+						_place_along_wall(layout, hall_rng, room, "runestone", 1, taken, near_door)
 	_place_enemies(layout, rng, roster(quest_seed, tier, enemy_budget, theme), taken, near_door)
 	_place_party(layout, taken, near_door)
 	_place_pickups(layout, rng, taken, near_door)
@@ -405,6 +432,55 @@ static func _place_throne(layout, room: Dictionary, taken: Dictionary,
 				layout.features.append({"type": "banner", "room": room["id"],
 					"at": at + along * 3.0 * side - n * 0.7, "normal": n, "squares": []})
 			return
+
+
+static func _place_tables(layout, rng: RandomNumberGenerator, room: Dictionary,
+		taken: Dictionary, near_door: Dictionary) -> void:
+	## Long tables, two squares each, laid down the room's long way, clear of the walls and with
+	## a square of floor all round so nothing gets sealed off behind one. Fight rooms only: the
+	## boss's hall keeps its floor clear in front of the throne.
+	##
+	## A table gets a bench down each long side where the room has width for both — a 3 x 2
+	## block with its ring of floor — and stands alone where it has not.
+	if String(room["role"]) != "fight":
+		return
+	var rect: Rect2i = room["rect"]
+	if rect.size.x < 3 or rect.size.y < 3:
+		return
+	var axis := Vector3(GRID, 0.0, 0.0) if rect.size.x >= rect.size.y else Vector3(0.0, 0.0, GRID)
+	var want := 1 if mini(rect.size.x, rect.size.y) < 4 else 2
+	var side := Vector3(axis.z, 0.0, axis.x)
+	var spots: Array = _interior(rect)
+	_shuffle(rng, spots)
+	var placed := 0
+	for with_benches in [true, false]:
+		for a in spots:
+			if placed >= want:
+				return
+			var b: Vector3 = a + axis
+			var block: Array = [a, b]
+			if with_benches:
+				block += [a + side, b + side, a - side, b - side]
+			var clear := true
+			for sq in block:
+				if not spots.has(sq):
+					clear = false
+					break
+				for dx in [-GRID, 0.0, GRID]:
+					for dz in [-GRID, 0.0, GRID]:
+						if not _free(sq + Vector3(dx, 0.0, dz), taken, near_door):
+							clear = false
+			if not clear:
+				continue
+			layout.features.append({"type": "table", "room": room["id"], "at": (a + b) / 2.0,
+				"normal": axis.normalized(), "squares": [a, b]})
+			if with_benches:
+				for k in [1.0, -1.0]:
+					var pair: Array = [a + side * k, b + side * k]
+					layout.features.append({"type": "bench", "room": room["id"],
+						"at": (pair[0] + pair[1]) / 2.0, "normal": axis.normalized(), "squares": pair})
+			_take(taken, block)
+			placed += 1
 
 
 static func _place_run(layout, room: Dictionary, type: String, count: int, taken: Dictionary,

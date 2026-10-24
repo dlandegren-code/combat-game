@@ -14,3 +14,4 @@ throw_range = 4
 model_path = "res://assets/vikings/weapons/SM_Wep_Axe_01.fbx"
 model_material_path = "res://assets/vikings/viking_mat_01_A.tres"
 worn_model_path = "res://assets/vikings/weapons/SM_Wep_Axe_01.fbx"
+worn_rotation = Vector3(0, -90, 0)

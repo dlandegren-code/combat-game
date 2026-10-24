@@ -256,7 +256,15 @@ var move_range: int = 4
 @export var dual_wield_skill: bool = false  ## trained off-hand: no OFFHAND_HIT_PENALTY on the free off-hand attack
 @export var ranged_skill: int = 9       ## used for bow/distance attacks
 @export var ranged_cost: int = 3
-@export var ammo: int = 0
+## Arrows to hand. With a quiver on the back (Inventory.back) they are the quiver's arrows and
+## every change is written straight back into it, so a quiver taken off, dropped or looted
+## carries exactly what was left in it. An enemy archer has no quiver item and just a number.
+@export var ammo: int = 0:
+	set(value):
+		ammo = value
+		var quiver: ItemResource = inventory.get("back") if inventory != null else null
+		if quiver != null:
+			quiver.ammo_amount = value
 @export var max_ammo: int = 0
 ## What the arrows still in a quiver become when their owner dies — see _gather_spare_arrows.
 const ARROW_BUNDLE_ITEM := "res://resources/items/arrow_bundle.tres"
@@ -472,6 +480,7 @@ var _last_left_hand: ItemResource = null
 var _last_helmet: ItemResource = null
 var _last_armor: ItemResource = null
 var _last_legs: ItemResource = null
+var _last_back: ItemResource = null
 
 ## The CharacterModel when it is a body that DRESSES from its gear (sidekick_body.gd): armour,
 ## greaves and helmets change what it looks like, and it names the bones things hang on. Null
@@ -589,8 +598,11 @@ func _apply_stats() -> void:
 	defensive_option = s.defensive_option
 	ranged_skill = s.ranged_skill
 	ranged_cost = s.ranged_cost
-	ammo = s.ammo
-	max_ammo = s.max_ammo
+	# A slung quiver (equipped by the Inventory child, whose _ready ran first) already decided
+	# these; the stat block's numbers are for archers who carry arrows without a quiver item.
+	if inventory == null or inventory.get("back") == null:
+		ammo = s.ammo
+		max_ammo = s.max_ammo
 	stealth_skill = s.stealth_skill
 	perception_skill = s.perception_skill
 	throw_skill = s.throw_skill
@@ -649,7 +661,7 @@ func _readd_equipment_bonuses() -> void:
 	if stats == null or inventory == null:
 		return
 	var counted: Array = []
-	for slot in ["right_hand", "left_hand", "armor", "helmet", "legs"]:
+	for slot in ["right_hand", "left_hand", "armor", "helmet", "legs", "back"]:
 		var item: ItemResource = inventory.get(slot)
 		if item == null:
 			continue
@@ -1100,20 +1112,22 @@ func _update_equipment_visuals() -> void:
 	var helmet_item: ItemResource = inventory.get("helmet")
 	var armor_item: ItemResource = inventory.get("armor")
 	var legs_item: ItemResource = inventory.get("legs")
+	var back_item: ItemResource = inventory.get("back")
 	if DEBUG_EQUIPMENT:
 		print("[Combatant] %s: right_hand=%s left_hand=%s helmet=%s" % [character_name, main.item_name if main else "null", off.item_name if off else "null", helmet_item.item_name if helmet_item else "null"])
 	if main == _last_right_hand and off == _last_left_hand and helmet_item == _last_helmet \
-			and armor_item == _last_armor and legs_item == _last_legs:
+			and armor_item == _last_armor and legs_item == _last_legs and back_item == _last_back:
 		return
 	_last_right_hand = main
 	_last_left_hand = off
 	_last_helmet = helmet_item
 	_last_armor = armor_item
 	_last_legs = legs_item
+	_last_back = back_item
 	if _body != null:
 		# The body dresses itself in what is worn; a helmet made of parts goes on the head that
 		# way, so the helmet socket only holds a helmet that has no parts (a mesh-only item).
-		_body.wear_items([armor_item, legs_item, helmet_item])
+		_body.wear_items([armor_item, legs_item, helmet_item, back_item])
 		if helmet_item != null and not helmet_item.worn_parts.is_empty():
 			helmet_item = null
 	# A two-handed weapon sits in BOTH hand slots as the same object.
@@ -3077,7 +3091,7 @@ func _physics_process(delta: float) -> void:
 			_update_hiding()
 			_on_move_complete()
 	else:
-		position += dir.normalized() * move_speed * delta
+		position += dir.normalized() * _travel_speed() * delta
 		position.y = _ground_y()
 
 	if is_alive and not _is_attacking and not is_prone and _held_pose == "":
@@ -3086,10 +3100,137 @@ func _physics_process(delta: float) -> void:
 			if _anim_player == null:
 				_anim_player = model.find_child("AnimationPlayer", true, false)
 			if _anim_player:
-				var target_anim := "walk" if is_moving else "idle"
+				var target_anim := _gait_clip() if is_moving else "idle"
 				var ap := _anim_player as AnimationPlayer
 				if ap.current_animation != target_anim:
-					ap.play(target_anim)
+					if is_moving:
+						# At the rate that makes the feet keep pace with the ground. Per play, so
+						# nothing else this player runs inherits it.
+						var natural := _gait_speed(target_anim)
+						ap.play(target_anim, -1, _travel_speed() / natural if natural > 0.0 else 1.0)
+					else:
+						ap.play(target_anim)
+
+
+# --- Gait: moving at the speed the feet are moving -------------------------
+#
+# The clips walk and run in place, each at its own ground speed, and a body's ground speed in the
+# world is that times how long its legs are. The bodies used to be slid along at move_speed —
+# 4 to 6 units a second for legs 0.67 long, a sprint — under a walk that covers about 0.8, so
+# everybody skated. Now the clip is chosen (_gait), played at the rate that matches, and the
+# travel speed is held to what that clip can show without looking frantic.
+
+## The fastest a gait clip is played, as a multiple of its own rate, by gait. Travel is capped to
+## match, so a body never moves faster than its legs could carry it. A walk is kept nearer its
+## own pace than a run: an amble played fast stops reading as an amble.
+const GAIT_MAX_RATE := {"walk": 1.25, "run": 1.6}
+## How close to its lowest point a foot has to be to count as planted, as a share of leg length.
+const PLANTED_SHARE := 0.04
+
+## Ground speed per unit of leg length, per clip, measured once: shared by every body that plays
+## the same Animation, because a retargeted clip covers the same ground per leg on any of them.
+static var _clip_speed := {}
+var _leg := -1.0
+
+
+func _gait() -> String:
+	## How this one gets about. Overridden: an enemy that has not been alerted ambles.
+	return "run"
+
+
+func _gait_clip() -> String:
+	var ap := _ensure_anim_player()
+	var g := _gait()
+	if ap != null and not ap.has_animation(g):
+		return "walk"
+	return g
+
+
+func _travel_speed() -> float:
+	## move_speed, unless the gait clip cannot keep up with it, in which case as fast as it can.
+	var clip := _gait_clip()
+	var natural := _gait_speed(clip)
+	if natural <= 0.0:
+		return move_speed
+	return minf(move_speed, natural * float(GAIT_MAX_RATE.get(clip, 1.6)))
+
+
+func _gait_speed(clip: String) -> float:
+	## The ground speed `clip` shows on this body at its own rate, in world units a second; 0 if
+	## it cannot be told.
+	var ap := _ensure_anim_player()
+	if ap == null or not ap.has_animation(clip):
+		return 0.0
+	var leg := _leg_length()
+	if leg <= 0.0:
+		return 0.0
+	var anim := ap.get_animation(clip)
+	if not _clip_speed.has(anim):
+		_clip_speed[anim] = _measure_clip(ap, clip, leg)
+	return float(_clip_speed[anim]) * leg
+
+
+func _leg_length() -> float:
+	## Hips to foot in the rest pose, in world units — what a stride scales with.
+	if _leg >= 0.0:
+		return _leg
+	_leg = 0.0
+	var model := get_node_or_null("CharacterModel") as Node3D
+	var sk := model.find_child("Skeleton3D", true, false) as Skeleton3D if model else null
+	if sk == null:
+		return _leg
+	var hips := sk.find_bone("Hips")
+	var foot := sk.find_bone("LeftFoot")
+	if hips < 0 or foot < 0:
+		return _leg
+	var hip_at: Vector3 = sk.global_transform * sk.get_bone_global_rest(hips).origin
+	var foot_at: Vector3 = sk.global_transform * sk.get_bone_global_rest(foot).origin
+	_leg = hip_at.y - foot_at.y
+	return _leg
+
+
+func _measure_clip(ap: AnimationPlayer, clip: String, leg: float) -> float:
+	## Step through `clip` and see how fast a planted foot slides back under the body: that IS
+	## the ground speed the clip walks at. Per unit of leg, so other bodies can reuse it.
+	var model := get_node_or_null("CharacterModel") as Node3D
+	var sk := model.find_child("Skeleton3D", true, false) as Skeleton3D if model else null
+	if sk == null:
+		return 0.0
+	var was := ap.current_animation
+	var was_at := ap.current_animation_position if was != "" else 0.0
+	var a := ap.get_animation(clip)
+	var steps := 48
+	var dt: float = a.length / steps
+	var fwd: Vector3 = model.global_transform.basis.z.normalized()
+	ap.play(clip)
+	var best := 0.0
+	for foot in ["LeftFoot", "RightFoot"]:
+		var fi := sk.find_bone(foot)
+		if fi < 0:
+			continue
+		var along: Array = []
+		var up: Array = []
+		for i in range(steps + 1):
+			ap.seek(dt * i, true)
+			sk.force_update_all_bone_transforms()
+			var pos: Vector3 = sk.global_transform * sk.get_bone_global_pose(fi).origin
+			along.append(pos.dot(fwd))
+			up.append(pos.y)
+		var floor_y: float = up.min()
+		var total := 0.0
+		var n := 0
+		for i in range(steps):
+			if up[i] < floor_y + PLANTED_SHARE * leg and up[i + 1] < floor_y + PLANTED_SHARE * leg:
+				var v: float = (along[i] - along[i + 1]) / dt
+				if v > 0.0:
+					total += v
+					n += 1
+		if n > 0:
+			best = maxf(best, total / n)
+	if was != "":
+		ap.play(was)
+		ap.seek(was_at, true)
+	return best / leg
 
 
 ## Called when a move finishes. Subclasses charge the appropriate turn cost.
@@ -3651,6 +3792,10 @@ func _gather_spare_arrows() -> void:
 	## level's supply. Killing one and taking his arrows is how the party's own bow keeps
 	## shooting, which is a fair trade to have to notice.
 	if ammo <= 0:
+		return
+	# A quiver keeps its own arrows (Combatant.ammo writes them into it), and the quiver is in
+	# the bag the pile is made from — a bundle as well would be the same arrows twice.
+	if inventory != null and inventory.get("back") != null:
 		return
 	var bundle: ItemResource = load(ARROW_BUNDLE_ITEM)
 	if bundle == null:

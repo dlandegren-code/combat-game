@@ -45,6 +45,14 @@ func _ready() -> void:
 		centre += p.global_position
 	centre /= maxf(1.0, party.size())
 	await _shoot(cam, centre, "res://.summer/local/quest_party.png")
+	await _shoot(cam, centre, "res://.summer/local/quest_overview.png", 16.0)
+	# Low and from outside the room, so a wall stands between the lens and the party: what the
+	# occlusion fader is for.
+	cam.global_position = centre + Vector3(0.0, 3.5, 11.0)
+	cam.look_at(centre, Vector3.UP)
+	cam.set("pivot", centre)
+	await get_tree().create_timer(0.6).timeout
+	get_viewport().get_texture().get_image().save_png("res://.summer/local/quest_low.png")
 
 	var enemies: Array = []
 	for n in get_tree().get_nodes_in_group("enemies"):
@@ -66,6 +74,17 @@ func _ready() -> void:
 		pick = enemies[0]
 	if pick != null:
 		await _shoot(cam, pick.global_position, "res://.summer/local/quest_enemy.png")
+
+	# A room with a long table in it, for a theme whose kit lays them (the raiders' mead hall).
+	var room_node = get_tree().root.find_child("DungeonRoom", true, false)
+	if room_node != null and room_node.layout != null:
+		var shot := {}
+		for f in room_node.layout.features:
+			for kind in ["table", "barrel", "chest", "vessel", "rack", "statue", "runestone"]:
+				if f["type"] == kind and not shot.has(kind):
+					shot[kind] = true
+					await _shoot(cam, f["at"], "res://.summer/local/quest_%s.png" % kind,
+						8.0 if kind in ["table", "vessel", "statue", "runestone"] else 4.0)
 
 	if seat_boss:
 		for e in enemies:
@@ -129,6 +148,9 @@ func _shoot(cam: Camera3D, at: Vector3, path: String, dist := 5.5) -> void:
 				back = d.normalized()
 	cam.global_position = focus + Vector3(0.0, dist * 0.55, 0.0) + back * dist
 	cam.look_at(focus, Vector3.UP)
-	for i in range(4):
-		await get_tree().process_frame
+	# Where the camera is looking is one of the things the roof lifts for (OcclusionFader), and
+	# the fade takes a moment; set it, and give it that moment.
+	if cam.get("pivot") is Vector3:
+		cam.set("pivot", focus)
+	await get_tree().create_timer(0.5).timeout
 	get_viewport().get_texture().get_image().save_png(path)

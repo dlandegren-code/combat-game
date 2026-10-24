@@ -625,6 +625,11 @@ func _is_within_sight_arc(at: Vector3) -> bool:
 	return forward.normalized().dot(toward.normalized()) >= half
 
 
+func _gait() -> String:
+	## Ambling about its own business until it knows there is a fight; running once it does.
+	return "run" if alerted else "walk"
+
+
 func _face_point(at: Vector3) -> void:
 	## Turn to look at a PLACE rather than at a body: _face_target wants a node, and a cask is
 	## a position in a list by the time it reaches here.

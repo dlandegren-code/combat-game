@@ -305,6 +305,38 @@ asset.** The equipped quiver used to be rebuilt in code with a flat brown
 `scenes/items/quiver.tscn` — textured Synty atlas, three arrows. `_apply_quiver` now
 instantiates that same scene, so they cannot drift.
 
+Since the Sidekick bodies, both use Goblin War Camp's
+`assets/goblin_camp/SM_Prop_Quiver_01.fbx` (the only quiver in any Synty pack — none of the
+Sidekick back/hip attachments is one; Fantasy Knights `03_24ABAC` looks like fletching from
+behind but is a spiked polearm with a ribbon, see `tools/preview_parts`). The pickup lies on
+its side (`quiver.tres`, `model_scale` 0.45 — smaller and the arrows vanish, leaving a tube
+that reads as a torch holder). `SidekickBody._add_quiver` hangs it on UpperChest, placed in the
+body's frame through the bone's rest pose and tilted back 22 degrees, because every stance clip
+hunches the chest forward and swings an upright quiver's foot out behind; check it with
+`tools/probe_quiver`. `quiver.tscn` is only used by the old Kenney `CharacterSkin` now.
+
+## Quivers hold the arrows
+
+The Quiver is worn equipment (`ItemType.QUIVER`, `EquipSlot.BACK`, `InventoryComponent.back`),
+not a consumable, and **its arrows are its own**: `ammo_amount` is what is in it,
+`ammo_capacity` what fits. Slung, `_sling_quiver` copies them onto the wearer's
+`ammo`/`max_ammo`, and `Combatant.ammo`'s setter writes every change straight back into the
+quiver — so unequipping, dropping, saving and looting a corpse (`forget`) all see the true
+count with no sync step to forget. Taken off, the wearer has 0/0: no quiver, no shooting.
+`_unsling_quiver` relies on `back` being cleared FIRST, or zeroing `ammo` would empty the
+quiver it was just taken from.
+
+- `_apply_stats` leaves ammo alone when a quiver is slung — the Inventory child equipped it
+  before Combatant._ready, and the stat block would otherwise overwrite its count.
+- Arrow bundles (`AMMO`) only go into a slung quiver, as many as fit; the rest stay in the bundle.
+- The body shows the quiver while one is slung (`SidekickBody.wear_items` sees the item).
+  `show_quiver` is now only for bodies with no inventory: enemy archers, who still keep arrows
+  as stat-block numbers and drop them as a bundle on death, and the town ranger.
+- Player stat blocks carry no ammo any more. `CharacterData._migrate_loose_arrows` turns an
+  old save's stat-block arrows into a slung quiver once, on load; `stats_from_combatant`
+  zeroes them when a quiver is slung so a captured hero never gets a second one.
+- `tools/probe_quiver_item` exercises all of it; `tools/capture_inventory` shoots the panel.
+
 **Spawn pickups at `GroundItem.DROP_Y` (0.2), an absolute world height — never
 offset from a combatant's `position`.** Combatant origins sit at
 `Combatant._ground_y()` = **1.11**, about a metre above the floor, because their

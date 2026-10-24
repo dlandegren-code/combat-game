@@ -96,4 +96,6 @@ static func for_empty_slot(slot: int) -> String:
 			return SWORD
 		ItemResource.EquipSlot.LEFT_HAND:
 			return SHIELD
+		ItemResource.EquipSlot.BACK:
+			return QUIVER
 	return GENERIC

@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://assets/vikings/viking_mat_01_A.tres" id="1_oikfm"]
+[ext_resource type="ArrayMesh" path="res://assets/vikings/models/SM_Prop_Barrel_03.res" id="2_jcqki"]
+
+[node name="SM_Prop_Barrel_03" type="MeshInstance3D" unique_id=1016404850]
+material_override = ExtResource("1_oikfm")
+mesh = ExtResource("2_jcqki")

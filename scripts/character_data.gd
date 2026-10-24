@@ -38,8 +38,9 @@ const V1_ATTRIBUTES := ["strength", "agility", "stamina", "intelligence", "willp
 ## property that wrapper needs set — the same ones the authored battlefield heroes were built
 ## with, so a spawned hero and a hand-placed one are the same character.
 ##
-## `props` is not decoration. The authored archer's model carries `show_quiver = true`, and a
-## spawned archer without it is an archer with no quiver on their back (see CharacterSkin).
+## `props` is not decoration: a spawned hero without the authored one's props would look
+## different. (The archer's quiver is not one of them any more — it is a Quiver item, worn on
+## the back slot, and the body shows it while it is slung.)
 ##
 ## A class is a string rather than an enum on purpose: it is stored in saves, and a string
 ## survives someone reordering this table. "archer" has no model of its own yet and borrows
@@ -71,7 +72,7 @@ const CLASS_BODIES := {
 	"archer": {"model": SIDEKICK_BODY, "props": {
 		"hair": "SK_HUMN_BASE_06_02HAIR_HU01", "facial_hair": "none",
 		"skin_palette": "T_HumanSpecies_03ColorMap.png",
-		"outfit": CLOTHES, "show_quiver": true}},
+		"outfit": CLOTHES}},
 }
 
 ## The Kenney bodies the hand-placed heroes in quest_scene.tscn still wear, by class — only so
@@ -83,6 +84,9 @@ const LEGACY_BODIES := {
 }
 
 const DEFAULT_CLASS := "soldier"
+
+## What an old save's loose arrows are put into — see _migrate_loose_arrows.
+const QUIVER_ITEM := "res://resources/items/quiver.tres"
 
 ## Where a hero's model sits inside the body. The authored heroes all use this, and a spawned
 ## one has to match or it stands a metre above the floor.
@@ -324,7 +328,7 @@ func worn_items() -> Array:
 	## Combatant to work it out (Combatant reads its live Inventory instead).
 	var out: Array = []
 	for slot in [ItemResource.EquipSlot.ARMOR, ItemResource.EquipSlot.LEGS,
-			ItemResource.EquipSlot.HELMET]:
+			ItemResource.EquipSlot.HELMET, ItemResource.EquipSlot.BACK]:
 		var idx: int = int(equipped.get(slot, -1))
 		out.append(bag[idx] if idx >= 0 and idx < bag.size() else null)
 	return out
@@ -450,6 +454,7 @@ func _capture_inventory(c: Node) -> void:
 		[ItemResource.EquipSlot.ARMOR, inv.armor],
 		[ItemResource.EquipSlot.HELMET, inv.helmet],
 		[ItemResource.EquipSlot.LEGS, inv.legs],
+		[ItemResource.EquipSlot.BACK, inv.back],
 	]:
 		var item: ItemResource = pair[1]
 		if item == null:
@@ -487,6 +492,10 @@ static func stats_from_combatant(c: Node) -> Resource:
 	var worn := _worn_bonuses(c)
 	s.armor = maxi(0, s.armor - worn.x)
 	s.physical_resistance = maxi(0, s.physical_resistance - worn.y)
+	# Likewise the arrows: with a quiver slung they are the quiver's, and it is in the bag.
+	if c.inventory != null and c.inventory.get("back") != null:
+		s.ammo = 0
+		s.max_ammo = 0
 	return s
 
 
@@ -499,7 +508,7 @@ static func _worn_bonuses(c: Node) -> Vector2i:
 		return Vector2i.ZERO
 	var total := Vector2i.ZERO
 	var counted: Array = []
-	for slot in ["right_hand", "left_hand", "armor", "helmet", "legs"]:
+	for slot in ["right_hand", "left_hand", "armor", "helmet", "legs", "back"]:
 		var item: ItemResource = inv.get(slot)
 		if item == null or counted.has(item):
 			continue
@@ -585,7 +594,35 @@ static func from_dict(d: Dictionary) -> CharacterData:
 	data.equipped = {}
 	for slot in d.get("equipped", {}):
 		data.equipped[int(slot)] = int(d["equipped"][slot])
+	data._migrate_loose_arrows()
 	return data
+
+
+func _migrate_loose_arrows() -> void:
+	## A hero's arrows used to be two numbers on the stat block, and the Quiver item was a
+	## consumable that topped them up. Arrows live in a worn Quiver now. A save from before that
+	## has an archer with a capacity on the stat block and maybe no quiver at all, so hand them
+	## one holding what they had, slung, and clear the numbers so this never happens twice.
+	if stats == null or int(stats.max_ammo) <= 0:
+		return
+	var capacity: int = int(stats.max_ammo)
+	var arrows: int = capacity if ammo == VITALS_FULL else ammo
+	stats.ammo = 0
+	stats.max_ammo = 0
+	for item in bag:
+		if item != null and item.item_type == ItemResource.ItemType.QUIVER:
+			return
+	var q: ItemResource = (load(QUIVER_ITEM) as ItemResource).make_instance()
+	q.ammo_capacity = capacity
+	q.ammo_amount = clampi(arrows, 0, capacity)
+	if bag_add(q):
+		equipped[ItemResource.EquipSlot.BACK] = bag.find(q)
+
+
+func quiver() -> ItemResource:
+	## The quiver slung on this character's back, or null — whose arrows are the ones they have.
+	var idx: int = int(equipped.get(ItemResource.EquipSlot.BACK, -1))
+	return bag[idx] if idx >= 0 and idx < bag.size() else null
 
 
 func _stats_to_dict() -> Dictionary:
@@ -641,6 +678,7 @@ static func _item_to_dict(item) -> Dictionary:
 		"durability": item.durability,
 		"broken": item.broken,
 		"ammo_amount": item.ammo_amount,
+		"ammo_capacity": item.ammo_capacity,
 	}
 
 
@@ -659,4 +697,5 @@ static func _item_from_dict(d: Dictionary):
 	item.durability = int(d.get("durability", item.durability))
 	item.broken = bool(d.get("broken", item.broken))
 	item.ammo_amount = int(d.get("ammo_amount", item.ammo_amount))
+	item.ammo_capacity = int(d.get("ammo_capacity", item.ammo_capacity))
 	return item

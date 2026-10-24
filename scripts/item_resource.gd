@@ -2,15 +2,17 @@ extends Resource
 class_name ItemResource
 
 ## Appended, never renumbered: these ordinals are stored in every .tres in resources/items.
-enum ItemType { WEAPON, THROWABLE, CONSUMABLE, AMMO, SHIELD, ARMOR, HELMET, LEGS, KEY }
+enum ItemType { WEAPON, THROWABLE, CONSUMABLE, AMMO, SHIELD, ARMOR, HELMET, LEGS, KEY, QUIVER }
 
+## Appended, never renumbered, like ItemType: saves store these as the keys of `equipped`.
 enum EquipSlot {
 	ANY_HAND,   ## Can go in either hand (1-handed weapons)
 	RIGHT_HAND, ## Main hand only
 	LEFT_HAND,  ## Offhand only (shields, offhand weapons)
 	ARMOR,      ## Torso slot, not hands
 	HELMET,     ## Headgear slot
-	LEGS        ## Legs slot (greaves, leggings)
+	LEGS,       ## Legs slot (greaves, leggings)
+	BACK        ## Slung on the back (quivers)
 }
 
 enum Handedness { ONE_HANDED, TWO_HANDED }
@@ -109,7 +111,11 @@ const DEFAULT_THROW_RANGE := 2
 
 ## Consumable effects (only relevant for CONSUMABLE and AMMO types)
 @export var heal_amount: int = 0       ## HP restored on use (CONSUMABLE)
-@export var ammo_amount: int = 0       ## Ammo restored on use (AMMO)
+@export var ammo_amount: int = 0       ## Ammo restored on use (AMMO); arrows inside (QUIVER)
+## How many arrows a QUIVER holds. The arrows are the quiver's, not the archer's: worn, its
+## count is the wearer's `ammo` (Combatant keeps the two in step), and taken off or dropped it
+## carries them away with it. No quiver on the back, nothing to nock.
+@export var ammo_capacity: int = 0
 
 ## --- Display model ---
 ## When model_path is set, it drives BOTH the equipped (in-hand) and dropped
@@ -194,7 +200,7 @@ const DEFAULT_THROW_RANGE := 2
 const VALUE_BASE := {
 	ItemType.WEAPON: 12, ItemType.THROWABLE: 10, ItemType.CONSUMABLE: 8, ItemType.AMMO: 5,
 	ItemType.SHIELD: 16, ItemType.ARMOR: 20, ItemType.HELMET: 14, ItemType.LEGS: 14,
-	ItemType.KEY: 0,
+	ItemType.KEY: 0, ItemType.QUIVER: 10,
 }
 const VALUE_PER_ATTACK := 4     ## per point on the d20 (5%), so +2 is worth one old point
 const VALUE_PER_DAMAGE := 8
@@ -341,6 +347,8 @@ func type_name() -> String:
 			kind = "Leg Armour"
 		ItemType.KEY:
 			kind = "Key"
+		ItemType.QUIVER:
+			kind = "Quiver"
 	if item_type == ItemType.WEAPON and handedness == Handedness.TWO_HANDED:
 		kind = "Two-Handed " + kind
 	return kind
@@ -395,6 +403,8 @@ func stat_lines() -> Array:
 		out.append(["Parries arrows", "yes"])
 	if dodge_ranged:
 		out.append(["Dodges arrows", "yes"])
+	if item_type == ItemType.QUIVER:
+		out.append(["Holds", "%d arrows" % ammo_capacity])
 	if item_type == ItemType.WEAPON or item_type == ItemType.THROWABLE 			or item_type == ItemType.SHIELD:
 		out.append(["Durability", "broken" if broken else str(durability)])
 	return out
@@ -411,6 +421,8 @@ func get_description() -> String:
 			desc += " (Consumable)"
 		ItemType.AMMO:
 			desc += " (Ammo)"
+		ItemType.QUIVER:
+			desc += " (Quiver)"
 		ItemType.SHIELD:
 			desc += " (Shield)"
 		ItemType.ARMOR:
@@ -462,7 +474,7 @@ func get_equip_time() -> int:
 	match item_type:
 		ItemType.ARMOR:
 			return EQUIP_DON
-		ItemType.SHIELD, ItemType.HELMET, ItemType.LEGS, ItemType.AMMO:
+		ItemType.SHIELD, ItemType.HELMET, ItemType.LEGS, ItemType.AMMO, ItemType.QUIVER:
 			return EQUIP_STRAP
 		_:
 			return EQUIP_QUICK
@@ -548,4 +560,6 @@ func can_equip_in(slot: int) -> bool:
 			return item_type == ItemType.HELMET or equip_slot == EquipSlot.HELMET
 		EquipSlot.LEGS:
 			return item_type == ItemType.LEGS or equip_slot == EquipSlot.LEGS
+		EquipSlot.BACK:
+			return item_type == ItemType.QUIVER or equip_slot == EquipSlot.BACK
 	return false

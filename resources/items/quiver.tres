@@ -5,9 +5,11 @@
 [resource]
 script = ExtResource("1_item")
 item_name = "Quiver"
-item_type = 3
-ammo_amount = 6
-model_path = "res://scenes/items/quiver.tscn"
-model_material_path = "res://assets/PolygonDungeon/Materials/Dungeon_Material_01_mat.tres"
-model_scale = 0.3
-model_ground_rotation = Vector3(-90, 0, 0)
+item_type = 9
+equip_slot = 6
+ammo_amount = 7
+ammo_capacity = 12
+model_path = "res://assets/goblin_camp/SM_Prop_Quiver_01.fbx"
+model_material_path = "res://assets/goblin_camp/goblin_camp_mat_01_A.tres"
+model_scale = 0.45
+model_ground_rotation = Vector3(0, 0, 90)

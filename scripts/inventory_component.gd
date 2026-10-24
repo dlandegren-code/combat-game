@@ -27,6 +27,8 @@ var left_hand: ItemResource = null
 var armor: ItemResource = null
 var helmet: ItemResource = null
 var legs: ItemResource = null
+## A quiver. While it is here its arrows ARE the character's `ammo` — see _sling_quiver.
+var back: ItemResource = null
 
 var character: CharacterBody3D  ## parent character, set on ready
 
@@ -46,7 +48,8 @@ func _ready() -> void:
 ## The slots a piece of gear is tried against, in order, when nobody has chosen one for it.
 ## Hands first, so a weapon is drawn rather than filed.
 const SLOT_ORDER := [ItemResource.EquipSlot.RIGHT_HAND, ItemResource.EquipSlot.LEFT_HAND,
-	ItemResource.EquipSlot.ARMOR, ItemResource.EquipSlot.HELMET, ItemResource.EquipSlot.LEGS]
+	ItemResource.EquipSlot.ARMOR, ItemResource.EquipSlot.HELMET, ItemResource.EquipSlot.LEGS,
+	ItemResource.EquipSlot.BACK]
 
 
 static func preferred_slot(item: ItemResource) -> int:
@@ -97,6 +100,8 @@ func remove_item(slot_index: int) -> ItemResource:
 		unequip_slot(ItemResource.EquipSlot.HELMET)
 	if legs == item:
 		unequip_slot(ItemResource.EquipSlot.LEGS)
+	if back == item:
+		unequip_slot(ItemResource.EquipSlot.BACK)
 	items[slot_index] = null
 	return item
 
@@ -124,6 +129,8 @@ func equip(slot_index: int) -> void:
 		target_slot = ItemResource.EquipSlot.HELMET
 	elif item.item_type == ItemResource.ItemType.LEGS:
 		target_slot = ItemResource.EquipSlot.LEGS
+	elif item.item_type == ItemResource.ItemType.QUIVER:
+		target_slot = ItemResource.EquipSlot.BACK
 	elif item.equip_slot == ItemResource.EquipSlot.RIGHT_HAND:
 		target_slot = ItemResource.EquipSlot.RIGHT_HAND
 	elif item.equip_slot == ItemResource.EquipSlot.LEFT_HAND:
@@ -221,6 +228,11 @@ func unequip_slot(slot: int) -> void:
 		ItemResource.EquipSlot.LEGS:
 			item = legs
 			legs = null
+		ItemResource.EquipSlot.BACK:
+			item = back
+			back = null
+			if item != null:
+				_unsling_quiver(item)
 	if item and character:
 		_remove_item_bonuses(item)
 
@@ -239,6 +251,8 @@ func unequip_item(item: ItemResource) -> void:
 		unequip_slot(ItemResource.EquipSlot.HELMET)
 	elif legs == item:
 		unequip_slot(ItemResource.EquipSlot.LEGS)
+	elif back == item:
+		unequip_slot(ItemResource.EquipSlot.BACK)
 
 
 func _equip_to(slot: int, item: ItemResource) -> void:
@@ -283,6 +297,9 @@ func _equip_to(slot: int, item: ItemResource) -> void:
 			helmet = item
 		ItemResource.EquipSlot.LEGS:
 			legs = item
+		ItemResource.EquipSlot.BACK:
+			back = item
+			_sling_quiver(item)
 
 	_apply_item_bonuses(item)
 
@@ -314,7 +331,7 @@ func clear_all() -> void:
 		left_hand = null
 	for slot in [ItemResource.EquipSlot.RIGHT_HAND, ItemResource.EquipSlot.LEFT_HAND,
 			ItemResource.EquipSlot.ARMOR, ItemResource.EquipSlot.HELMET,
-			ItemResource.EquipSlot.LEGS]:
+			ItemResource.EquipSlot.LEGS, ItemResource.EquipSlot.BACK]:
 		unequip_slot(slot)
 	for i in range(items.size()):
 		items[i] = null
@@ -451,6 +468,10 @@ func forget(item: ItemResource) -> void:
 		helmet = null
 	if legs == item:
 		legs = null
+	if back == item:
+		# Looted off a corpse: the arrows go with the quiver, not stay behind as a number.
+		back = null
+		_unsling_quiver(item)
 
 
 func has_key(key_id: String) -> bool:
@@ -569,18 +590,26 @@ func use_consumable(slot_index: int) -> bool:
 		character.heal(item.heal_amount)
 		applied = true
 
-	# Ammo effect
-	if item.ammo_amount > 0 and character:
-		# A character with no quiver capacity yet gets one the moment they take up ammo.
-		# Without this, max_ammo 0 clamps the gain to nothing while `applied` still goes true
-		# below — the quiver would be consumed for no arrows at all.
-		if character.max_ammo <= 0:
-			character.max_ammo = 10
-		character.ammo = min(character.ammo + item.ammo_amount, character.max_ammo)
+	# Ammo effect: loose arrows go into the quiver on the back, as many as it has room for. The
+	# rest stay in the bundle, so topping up a nearly full quiver does not throw arrows away.
+	if item.item_type == ItemResource.ItemType.AMMO and item.ammo_amount > 0 and character:
+		if back == null:
+			if character.has_method("_show_action_text"):
+				character._show_action_text("No quiver to put them in")
+			return false
+		var taken: int = mini(item.ammo_amount, character.max_ammo - character.ammo)
+		if taken <= 0:
+			if character.has_method("_show_action_text"):
+				character._show_action_text("Quiver is full")
+			return false
+		character.ammo += taken
+		item.ammo_amount -= taken
 		if character.has_method("_update_health_bar"):
 			character._update_health_bar()
 		if character.has_method("_show_action_text"):
-			character._show_action_text("+" + str(item.ammo_amount) + " arrows")
+			character._show_action_text("+" + str(taken) + " arrows")
+		if item.ammo_amount > 0:
+			return true
 		applied = true
 
 	if applied:
@@ -594,6 +623,25 @@ func use_consumable(slot_index: int) -> bool:
 		items[slot_index] = null
 		return true
 	return false
+
+
+func _sling_quiver(quiver: ItemResource) -> void:
+	## The quiver's arrows become the character's: `ammo` is what every bow shot spends, and
+	## Combatant writes it back into the quiver as it changes (see Combatant.ammo).
+	if character == null:
+		return
+	character.max_ammo = quiver.ammo_capacity
+	character.ammo = clampi(quiver.ammo_amount, 0, quiver.ammo_capacity)
+
+
+func _unsling_quiver(quiver: ItemResource) -> void:
+	## The arrows leave with the quiver. `back` is already cleared, so the zeroing below is not
+	## written back into the quiver it was just taken from.
+	if character == null:
+		return
+	quiver.ammo_amount = character.ammo
+	character.ammo = 0
+	character.max_ammo = 0
 
 
 func is_full() -> bool:

@@ -1297,3 +1297,76 @@ New theme "raiders" in QuestDef.THEMES — note this changes which theme an
 existing seed rolls (THEMES.size() went 3 → 4); boards already saved keep
 their quests, which are stored whole. Dungeon dressing is still the
 shared one; a Viking-flavoured hall (Viking Realm props) is the obvious follow-up.
+
+### Raiders mead hall dressing (2026-10-23)
+
+`RoomBuilder.KITS` picks what a dungeon is built out of by quest theme; "dungeon" is the old
+Polygon Dungeon set (unchanged), "raiders" a Viking mead hall: log walls and log doorway with a
+plank door, dark plank floor (its own tiling Planks_Dark_01 texture — the Base floor's UVs span
+the whole square), the carved high seat, dragon banners, a stone hearth with firelight where the
+dungeon has its vessel, wooden pillars, Viking chest / casks / crates. Kit scales are absolute:
+Viking modules are 2.5 m at 1.6, the Dungeon's 5 units at 0.8, both one TILE.
+
+Raiders-only extras: long tables (generator feature "table", two squares, reserved; laid from a
+SEPARATE rng in `_place_tables` so no other theme's layouts move), a roast boar on every other
+one, furs in every free corner and before the high seat, wall torches, and one warm shadowless
+light per room. Dressing draws off the room's _rng after everything with gameplay meaning.
+
+The pieces are baked by `tools/build_viking_kit` from `assets/vikings/env/*.fbx` into
+`assets/vikings/models/*.res` (meshes) and `assets/vikings/prefabs/*.tscn` (MeshInstance-rooted,
+atlas applied; the chest keeps a `*_Lid` child on its hinge, lock riding on it), so every builder
+path still takes the forms the Dungeon pack uses. `tools/inspect_viking_env` reports the raw
+pieces' sizes.
+
+Benches and weapon racks (same day): a table gets a bench down each long side where the room
+has width for the 3 x 2 block plus its ring of floor (else it stands alone). Bench squares are
+reserved but have no collider — knee-high, so sight and arrows pass over. Weapon racks ("rack",
+against a wall: every stores room, 60% of fight rooms, hall rng) are LootContainers searched for
+one Viking weapon or shield (RoomBuilder.RACK_LOOT); the baked prefab stands an axe, a spear and a
+sword in the pack's empty frame (build_viking_kit DECOR; tools/preview_prop shows one close up).
+
+Also: seated bodies now cancel the sit clip's backward hip shift (Enemy._hip_shift), so the boss
+sits ON the seat instead of in the backrest — Sidekick and Polygon bodies alike.
+
+Statues and rune stones (same day): "statue" — two against the boss hall's walls, one in the
+entrance room; "runestone" — against a wall in half the fight rooms (hall rng). Solid, hold their
+square, block sight. One of three statues (01/03/04 — 02 is a 10 m outdoor colossus, left out) or
+four rune stones (their own atlas, PolygonVikingRealm_Texture_02_C), each scaled to about a
+square and centred on it by its bounds (several rune stones sit well off their own pivots).
+
+### Roof, beams, and the occlusion fader (2026-10-23)
+
+Raiders kit: a shingled roof (SM_Bld_Base_Ceiling_01 + Roof_01.png, double-sided) over every
+floor tile at wall-top height, and timber beams (SM_Gen_Bld_Beam_01, stretched wall to wall)
+across each room at every tile line. Neither has a collider; neither casts a shadow (lit from
+above, the roof would black out the hall and the beams stripe the floor).
+
+`scripts/occlusion_fader.gd` (added by RoomBuilder for EVERY theme, not in the editor) keeps
+the party in view, visually only — colliders, LOS and movement are untouched, and clicks never
+hit walls (the move ray asks LAYER_GROUND only):
+- walls, door frames, door leaves and beams go GHOST (0.78 transparency) while they cut the
+  segment from the camera to a focus point (each living party member at chest height, the
+  active combatant, the camera pivot);
+- the roof lifts (fully) over every region a focus point stands in, within ROOF_RADIUS of one,
+  or anywhere it cuts a camera→focus segment — the rest of the hall stays roofed, which also
+  works as a light fog of war.
+Uses GeometryInstance3D.transparency (no material copies), re-decided every 0.1 s and faded at
+4/s so orbiting does not flicker. tools/capture_quest now sets the camera pivot when it moves
+the camera and has overview + low-angle shots (quest_overview.png, quest_low.png).
+
+### Feedback pass: gait, grips, throne, potion (2026-10-24)
+
+- Gait (Combatant): bodies used to slide at move_speed (4-6 u/s, legs ~0.67) under a walk clip
+  that covers ~0.8 u/s. Now `_gait()` picks the clip ("run"; Enemy: "walk" until alerted), it is
+  played at move/natural rate (per play, so nothing else inherits it), and travel is capped at
+  GAIT_MAX_RATE x natural (walk 1.25, run 1.6). Natural ground speed is measured once per clip
+  from how fast a planted foot slides back (per leg length, cached per Animation) times the
+  body's leg (Hips-LeftFoot rest). Run ~4.0 u/s on a human body: alerted enemies (4) run at 1.0x,
+  heroes (6) at 1.5x; unalerted enemies amble at ~1 u/s. Ghouls now run when alerted (no zombie
+  run clip exists); they still shamble while idle. tools/probe_walk reports all of it.
+- Grips: axes, the warhammer and the boss cleaver at worn_rotation (0,-90,0) — head down, not
+  into the body; bows (short/long/goblin) at (0,-90,0) — level along the body, string up.
+  tools/probe_grip finds such rotations from the hand's real frame in the idle pose.
+- Throne: kit throne_scale is now the GIANT size; bosses under THRONE_GIANT_SIZE (1.5) get
+  THRONE_NORMAL (0.7) of it — seat ~0.61 instead of 0.82, feet on the floor.
+- Health potion ground model_scale 0.4 -> 0.25.

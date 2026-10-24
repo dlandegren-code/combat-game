@@ -950,7 +950,7 @@ func unequip_item(item: ItemResource) -> void:
 	var was_equipped := false
 	if inventory.get("right_hand") == item or inventory.get("left_hand") == item \
 			or inventory.get("armor") == item or inventory.get("helmet") == item \
-			or inventory.get("legs") == item:
+			or inventory.get("legs") == item or inventory.get("back") == item:
 		was_equipped = true
 	if not was_equipped:
 		return

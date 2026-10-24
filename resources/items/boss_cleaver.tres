@@ -13,3 +13,4 @@ attack_bonus = 4
 damage_bonus = 2
 durability = 12
 worn_model_path = "res://assets/PolygonDungeon/Models/SM_Wep_Goblin_Machete_01.res"
+worn_rotation = Vector3(0, -90, 0)

@@ -62,8 +62,13 @@ const BASE_SET := "SK_HUMN_BASE_01"
 @export var skin_palette := "T_HumanSpecies_01ColorMap.png"
 ## Parts worn whatever the inventory says — an NPC's clothes, or a preview's.
 @export var outfit: Array = []
-## A quiver on the back, the way CharacterSkin.show_quiver puts one on the Kenney archer.
+## A quiver on the back: Goblin War Camp's leather quiver of three arrows, the same model the
+## Quiver pickup shows on the floor. (No Sidekick set has a quiver among its back pieces.)
+## Combatants do not set this — theirs follows the Quiver item they have slung (wear_items);
+## it is for bodies with no inventory, such as a ranger in town.
 @export var show_quiver := false
+const QUIVER_MODEL := "res://assets/goblin_camp/SM_Prop_Quiver_01.fbx"
+const QUIVER_MATERIAL := "res://assets/goblin_camp/goblin_camp_mat_01_A.tres"
 ## Clips this body plays in place of the usual ones, game name -> clip name in CLIPS: a ghoul
 ## shambles {"walk": "zombie-walk"} where everyone else walks. Combatant asks for "walk" and
 ## "attack-melee-right" as it always does and never needs to know.
@@ -107,7 +112,7 @@ func build() -> void:
 	scale *= MODEL_SCALE
 	for code in BODY_SLOTS:
 		_put(code, _base_part(code), true)
-	_apply_parts(outfit, [], "")
+	_dress_outfit()
 	anim = AnimationPlayer.new()
 	anim.name = "AnimationPlayer"
 	add_child(anim)
@@ -146,11 +151,15 @@ func wear_items(items: Array) -> void:
 		return
 	_worn_key = key
 	_undress()
-	_apply_parts(outfit, [], "")
+	_dress_outfit()
+	var slung := false
 	for it in items:
 		if it == null or not ("worn_parts" in it):
 			continue
 		_apply_parts(it.worn_parts, it.worn_hides, it.worn_palette)
+		if it.item_type == ItemResource.ItemType.QUIVER:
+			slung = true
+	_show_quiver_model(show_quiver or slung)
 
 
 # --- Building --------------------------------------------------------------
@@ -173,6 +182,11 @@ static func slot_of(part: String) -> String:
 	## "SK_FANT_KNGT_01_10TORS_HU01" -> "10TORS".
 	var bits := part.split("_")
 	return bits[bits.size() - 2] if bits.size() >= 2 else ""
+
+
+func _dress_outfit() -> void:
+	## The body's own clothes — what every re-dress starts from.
+	_apply_parts(outfit, [], "")
 
 
 func _apply_parts(parts, hides, palette: String) -> void:
@@ -332,6 +346,13 @@ static func _material_for(path: String) -> StandardMaterial3D:
 	return m
 
 
+func _show_quiver_model(on: bool) -> void:
+	if on and _quiver == null:
+		_add_quiver()
+	if _quiver != null:
+		_quiver.visible = on
+
+
 func _add_quiver() -> void:
 	var bone := socket_bone("back")
 	if skeleton == null or skeleton.find_bone(bone) < 0:
@@ -340,15 +361,37 @@ func _add_quiver() -> void:
 	socket.name = "QuiverSocket"
 	socket.bone_name = bone
 	skeleton.add_child(socket)
-	var ps: PackedScene = load("res://scenes/items/quiver.tscn")
-	if ps == null:
-		return
-	_quiver = ps.instantiate() as Node3D
-	# In UpperChest space on this rig: behind the shoulder blades, slung over the right shoulder.
-	_quiver.position = Vector3(0.12, 0.05, -0.2)
-	_quiver.rotation_degrees = Vector3(0, 0, -25)
-	_quiver.scale = Vector3.ONE * 1.6
+	_quiver = (load(QUIVER_MODEL) as PackedScene).instantiate() as Node3D
+	var mat: Material = load(QUIVER_MATERIAL)
+	for mi in _quiver.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).material_override = mat
+	# Placed in the body's own frame (facing +Z, +X its left) and carried into the bone's: the
+	# UpperChest bone leans with the spine, and the skeleton node is turned from the FBX's Z-up,
+	# so an offset in either space tips the quiver out backwards.
+	var rest := _skeleton_frame() * skeleton.get_bone_global_rest(skeleton.find_bone(bone))
+	var want := Transform3D(Basis.from_euler(QUIVER_ROTATION * PI / 180.0).scaled(Vector3.ONE * QUIVER_SCALE),
+		rest.origin + QUIVER_OFFSET)
+	_quiver.transform = rest.affine_inverse() * want
 	socket.add_child(_quiver)
+
+
+func _skeleton_frame() -> Transform3D:
+	## The skeleton's transform in this body's frame.
+	var t := Transform3D.IDENTITY
+	var n: Node = skeleton
+	while n != null and n != self:
+		if n is Node3D:
+			t = (n as Node3D).transform * t
+		n = n.get_parent()
+	return t
+
+
+## Behind the shoulder blades, tipped so the arrows come up over the right shoulder. The X tilt
+## leans it back at rest: every stance clip hunches the upper chest forward some 25 degrees,
+## which would otherwise swing the quiver's foot out behind the archer.
+const QUIVER_OFFSET := Vector3(0.0, -0.05, -0.115)
+const QUIVER_ROTATION := Vector3(-22, 0, 22)
+const QUIVER_SCALE := 0.72
 
 
 # --- Clips -----------------------------------------------------------------

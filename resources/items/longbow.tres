@@ -18,4 +18,4 @@ use_two_handed_grip = false
 model_grip_roll = 180.0
 worn_model_path = "res://assets/vikings/weapons/SM_Wep_Bow_Rigged_01.fbx"
 worn_scale = 1.0
-worn_rotation = Vector3(0, 0, 90)
+worn_rotation = Vector3(0, -90, 0)
